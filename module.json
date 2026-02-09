@@ -3,6 +3,7 @@
   "title": "STA Tactical Campaign",
   "description": "Adds Assets and Points of Interest actor types for the Federation-Klingon War Tactical Campaign rules from Star Trek Adventures.",
   "version": "1.0.0",
+  "manifest": "https://github.com/AlexBoer/sta-tactical-campaign/releases/latest/download/module.json",
   "compatibility": {
     "minimum": "13",
     "verified": "13"

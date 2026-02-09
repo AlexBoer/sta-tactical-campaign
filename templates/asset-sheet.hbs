@@ -1,0 +1,53 @@
+<div class="sta-tc-sheet asset-sheet">
+  {{!-- Header Section --}}
+  <header class="sheet-header">
+    <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" />
+    <div class="header-fields">
+      <div class="actor-name">
+        <input name="name" type="text" value="{{actor.name}}" placeholder="{{localize 'STA_TC.AssetName'}}" />
+      </div>
+      <div class="asset-type-select">
+        <select name="system.assetType">
+          <option value="character" {{#if (eq system.assetType "character")}}selected{{/if}}>{{localize "STA_TC.AssetTypes.Character"}}</option>
+          <option value="ship" {{#if (eq system.assetType "ship")}}selected{{/if}}>{{localize "STA_TC.AssetTypes.Ship"}}</option>
+          <option value="resource" {{#if (eq system.assetType "resource")}}selected{{/if}}>{{localize "STA_TC.AssetTypes.Resource"}}</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  {{!-- Powers Section --}}
+  <section class="sheet-body">
+    <div class="powers-section">
+      <div class="powers-table">
+        <div class="powers-header">
+          <span class="col-select"></span>
+          <span class="col-type">{{localize "STA_TC.Powers.Type"}}</span>
+          <span class="col-power">{{localize "STA_TC.Powers.Power"}}</span>
+          <span class="col-focus">{{localize "STA_TC.Powers.Focus"}}</span>
+        </div>
+        {{#each powers}}
+        <div class="power-row">
+          <input class="col-select power-select" type="radio" name="system.selectedPower" value="{{this.key}}" {{#if this.isSelected}}checked{{/if}} />
+          <span class="col-type">{{this.label}}</span>
+          <input class="col-power" type="number" name="{{this.valuePath}}" value="{{this.value}}" min="0" max="20" placeholder="0" />
+          <input class="col-focus" type="number" name="{{this.focusPath}}" value="{{this.focus}}" min="0" max="5" placeholder="0" />
+        </div>
+        {{/each}}
+      </div>
+      <div class="powers-actions">
+        <button type="button" class="btn perform-test" data-action="performTest">{{localize "STA_TC.PerformTest"}}</button>
+      </div>
+    </div>
+
+    {{!-- Description Section --}}
+    <div class="description-section">
+      <h2>{{localize "STA_TC.Description"}}</h2>
+      <div class="editor-container">
+        <prose-mirror name="system.description" data-document-u-u-i-d="{{actor.uuid}}" value="{{system.description}}" collaborate="true" toggled="true">
+          {{{enrichedDescription}}}
+        </prose-mirror>
+      </div>
+    </div>
+  </section>
+</div>

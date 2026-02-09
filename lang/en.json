@@ -1,0 +1,51 @@
+{
+  "TYPES": {
+    "Actor": {
+      "sta-tactical-campaign": {
+        "asset": "Asset",
+        "poi": "Point of Interest"
+      }
+    }
+  },
+  "STA_TC": {
+    "Sheets": {
+      "Asset": "Asset Sheet",
+      "PointOfInterest": "Point of Interest Sheet"
+    },
+    "Types": {
+      "Asset": "Asset",
+      "PointOfInterest": "Point of Interest"
+    },
+    "AssetName": "Asset Name",
+    "AssetTypes": {
+      "Character": "Character Asset",
+      "Ship": "Ship Asset",
+      "Resource": "Resource Asset"
+    },
+    "PoiName": "Point of Interest Name",
+    "Description": "Description",
+    "PerformTest": "Perform Test",
+    "TotalPower": "Total Power",
+    "TotalFocus": "Total Focus",
+    "Powers": {
+      "Title": "Powers",
+      "Type": "Type",
+      "Power": "Power",
+      "Focus": "Focus",
+      "Value": "Value",
+      "Medical": "Medical",
+      "Military": "Military",
+      "Personal": "Personal",
+      "Science": "Science",
+      "Social": "Social"
+    },
+    "Poi": {
+      "Power": "Power Type",
+      "Difficulty": "Difficulty",
+      "Urgency": "Urgency"
+    },
+    "DicePool": "Dice Pool",
+    "RollDice": "Roll Dice",
+    "Cancel": "Cancel"
+  }
+}

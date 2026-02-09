@@ -1,0 +1,46 @@
+<div class="sta-tc-sheet poi-sheet">
+  {{!-- Header Section --}}
+  <header class="sheet-header">
+    <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" />
+    <div class="header-fields">
+      <div class="actor-name">
+        <input name="name" type="text" value="{{actor.name}}" placeholder="{{localize 'STA_TC.PoiName'}}" />
+      </div>
+      <div class="poi-power-select">
+        <select name="system.power">
+          <option value="medical" {{#if (eq system.power "medical")}}selected{{/if}}>{{localize "STA_TC.Powers.Medical"}}</option>
+          <option value="military" {{#if (eq system.power "military")}}selected{{/if}}>{{localize "STA_TC.Powers.Military"}}</option>
+          <option value="personal" {{#if (eq system.power "personal")}}selected{{/if}}>{{localize "STA_TC.Powers.Personal"}}</option>
+          <option value="science" {{#if (eq system.power "science")}}selected{{/if}}>{{localize "STA_TC.Powers.Science"}}</option>
+          <option value="social" {{#if (eq system.power "social")}}selected{{/if}}>{{localize "STA_TC.Powers.Social"}}</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  {{!-- Stats Section --}}
+  <section class="sheet-body">
+    <div class="poi-stats-section">
+      <div class="poi-stats-table">
+        <div class="poi-stats-header">
+          <span class="col-stat-label">{{localize "STA_TC.Poi.Difficulty"}}</span>
+          <span class="col-stat-label">{{localize "STA_TC.Poi.Urgency"}}</span>
+        </div>
+        <div class="poi-stats-row">
+          <input class="col-stat-value" type="number" name="system.difficulty" value="{{system.difficulty}}" min="1" max="5" />
+          <input class="col-stat-value" type="number" name="system.urgency" value="{{system.urgency}}" min="1" max="5" />
+        </div>
+      </div>
+    </div>
+
+    {{!-- Description Section --}}
+    <div class="description-section">
+      <div class="section-header">{{localize "STA_TC.Description"}}</div>
+      <div class="editor-container">
+        <prose-mirror name="system.description" data-document-u-u-i-d="{{actor.uuid}}" value="{{system.description}}" collaborate="true" toggled="true">
+          {{{enrichedDescription}}}
+        </prose-mirror>
+      </div>
+    </div>
+  </section>
+</div>

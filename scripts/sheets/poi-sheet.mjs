@@ -11,7 +11,7 @@ export class PoiSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   static DEFAULT_OPTIONS = {
     classes: ["sta-tactical-campaign", "poi-sheet"],
     actions: {
-      // Define sheet actions here
+      editImage: PoiSheet._onEditImage,
     },
     form: {
       submitOnChange: true,
@@ -57,32 +57,18 @@ export class PoiSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     };
   }
 
-  /** @override */
-  async _onRender(context, options) {
-    await super._onRender(context, options);
-
-    // Handle profile image click to open file picker
-    const img = this.element.querySelector(".profile-img");
-    if (img) {
-      img.style.cursor = "pointer";
-      img.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        this._onEditImage(event);
-      });
-    }
-  }
-
   /**
    * Handle clicking the profile image to change it
    * @param {Event} event - The click event
+   * @param {HTMLElement} target - The image element
    */
-  _onEditImage(event) {
+  static _onEditImage(event, target) {
+    const sheet = this;
     new FilePicker({
       type: "image",
-      current: this.actor.img,
+      current: sheet.actor.img,
       callback: (path) => {
-        this.actor.update({ img: path });
+        sheet.actor.update({ img: path });
       },
     }).browse();
   }

@@ -12,6 +12,7 @@ export class AssetSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     classes: ["sta-tactical-campaign", "asset-sheet"],
     actions: {
       performTest: AssetSheet._onPerformTest,
+      editImage: AssetSheet._onEditImage,
     },
     form: {
       submitOnChange: true,
@@ -80,32 +81,18 @@ export class AssetSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     };
   }
 
-  /** @override */
-  async _onRender(context, options) {
-    await super._onRender(context, options);
-
-    // Handle profile image click to open file picker
-    const img = this.element.querySelector(".profile-img");
-    if (img) {
-      img.style.cursor = "pointer";
-      img.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        this._onEditImage(event);
-      });
-    }
-  }
-
   /**
    * Handle clicking the profile image to change it
    * @param {Event} event - The click event
+   * @param {HTMLElement} target - The image element
    */
-  _onEditImage(event) {
+  static _onEditImage(event, target) {
+    const sheet = this;
     new FilePicker({
       type: "image",
-      current: this.actor.img,
+      current: sheet.actor.img,
       callback: (path) => {
-        this.actor.update({ img: path });
+        sheet.actor.update({ img: path });
       },
     }).browse();
   }
@@ -142,7 +129,7 @@ export class AssetSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     );
 
     // Load and render the dialog template
-    const dialogContent = await renderTemplate(
+    const dialogContent = await foundry.applications.handlebars.renderTemplate(
       "modules/sta-tactical-campaign/templates/dice-pool-dialog.hbs",
       {},
     );

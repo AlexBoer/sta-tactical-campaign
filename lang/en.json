@@ -46,6 +46,13 @@
     },
     "DicePool": "Dice Pool",
     "RollDice": "Roll Dice",
-    "Cancel": "Cancel"
+    "Cancel": "Cancel",
+    "Dialog": {
+      "UsingFocus": "Using Focus",
+      "DedicatedFocus": "Double Focus Range",
+      "UsingDetermination": "Using Determination",
+      "ComplicationRange": "Complication Range",
+      "DicePoolSize": "Number of Dice"
+    }
   }
 }

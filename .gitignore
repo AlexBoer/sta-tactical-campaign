@@ -28,3 +28,6 @@ package-lock.json
 # Temporary files
 *.tmp
 *.temp
+
+# Current Release File
+module.zip

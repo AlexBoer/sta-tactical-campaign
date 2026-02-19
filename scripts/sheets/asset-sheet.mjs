@@ -179,26 +179,23 @@ export class AssetSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     // If dialog was cancelled or closed, do nothing
     if (!result || result === "cancel") return;
 
-    // Build the speaker object
-    const speaker = {
-      id: actor.id,
-      type: "sidebar",
-      name: actor.name,
+    // Build the task data object for the new STA v2.5.0 rollTask API
+    // Using rolltype 'custom' allows us to set our own flavor text
+    const taskData = {
+      speakerName: actor.name,
+      selectedAttributeValue: attributeValue, // power - focus
+      selectedDisciplineValue: focusValue,
+      rolltype: "custom",
+      flavor: `${powerLabel} ${game.i18n.localize("STA_TC.Powers.Power")}`,
+      dicePool: result.dicePool,
+      usingFocus: result.usingFocus,
+      usingDedicatedFocus: result.usingDedicatedFocus,
+      usingDetermination: result.usingDetermination,
+      complicationRange: result.complicationRange,
     };
 
-    // Create a new STARoll instance and perform the test
+    // Create a new STARoll instance and perform the roll
     const roller = new STARoll();
-    await roller.performAttributeTest(
-      result.dicePool,
-      result.usingFocus,
-      result.usingDedicatedFocus,
-      result.usingDetermination,
-      powerLabel, // selectedAttribute (display name)
-      attributeValue, // selectedAttributeValue (power - focus)
-      game.i18n.localize("STA_TC.Powers.Power"), // selectedDiscipline ("Power")
-      focusValue, // selectedDisciplineValue (focus)
-      result.complicationRange,
-      speaker,
-    );
+    await roller.rollTask(taskData);
   }
 }

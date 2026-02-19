@@ -208,9 +208,60 @@ The STA system exposes its API at `game.sta`. Common uses:
 ```javascript
 // Access STA configuration
 const staConfig = CONFIG.sta;
+```
 
-// Use STA dice rolling (if needed)
-game.sta.roll(...);
+### Using STA's Dice Rolling API (v2.5.0+)
+
+As of STA v2.5.0, the rolling API changed from individual parameters to a data object pattern.
+
+**Task Rolls:**
+
+```javascript
+const roller = new STARoll();
+
+// Using custom flavor text (recommended for module extensions)
+const taskData = {
+  speakerName: actor.name, // Display name for chat
+  selectedAttributeValue: 8, // First half of target number
+  selectedDisciplineValue: 3, // Second half (also used for focus threshold)
+  rolltype: "custom", // Use 'custom' for custom flavor text
+  flavor: "My Custom Roll", // Custom header text in chat card
+  dicePool: 2, // Number of d20s
+  usingFocus: true, // Double successes on 1s or <= discipline
+  usingDedicatedFocus: false, // Double successes on <= 2x discipline
+  usingDetermination: false, // Add automatic 1 (2 successes)
+  complicationRange: 1, // 20 only = 1, 19-20 = 2, etc.
+};
+
+await roller.rollTask(taskData);
+```
+
+**Available rolltypes:**
+
+- `custom` - Use the `flavor` property for custom header text
+- `character2e` / `character1e` - Localizes attribute/discipline names
+- `starship` - Localizes system/department names
+- `sidebar` - Generic "Task Roll" label
+
+**Scene Complication Range:**
+
+The system can calculate complication range from scene traits:
+
+```javascript
+const calculatedRange = await roller._sceneComplications();
+```
+
+**Challenge Rolls (d6 damage/effect dice):**
+
+```javascript
+const roller = new STARoll();
+const challengeData = {
+  speakerName: actor.name,
+  dicePool: 3, // Number of challenge dice
+  challengeName: "Phaser Damage", // Description for chat
+};
+
+await roller.performChallengeRoll(challengeData);
 ```
 
 ---
@@ -283,4 +334,5 @@ Potential areas for expansion:
 
 ## Version History
 
+- **1.0.1** - Updated roll API for STA v2.5.0 compatibility (rollTask with custom flavor support)
 - **1.0.0** - Initial release with Asset and POI actor types

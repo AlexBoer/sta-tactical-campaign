@@ -25,14 +25,28 @@
   font-family: "Roboto Condensed", "Roboto", sans-serif !important;
   color: var(--sta-tc-text);
   padding: 10px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.sta-tc-sheet .sheet-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 /* Lock asset sheet width while allowing height resize */
-.asset-sheet.application,
-.poi-sheet.application {
+.asset-sheet.application {
   min-width: 330px !important;
   max-width: 330px !important;
   width: 330px !important;
+}
+
+/* POI sheet: allow horizontal resize, just enforce a minimum */
+.poi-sheet.application {
+  min-width: 330px !important;
 }
 
 .sta-tc-sheet input,
@@ -304,21 +318,52 @@
 
 
 
+/* ===== Application window flex chain for POI sheet ===== */
+.poi-sheet.application .window-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.poi-sheet.application .window-content > form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 /* ===== Description Section ===== */
 .sta-tc-sheet .description-section {
   margin-top: 10px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .sta-tc-sheet .editor-container {
   min-height: 100px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .sta-tc-sheet .editor-container prose-mirror {
   min-height: 80px;
-  display: block;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   position: relative;
+  min-height: 0;
 }
 
+/* Prose mirror editable area fills remaining space */
+.sta-tc-sheet .editor-container prose-mirror .ProseMirror {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Keep the edit toggle button in place */
 .sta-tc-sheet .editor-container prose-mirror .editor-edit {
   bottom: 8px;
 }

@@ -42,7 +42,82 @@
     "Poi": {
       "Power": "Power Type",
       "Difficulty": "Difficulty",
-      "Urgency": "Urgency"
+      "Urgency": "Urgency",
+      "Generator": {
+        "Rolling": "Rolling for Point of Interest…",
+        "TypeTableName": "Point of Interest Type",
+        "TypeRollFailed": "Failed to roll on the Point of Interest Type table.",
+        "UnknownType": "Unknown Point of Interest type: {type}",
+        "Generated": "Generated {type} Point of Interest: {name}!",
+        "SpeakerAlias": "Point of Interest Generator",
+        "TypeRoll": "Type Roll",
+        "SubTableRoll": "Sub-table Roll",
+        "DragToCanvas": "Drag to canvas",
+        "TableNotConfigured": "Table UUID not configured: {name}. Set it in the module settings.",
+        "TableNotFound": "Table not found: {name}. Check the UUID in the module settings.",
+        "SubTableNotConfigured": "Sub-table not configured for {type}. Set its UUID in the module settings.",
+        "ActorNotFound": "Could not find POI actor: {name}. Check the sub-table result contains a valid UUID.",
+        "ActorNotResolved": "Actor UUID could not be resolved. Verify the sub-table results contain valid actor UUIDs.",
+        "TokenPlaced": "Placed {name} token on canvas.",
+        "TokenFailed": "Failed to create token: {error}",
+        "Types": {
+          "TacticalThreat": "Tactical Threat",
+          "Exploration": "Exploration",
+          "Routine": "Routine",
+          "Unknown": "Unknown"
+        }
+      }
+    },
+    "Asset": {
+      "Generator": {
+        "Rolling": "Rolling for Asset…",
+        "TypeTableName": "Asset Type",
+        "TypeRollFailed": "Failed to roll on the Asset Type table.",
+        "UnknownType": "Unknown Asset type: {type}",
+        "Generated": "Generated {type} Asset: {name}!",
+        "SpeakerAlias": "Asset Generator",
+        "TypeRoll": "Type Roll",
+        "SubTableRoll": "Sub-table Roll",
+        "TableNotConfigured": "Table UUID not configured: {name}. Set it in the module settings.",
+        "TableNotFound": "Table not found: {name}. Check the UUID in the module settings.",
+        "SubTableNotConfigured": "Sub-table not configured for {type}. Set its UUID in the module settings.",
+        "ActorNotFound": "Could not find asset actor: {name}. Check the sub-table result contains a valid UUID.",
+        "ActorNotResolved": "Actor UUID could not be resolved. Verify the sub-table results contain valid actor UUIDs.",
+        "ConditionalTitle": "Choose Asset Type",
+        "ConditionalPrompt": "The result says: <strong>1 Character asset if you currently have 2 or fewer Character assets. Otherwise 1 Ship asset.</strong>",
+        "ConditionalHint": "Which asset type should be generated?",
+        "Types": {
+          "Character": "Character",
+          "Ship": "Ship",
+          "Resource": "Resource"
+        }
+      }
+    },
+    "Settings": {
+      "TablePoiType": "POI Type Table UUID",
+      "TablePoiTypeHint": "UUID of the main Point of Interest Type rollable table (determines the category).",
+      "TableTacticalThreat": "Tactical Threat Table UUID",
+      "TableTacticalThreatHint": "UUID of the Tactical Threat sub-table. Results should contain POI actor UUIDs.",
+      "TableExploration": "Exploration Table UUID",
+      "TableExplorationHint": "UUID of the Exploration sub-table. Results should contain POI actor UUIDs.",
+      "TableRoutine": "Routine Table UUID",
+      "TableRoutineHint": "UUID of the Routine sub-table. Results should contain POI actor UUIDs.",
+      "TableUnknown": "Unknown Table UUID",
+      "TableUnknownHint": "UUID of the Unknown sub-table. Results should contain POI actor UUIDs.",
+      "TableAssetType": "Asset Type Table UUID",
+      "TableAssetTypeHint": "UUID of the main Asset Type rollable table (determines the asset category).",
+      "TableAssetCharacter": "Character Assets Table UUID",
+      "TableAssetCharacterHint": "UUID of the Character assets sub-table. Results should contain actor UUIDs.",
+      "TableAssetShip": "Ship Assets Table UUID",
+      "TableAssetShipHint": "UUID of the Ship assets sub-table. Results should contain actor UUIDs.",
+      "TableAssetResource": "Resource Assets Table UUID",
+      "TableAssetResourceHint": "UUID of the Resource assets sub-table. Results should contain actor UUIDs.",
+      "CampaignMomentum": "Campaign Momentum",
+      "CampaignMomentumHint": "The current Campaign Momentum value.",
+      "CampaignThreat": "Campaign Threat",
+      "CampaignThreatHint": "The current Campaign Threat value.",
+      "ProgressionPoints": "Progression Points",
+      "ProgressionPointsHint": "The current number of Progression Points."
     },
     "DicePool": "Dice Pool",
     "RollDice": "Roll Dice",

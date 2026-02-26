@@ -1,7 +1,7 @@
 {
   "id": "sta-tactical-campaign",
   "title": "STA Tactical Campaign",
-  "description": "Adds Assets and Points of Interest actor types for the Federation-Klingon War Tactical Campaign rules from Star Trek Adventures.",
+  "description": "<p>Adds Assets and Points of Interest actor types for the Federation-Klingon War Tactical Campaign rules from Star Trek Adventures.</p>",
   "version": "1.0.1",
   "manifest": "https://github.com/AlexBoer/sta-tactical-campaign/releases/latest/download/module.json",
   "download": "https://github.com/AlexBoer/sta-tactical-campaign/releases/download/1.0.1/module.zip",
@@ -14,20 +14,24 @@
   },
   "authors": [
     {
-      "name": "Alex Boer"
+      "name": "Alex Boer",
+      "flags": {}
     }
   ],
   "esmodules": [
     "scripts/module.js"
   ],
   "styles": [
-    "styles/styles.css"
+    {
+      "src": "styles/styles.css"
+    }
   ],
   "languages": [
     {
       "lang": "en",
       "name": "English",
-      "path": "lang/en.json"
+      "path": "lang/en.json",
+      "flags": {}
     }
   ],
   "relationships": {
@@ -47,5 +51,19 @@
       "asset": {},
       "poi": {}
     }
-  }
+  },
+  "packs": [
+    {
+      "name": "tactical-campaign-macros",
+      "label": "Tactical Campaign Macros",
+      "path": "packs/tactical-campaign-macros",
+      "type": "Macro",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      },
+      "system": "sta"
+    }
+  ],
+  "flags": {}
 }

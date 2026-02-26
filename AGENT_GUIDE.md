@@ -72,6 +72,13 @@ This module follows patterns established by the STA core system:
 3. **Registration Pattern** (`module.js`)
    - Data models registered to `CONFIG.Actor.dataModels`
    - Sheets registered via `DocumentSheetConfig.registerSheet()`
+   - World settings registered via `game.settings.register()` in `settings.js`
+   - Public API exposed on `game.modules.get(MODULE_ID).api` during ready hook
+
+4. **POI Generator** (`poi-generator.mjs`)
+   - Static class with `generate()`, `rollOnTable()`, `parsePowerAndDifficultyOptions()`
+   - Registers `renderChatMessage` hook for chat drag support
+   - Registers `dropCanvasData` hook for canvas token creation
 
 ---
 
@@ -82,8 +89,10 @@ sta-tactical-campaign/
 ├── module.json              # Module manifest
 ├── AGENT_GUIDE.md           # This file
 ├── scripts/
-│   ├── module.js            # Entry point, hooks, registration
+│   ├── module.js            # Entry point, hooks, registration, API exposure
 │   ├── data-models.js       # AssetData, PoiData TypeDataModels
+│   ├── settings.js          # World settings registration (table & actor UUIDs)
+│   ├── poi-generator.mjs    # POI generator (table rolls, chat cards, drag-to-canvas)
 │   └── sheets/
 │       ├── asset-sheet.mjs  # Asset actor sheet class
 │       └── poi-sheet.mjs    # POI actor sheet class
@@ -316,6 +325,75 @@ game.actors.documentTypes;
 // Create test actor
 Actor.create({ name: "Test Asset", type: "sta-tactical-campaign.asset" });
 ```
+
+---
+
+## POI Generator
+
+### Overview
+
+The module includes a Point of Interest generator that rolls on configurable rollable tables, posts formatted results to chat, and supports drag-to-canvas token creation.
+
+### World Settings
+
+All table and template actor UUIDs are configured via **Module Settings** (Configure Settings → Module Settings → STA Tactical Campaign):
+
+**Table UUIDs** (right-click a table → Copy UUID):
+
+- `tablePoiType` – Main table that determines the POI category
+- `tableTacticalThreat` – Sub-table for Tactical Threat results
+- `tableExploration` – Sub-table for Exploration results
+- `tableRoutine` – Sub-table for Routine results
+- `tableUnknown` – Sub-table for Unknown results
+
+**Template Actor UUIDs** (right-click an actor → Copy UUID):
+
+- `templateActorTacticalThreat` – Template POI actor for Tactical Threat tokens
+- `templateActorExploration` – Template POI actor for Exploration tokens
+- `templateActorRoutine` – Template POI actor for Routine tokens
+- `templateActorUnknown` – Template POI actor for Unknown tokens
+
+Template actors should be `sta-tactical-campaign.poi` type actors with desired token settings (image, size, etc.). Generated tokens are unlinked and inherit prototype token visuals.
+
+### Public API
+
+The module exposes an API at `game.modules.get("sta-tactical-campaign").api`:
+
+```javascript
+// Generate a POI (rolls tables, posts chat card)
+await game.modules.get("sta-tactical-campaign").api.generatePoi();
+
+// Direct access to the PoiGenerator class
+const { PoiGenerator } = game.modules.get("sta-tactical-campaign").api;
+
+// Roll on a specific table by UUID
+const result = await PoiGenerator.rollOnTable(uuid, "Table Name");
+
+// Parse power/difficulty from text
+const { options, urgency } = PoiGenerator.parsePowerAndDifficultyOptions(text);
+
+// Read current settings
+const tables = PoiGenerator.getTableSettings();
+const actors = PoiGenerator.getTemplateActorSettings();
+```
+
+### Generation Flow
+
+1. Roll on the main POI Type table → result name (e.g. "TACTICAL THREAT")
+2. Map the result name (uppercased) to a sub-table key via `TYPE_TO_KEY`
+3. Roll on the matching sub-table → description, power/difficulty text
+4. Parse power types, difficulties, and urgency from the sub-table result text
+5. Build a chat card with coloured header, description, and drag-to-canvas buttons
+6. When dragged to canvas, create an unlinked token from the template actor with rolled stats in `delta.system`
+
+### Type Mapping
+
+The main table result name (uppercased) must match one of:
+
+- `"TACTICAL THREAT"` → `tacticalThreat`
+- `"EXPLORATION"` → `exploration`
+- `"ROUTINE"` → `routine`
+- `"UNKNOWN"` → `unknown`
 
 ---
 

@@ -20,18 +20,24 @@
   <section class="sheet-body">
     <div class="powers-section">
       <div class="powers-table">
-        <div class="powers-header">
+        <div class="powers-header {{#unless hasPrimaryPower}}no-primary{{/unless}}">
           <span class="col-select"></span>
           <span class="col-type">{{localize "STA_TC.Powers.Type"}}</span>
           <span class="col-power">{{localize "STA_TC.Powers.Power"}}</span>
           <span class="col-focus">{{localize "STA_TC.Powers.Focus"}}</span>
+          {{#if hasPrimaryPower}}
+          <span class="col-primary">{{localize "STA_TC.Powers.Primary"}}</span>
+          {{/if}}
         </div>
         {{#each powers}}
-        <div class="power-row">
+        <div class="power-row {{#unless ../hasPrimaryPower}}no-primary{{/unless}}">
           <input class="col-select power-select" type="radio" name="system.selectedPower" value="{{this.key}}" {{#if this.isSelected}}checked{{/if}} />
           <span class="col-type">{{this.label}}</span>
           <input class="col-power" type="number" name="{{this.valuePath}}" value="{{this.value}}" min="0" max="20" placeholder="0" />
           <input class="col-focus" type="number" name="{{this.focusPath}}" value="{{this.focus}}" min="0" max="5" placeholder="0" />
+          {{#if ../hasPrimaryPower}}
+          <span class="col-primary"><input class="primary-select-input" type="radio" name="system.primaryPower" value="{{this.key}}" id="primary-{{this.key}}" {{#if this.isPrimary}}checked{{/if}} /><label class="primary-select-label" for="primary-{{this.key}}"><i class="fa-star {{#if this.isPrimary}}fa-solid{{else}}fa-regular{{/if}}"></i></label></span>
+          {{/if}}
         </div>
         {{/each}}
       </div>

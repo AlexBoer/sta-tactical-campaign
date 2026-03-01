@@ -50,6 +50,12 @@ export class AssetData extends foundry.abstract.TypeDataModel {
         initial: "medical",
         choices: ["medical", "military", "personal", "science", "social"],
       }),
+      primaryPower: new StringField({
+        required: false,
+        blank: true,
+        initial: "",
+        choices: ["", "medical", "military", "personal", "science", "social"],
+      }),
       description: new HTMLField({
         required: false,
         blank: true,

@@ -35,6 +35,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow-y: auto;
 }
 
 /* Lock asset sheet width while allowing height resize */
@@ -210,21 +211,38 @@
 
 .sta-tc-sheet .powers-header {
   display: grid;
-  grid-template-columns: 24px 100px 60px 60px;
-  gap: 8px;
+  grid-template-columns: 24px 1fr 54px 54px 50px;
+  gap: 4px;
   padding: 4px 8px;
   font-weight: bold;
   font-size: 0.9em;
   color: var(--sta-tc-text-muted);
   border-bottom: 1px solid var(--sta-tc-border);
+  align-items: center;
+}
+
+.sta-tc-sheet .powers-header.no-primary {
+  grid-template-columns: 24px 1fr 54px 54px;
+}
+
+.sta-tc-sheet .powers-header span {
+  text-align: center;
+}
+
+.sta-tc-sheet .powers-header .col-type {
+  text-align: left;
 }
 
 .sta-tc-sheet .power-row {
   display: grid;
-  grid-template-columns: 24px 100px 60px 60px;
-  gap: 8px;
+  grid-template-columns: 24px 1fr 54px 54px 50px;
+  gap: 4px;
   align-items: center;
   padding: 4px 8px;
+}
+
+.sta-tc-sheet .power-row.no-primary {
+  grid-template-columns: 24px 1fr 54px 54px;
 }
 
 .sta-tc-sheet .power-row:nth-child(odd) {
@@ -241,8 +259,15 @@
   text-align: center;
 }
 
+.sta-tc-sheet .col-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .sta-tc-sheet .power-row input[type="number"] {
-  width: 50px;
+  width: 100%;
+  box-sizing: border-box;
   padding: 2px 4px;
 }
 
@@ -287,6 +312,26 @@
   height: 8px;
   background: var(--sta-tc-accent) !important;
   border-radius: 50% !important;
+}
+
+/* Primary power radio buttons — star style */
+.sta-tc-sheet .primary-select-input {
+  display: none !important;
+}
+
+.sta-tc-sheet .primary-select-label {
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--sta-tc-text-muted);
+  line-height: 1;
+}
+
+.sta-tc-sheet .primary-select-label:hover {
+  color: var(--sta-tc-secondary);
+}
+
+.sta-tc-sheet .primary-select-input:checked + .primary-select-label {
+  color: var(--sta-tc-accent);
 }
 
 .sta-tc-sheet .powers-actions {
@@ -334,31 +379,31 @@
 /* ===== Description Section ===== */
 .sta-tc-sheet .description-section {
   margin-top: 10px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
 }
 
 .sta-tc-sheet .editor-container {
   min-height: 100px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
 }
 
 .sta-tc-sheet .editor-container prose-mirror {
   min-height: 80px;
+  position: relative;
+}
+
+/* In view mode, content flows naturally with the sheet */
+.sta-tc-sheet .editor-container prose-mirror .ProseMirror {
+  overflow-y: visible;
+}
+
+/* In edit mode, contain the editor and enable scrolling */
+.sta-tc-sheet .editor-container prose-mirror:not(.inactive) {
   flex: 1;
   display: flex;
   flex-direction: column;
-  position: relative;
-  min-height: 0;
+  min-height: 150px;
 }
 
-/* Prose mirror editable area fills remaining space */
-.sta-tc-sheet .editor-container prose-mirror .ProseMirror {
+.sta-tc-sheet .editor-container prose-mirror:not(.inactive) .ProseMirror {
   flex: 1;
   overflow-y: auto;
 }

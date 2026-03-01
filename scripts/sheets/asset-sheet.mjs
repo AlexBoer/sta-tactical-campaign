@@ -19,7 +19,7 @@ export class AssetSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       closeOnSubmit: false,
     },
     position: {
-      height: "auto",
+      height: 700,
       width: 330,
     },
     window: {
@@ -54,6 +54,8 @@ export class AssetSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       "social",
     ];
     const selectedPower = system.selectedPower || "medical";
+    const primaryPower = system.primaryPower || "";
+    const hasPrimaryPower = system.assetType !== "resource";
     const powers = powerCategories.map((key) => ({
       key,
       label: game.i18n.localize(
@@ -64,12 +66,14 @@ export class AssetSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       valuePath: `system.powers.${key}.value`,
       focusPath: `system.powers.${key}.focus`,
       isSelected: key === selectedPower,
+      isPrimary: key === primaryPower,
     }));
 
     return {
       actor,
       system,
       powers,
+      hasPrimaryPower,
       enrichedDescription: await foundry.applications.ux.TextEditor.enrichHTML(
         system.description,
         {

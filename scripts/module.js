@@ -9,6 +9,7 @@ import { PoiSheet } from "./sheets/poi-sheet.mjs";
 import { registerSettings } from "./settings.js";
 import { PoiGenerator } from "./poi-generator.mjs";
 import { AssetGenerator } from "./asset-generator.mjs";
+import { ActorConverter } from "./actor-converter.mjs";
 
 const MODULE_ID = "sta-tactical-campaign";
 
@@ -82,6 +83,23 @@ Hooks.once("ready", () => {
 
     /** Direct access to the AssetGenerator class for advanced usage. */
     AssetGenerator,
+
+    /**
+     * Convert an STA character or ship actor into a Tactical Campaign asset.
+     * Prompts the user to select an actor (or uses the selected token).
+     * @returns {Promise<Actor|null>}
+     */
+    convertActor: () => ActorConverter.convert(),
+
+    /**
+     * Convert all eligible actors in a folder into assets in a new folder.
+     * Prompts the user to select a source folder.
+     * @returns {Promise<Actor[]>}
+     */
+    convertFolder: () => ActorConverter.convertFolder(),
+
+    /** Direct access to the ActorConverter class for advanced usage. */
+    ActorConverter,
   };
 
   console.log(

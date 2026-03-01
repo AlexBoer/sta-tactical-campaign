@@ -128,4 +128,22 @@ export function registerSettings() {
     type: Number,
     default: 0,
   });
+
+  // -------------------------------------------------------------------------
+  // Converter Settings
+  // -------------------------------------------------------------------------
+
+  game.settings.register(MODULE_ID, "primaryPowerMode", {
+    name: "STA_TC.Settings.PrimaryPowerMode",
+    hint: "STA_TC.Settings.PrimaryPowerModeHint",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "random",
+    choices: {
+      random: "STA_TC.Settings.PrimaryPowerModes.Random",
+      highest: "STA_TC.Settings.PrimaryPowerModes.Highest",
+      choice: "STA_TC.Settings.PrimaryPowerModes.Choice",
+    },
+  });
 }

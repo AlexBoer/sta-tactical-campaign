@@ -18,7 +18,7 @@ export class PoiSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       closeOnSubmit: false,
     },
     position: {
-      height: 500,
+      height: 550,
       width: 330,
     },
     window: {

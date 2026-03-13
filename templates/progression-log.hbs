@@ -1,0 +1,44 @@
+<div class="progression-log-app">
+
+  {{!-- Toolbar --}}
+  <div class="progression-log-toolbar">
+    <button type="button" class="btn btn-sm progression-create-btn" data-action="createEntry">
+      <i class="fas fa-plus"></i> {{localize "STA_TC.Progression.NewEntry"}}
+    </button>
+  </div>
+
+  {{!-- Entry list --}}
+  {{#if entries.length}}
+  <ul class="progression-entries-list">
+    {{#each entries as |entry|}}
+    <li class="progression-entry-row" data-item-id="{{entry.id}}">
+      <button type="button" class="progression-saved-btn {{#if entry.saved}}is-saved{{/if}}" data-action="toggleSaved" title="{{localize 'STA_TC.Progression.ToggleSaved'}}">
+        <i class="fas fa-star"></i>
+      </button>
+      <div class="progression-entry-info">
+        <span class="progression-entry-name">{{entry.name}}</span>
+        {{#if entry.description}}
+        <span class="progression-entry-desc">{{entry.description}}</span>
+        {{/if}}
+      </div>
+      <div class="progression-entry-controls">
+        {{#if entry.saved}}
+        <button type="button" class="progression-activate-btn" data-action="activateEntry" title="{{localize 'STA_TC.Progression.Activate'}}">
+          <i class="fas fa-bolt"></i>
+        </button>
+        {{/if}}
+        <button type="button" class="progression-open-btn" data-action="openEntry" title="{{localize 'STA_TC.Progression.Open'}}">
+          <i class="fas fa-external-link-alt"></i>
+        </button>
+        <button type="button" class="progression-delete-btn" data-action="deleteEntry" title="{{localize 'STA_TC.Progression.Delete'}}">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </li>
+    {{/each}}
+  </ul>
+  {{else}}
+  <p class="progression-no-entries">{{localize "STA_TC.Progression.NoEntries"}}</p>
+  {{/if}}
+
+</div>

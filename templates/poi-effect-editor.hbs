@@ -1,0 +1,59 @@
+<form class="poi-effect-editor-form">
+  {{!-- Effect Name --}}
+  <div class="form-group">
+    <label for="effect-name-input">{{localize "STA_TC.EffectEditor.EffectName"}}</label>
+    <input id="effect-name-input" type="text" name="effectName" value="{{effectName}}" placeholder="{{localize 'STA_TC.EffectEditor.EffectNamePlaceholder'}}" />
+  </div>
+
+  {{!-- Field selector --}}
+  <div class="form-group">
+    <label for="effect-field-select">{{localize "STA_TC.EffectEditor.Field"}}</label>
+    <select id="effect-field-select" name="fieldKey" class="field-select">
+      {{#each fields as |field|}}
+        <option value="{{field.key}}" {{#if field.selected}}selected{{/if}}>{{field.label}}</option>
+      {{/each}}
+    </select>
+  </div>
+
+  {{!-- Mode selector --}}
+  <div class="form-group">
+    <label for="effect-mode-select">{{localize "STA_TC.EffectEditor.ModeLabel"}}</label>
+    <select id="effect-mode-select" name="modeName">
+      {{#each modes as |mode|}}
+        <option value="{{mode.name}}" {{#if mode.selected}}selected{{/if}}>{{mode.label}}</option>
+      {{/each}}
+    </select>
+  </div>
+
+  {{!-- Value: number --}}
+  {{#if isNumber}}
+  <div class="form-group">
+    <label for="effect-value-number">{{localize "STA_TC.EffectEditor.Value"}}</label>
+    <input id="effect-value-number" type="number" name="valueNumber" value="{{valueNumber}}"
+      {{#if fieldMin}}min="{{fieldMin}}"{{/if}}
+      {{#if fieldMax}}max="{{fieldMax}}"{{/if}} />
+  </div>
+  {{/if}}
+
+  {{!-- Value: select --}}
+  {{#if isSelect}}
+  <div class="form-group">
+    <label for="effect-value-select">{{localize "STA_TC.EffectEditor.Value"}}</label>
+    <select id="effect-value-select" name="valueSelect">
+      {{#each choices as |choice|}}
+        <option value="{{choice.value}}" {{#if choice.selected}}selected{{/if}}>{{choice.label}}</option>
+      {{/each}}
+    </select>
+  </div>
+  {{/if}}
+
+  {{!-- Buttons --}}
+  <div class="form-footer editor-buttons">
+    <button type="button" class="btn btn-primary" data-action="submitEditor">
+      <i class="fas fa-check"></i> {{localize "STA_TC.EffectEditor.Submit"}}
+    </button>
+    <button type="button" class="btn" data-action="cancelEditor">
+      <i class="fas fa-xmark"></i> {{localize "STA_TC.Cancel"}}
+    </button>
+  </div>
+</form>

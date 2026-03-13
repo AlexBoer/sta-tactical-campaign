@@ -3,43 +3,132 @@
   <header class="sheet-header">
     <img class="profile-img" src="{{actor.img}}" data-action="editImage" title="{{actor.name}}" />
     <div class="header-fields">
-      <div class="actor-name">
-        <input name="name" type="text" value="{{actor.name}}" placeholder="{{localize 'STA_TC.PoiName'}}" />
+      <div class="poi-name-row">
+        <div class="actor-name">
+          <input name="name" type="text" value="{{actor.name}}" placeholder="{{localize 'STA_TC.PoiName'}}" />
+        </div>
+        {{#if isTacticalThreat}}
+        <div class="poi-urgency-header">
+          <label for="poi-urgency-input">{{localize "STA_TC.Poi.Urgency"}}</label>
+          <input id="poi-urgency-input" type="number" name="system.urgency" value="{{system.urgency}}" min="1" max="5" class="{{#if (lookup displayOverrides 'system.urgency')}}ae-modified{{/if}}" />
+        </div>
+        {{/if}}
       </div>
-      <div class="poi-power-select">
-        <select name="system.power">
-          <option value="medical" {{#if (eq system.power "medical")}}selected{{/if}}>{{localize "STA_TC.Powers.Medical"}}</option>
-          <option value="military" {{#if (eq system.power "military")}}selected{{/if}}>{{localize "STA_TC.Powers.Military"}}</option>
-          <option value="personal" {{#if (eq system.power "personal")}}selected{{/if}}>{{localize "STA_TC.Powers.Personal"}}</option>
-          <option value="science" {{#if (eq system.power "science")}}selected{{/if}}>{{localize "STA_TC.Powers.Science"}}</option>
-          <option value="social" {{#if (eq system.power "social")}}selected{{/if}}>{{localize "STA_TC.Powers.Social"}}</option>
+      <div class="poi-type-select">
+        <select name="system.poiType" class="{{#if (lookup displayOverrides 'system.poiType')}}ae-modified{{/if}}">
+          {{#each poiTypes}}
+            <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
+          {{/each}}
         </select>
       </div>
     </div>
   </header>
 
-  {{!-- Stats Section --}}
+  {{!-- Stats + Body --}}
   <section class="sheet-body">
+
+    {{!-- Powers: two blocks side by side --}}
     <div class="poi-stats-section">
-      <div class="poi-stats-table">
-        <div class="poi-stats-header">
-          <span class="col-stat-label">{{localize "STA_TC.Poi.Difficulty"}}</span>
-          <span class="col-stat-label">{{localize "STA_TC.Poi.Urgency"}}</span>
+      <div class="poi-powers-grid">
+        <div class="poi-power-block">
+          <div class="poi-power-block-header">
+            <span>{{localize "STA_TC.Powers.Title"}}</span>
+            <span>{{localize "STA_TC.Poi.Difficulty"}}</span>
+          </div>
+          <div class="poi-power-block-row">
+            <select name="system.power" class="{{#if (lookup displayOverrides 'system.power')}}ae-modified{{/if}}">
+              <option value="medical" {{#if (eq system.power "medical")}}selected{{/if}}>{{localize "STA_TC.Powers.Medical"}}</option>
+              <option value="military" {{#if (eq system.power "military")}}selected{{/if}}>{{localize "STA_TC.Powers.Military"}}</option>
+              <option value="personal" {{#if (eq system.power "personal")}}selected{{/if}}>{{localize "STA_TC.Powers.Personal"}}</option>
+              <option value="science" {{#if (eq system.power "science")}}selected{{/if}}>{{localize "STA_TC.Powers.Science"}}</option>
+              <option value="social" {{#if (eq system.power "social")}}selected{{/if}}>{{localize "STA_TC.Powers.Social"}}</option>
+            </select>
+            <input type="number" name="system.difficulty" value="{{system.difficulty}}" min="1" max="5" class="{{#if (lookup displayOverrides 'system.difficulty')}}ae-modified{{/if}}" />
+          </div>
         </div>
-        <div class="poi-stats-row">
-          <input class="col-stat-value" type="number" name="system.difficulty" value="{{system.difficulty}}" min="1" max="5" />
-          <input class="col-stat-value" type="number" name="system.urgency" value="{{system.urgency}}" min="1" max="5" />
+        <div class="poi-power-block">
+          <div class="poi-power-block-header">
+            <span>{{localize "STA_TC.Poi.AltPower"}}</span>
+            <span>{{localize "STA_TC.Poi.Difficulty"}}</span>
+          </div>
+          <div class="poi-power-block-row">
+            <select name="system.power2" class="{{#if (lookup displayOverrides 'system.power2')}}ae-modified{{/if}}">
+              <option value="">{{localize "STA_TC.Poi.SecondPowerNone"}}</option>
+              <option value="medical" {{#if (eq system.power2 "medical")}}selected{{/if}}>{{localize "STA_TC.Powers.Medical"}}</option>
+              <option value="military" {{#if (eq system.power2 "military")}}selected{{/if}}>{{localize "STA_TC.Powers.Military"}}</option>
+              <option value="personal" {{#if (eq system.power2 "personal")}}selected{{/if}}>{{localize "STA_TC.Powers.Personal"}}</option>
+              <option value="science" {{#if (eq system.power2 "science")}}selected{{/if}}>{{localize "STA_TC.Powers.Science"}}</option>
+              <option value="social" {{#if (eq system.power2 "social")}}selected{{/if}}>{{localize "STA_TC.Powers.Social"}}</option>
+            </select>
+            <input type="number" name="system.difficulty2" value="{{system.difficulty2}}" min="1" max="5" class="{{#if (lookup displayOverrides 'system.difficulty2')}}ae-modified{{/if}}" />
+          </div>
         </div>
       </div>
     </div>
 
-    {{!-- Description Section --}}
+    {{!-- Description: full-width plain textarea --}}
     <div class="description-section">
       <div class="section-header">{{localize "STA_TC.Description"}}</div>
-      <div class="editor-container">
-        <prose-mirror name="system.description" data-document-u-u-i-d="{{actor.uuid}}" value="{{system.description}}" collaborate="true" toggled="true">
-          {{{enrichedDescription}}}
-        </prose-mirror>
+      <textarea name="system.description" rows="3" class="poi-textarea">{{system.description}}</textarea>
+    </div>
+
+    {{!-- Note + Active Events: two columns --}}
+    <div class="poi-bottom-columns">
+      <div class="poi-note-col">
+        <div class="section-header">{{localize "STA_TC.Poi.Note"}}</div>
+        <textarea name="system.note" rows="5" class="poi-textarea" placeholder="{{localize 'STA_TC.Poi.NotePlaceholder'}}">{{system.note}}</textarea>
+      </div>
+      <div class="poi-event-col poi-events-section">
+        <div class="event-section-header">
+          <div class="section-header">{{localize "STA_TC.Poi.Events"}}</div>
+          <button type="button" class="btn btn-sm" data-action="rollRandomEvent"
+            {{#unless hasEventTable}}disabled title="{{localize 'STA_TC.Wizard.EventTableNotConfigured'}}"{{/unless}}>
+            <i class="fas fa-dice"></i> {{localize "STA_TC.Poi.RollRandomEvent"}}
+          </button>
+          <button type="button" class="btn btn-sm" data-action="addCustomEvent">
+            <i class="fas fa-plus"></i> {{localize "STA_TC.Poi.AddCustomEvent"}}
+          </button>
+        </div>
+        {{#if events.length}}
+          <ul class="poi-event-items-list">
+            {{#each events as |event|}}
+              <li class="poi-event-item-row" data-item-id="{{event.id}}">
+                <img class="event-item-icon" src="{{event.img}}" title="{{event.name}}" />
+                <span class="event-item-name">{{event.name}}</span>
+                <div class="event-item-controls">
+                  <button type="button" data-action="openEvent" title="{{localize 'STA_TC.Poi.OpenEvent'}}">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button type="button" data-action="deleteEvent" title="{{localize 'STA_TC.Poi.DeleteEvent'}}">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </li>
+            {{/each}}
+          </ul>
+        {{else}}
+          <div class="poi-event-drop-zone">
+            <i class="fas fa-arrow-down"></i> {{localize "STA_TC.Poi.DropEvent"}}
+          </div>
+        {{/if}}
+
+        {{!-- Complex effect descriptions (non-asset) --}}
+        {{#if complexDescriptions.length}}
+          <ul class="poi-effect-descriptions">
+            {{#each complexDescriptions as |desc|}}
+              <li><i class="fas fa-code-branch"></i> {{desc}}</li>
+            {{/each}}
+          </ul>
+        {{/if}}
+
+        {{!-- Asset-targeting effect descriptions --}}
+        {{#if assetEffectDescriptions.length}}
+          <ul class="poi-effect-descriptions poi-asset-effect-descriptions">
+            {{#each assetEffectDescriptions as |desc|}}
+              <li><i class="fas fa-users"></i> {{desc}}</li>
+            {{/each}}
+          </ul>
+        {{/if}}
       </div>
     </div>
   </section>

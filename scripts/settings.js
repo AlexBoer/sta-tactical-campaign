@@ -62,15 +62,6 @@ export function registerSettings() {
   // Asset Generator – Rollable Table Settings
   // -------------------------------------------------------------------------
 
-  game.settings.register(MODULE_ID, "tableAssetType", {
-    name: "STA_TC.Settings.TableAssetType",
-    hint: "STA_TC.Settings.TableAssetTypeHint",
-    scope: "world",
-    config: true,
-    type: String,
-    default: "",
-  });
-
   game.settings.register(MODULE_ID, "tableAssetCharacter", {
     name: "STA_TC.Settings.TableAssetCharacter",
     hint: "STA_TC.Settings.TableAssetCharacterHint",
@@ -127,6 +118,28 @@ export function registerSettings() {
     config: true,
     type: Number,
     default: 0,
+  });
+
+  // -------------------------------------------------------------------------
+  // Campaign Turn Wizard – Rollable Table Settings
+  // -------------------------------------------------------------------------
+
+  game.settings.register(MODULE_ID, "tableEvents", {
+    name: "STA_TC.Settings.TableEvents",
+    hint: "STA_TC.Settings.TableEventsHint",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "",
+  });
+
+  game.settings.register(MODULE_ID, "tableEscalation", {
+    name: "STA_TC.Settings.TableEscalation",
+    hint: "STA_TC.Settings.TableEscalationHint",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "",
   });
 
   // -------------------------------------------------------------------------

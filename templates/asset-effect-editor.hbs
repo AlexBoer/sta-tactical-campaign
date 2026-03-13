@@ -1,0 +1,91 @@
+{{!-- Asset Effect Editor --}}
+{{!-- Single root <div> required by Foundry's HandlebarsApplication#parsePartHTML.
+     The outer application element (tag: "form") is already the <form>. --}}
+<div class="asset-effect-editor-form">
+  {{!-- Meta --}}
+  <section class="ae-meta">
+    <div class="ae-name-row">
+      <input type="text" name="name" value="{{name}}" placeholder="{{localize 'STA_TC.EffectEditor.NamePlaceholder'}}" class="ae-name-input" />
+    </div>
+    <div class="ae-img-row">
+      <label>{{localize "STA_TC.EffectEditor.Image"}}</label>
+      <div class="ae-img-picker">
+        <img src="{{img}}" class="ae-img-preview" title="{{localize 'STA_TC.EffectEditor.Image'}}" />
+        <input type="text" name="img" value="{{img}}" class="ae-img-path" />
+      </div>
+    </div>
+    <div class="ae-duration-row">
+      <label>{{localize "STA_TC.EffectEditor.Duration"}}</label>
+      <input type="number" name="duration" value="{{duration}}" min="1" max="99" class="ae-duration-input" placeholder="—" />
+      <small class="ae-duration-hint">{{localize "STA_TC.EffectEditor.DurationHint"}}</small>
+    </div>
+  </section>
+
+  <hr />
+
+  {{!-- Status Changes --}}
+  <section class="ae-section">
+    <h3>{{localize "STA_TC.EffectEditor.StatusChanges"}}</h3>
+    <div class="ae-status-grid">
+      <label class="ae-checkbox-label">
+        <input type="checkbox" name="isLost" {{#if isLost}}checked{{/if}} />
+        <i class="fas fa-skull ae-status-icon ae-lost-icon"></i>
+        {{localize "STA_TC.Status.Lost"}}
+      </label>
+      <label class="ae-checkbox-label">
+        <input type="checkbox" name="isUnavailable" {{#if isUnavailable}}checked{{/if}} />
+        <i class="fas fa-bed ae-status-icon ae-unavail-icon"></i>
+        {{localize "STA_TC.Status.Unavailable"}}
+      </label>
+    </div>
+  </section>
+
+  <hr />
+
+  {{!-- Power Modifiers --}}
+  <section class="ae-section">
+    <h3>{{localize "STA_TC.EffectEditor.PowerModifiers"}}</h3>
+    <div class="ae-power-grid">
+      <span class="ae-grid-header ae-grid-power">{{localize "STA_TC.Powers.Type"}}</span>
+      <span class="ae-grid-header ae-grid-delta">{{localize "STA_TC.EffectEditor.PowerDelta"}}</span>
+      <span class="ae-grid-header ae-grid-delta">{{localize "STA_TC.EffectEditor.FocusDelta"}}</span>
+      {{#each powerRows}}
+      <span class="ae-grid-label">{{this.label}}</span>
+      <input class="ae-delta-input" type="number" name="powerDelta_{{this.key}}" value="{{this.powerDelta}}" min="-20" max="20" placeholder="0" />
+      <input class="ae-delta-input" type="number" name="focusDelta_{{this.key}}" value="{{this.focusDelta}}" min="-5" max="5" placeholder="0" />
+      {{/each}}
+    </div>
+  </section>
+
+  <hr />
+
+  {{!-- Primary Power Override --}}
+  <section class="ae-section ae-override-row">
+    <label>{{localize "STA_TC.EffectEditor.PrimaryPower"}}</label>
+    <select name="primaryPower">
+      {{#each primaryPowerOptions}}
+      <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
+      {{/each}}
+    </select>
+  </section>
+
+  {{!-- Asset Type Override --}}
+  <section class="ae-section ae-override-row">
+    <label>{{localize "STA_TC.EffectEditor.AssetType"}}</label>
+    <select name="assetType">
+      {{#each assetTypeOptions}}
+      <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
+      {{/each}}
+    </select>
+  </section>
+
+  <hr />
+
+  {{!-- Submit --}}
+  <footer class="sheet-footer">
+    <button type="submit" class="btn btn-primary">
+      <i class="fas fa-save"></i>
+      {{localize "STA_TC.EffectEditor.Submit"}}
+    </button>
+  </footer>
+</div>

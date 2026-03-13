@@ -1,0 +1,22 @@
+<div class="sta-tc-sheet progression-sheet">
+  {{!-- Header --}}
+  <header class="sheet-header progression-sheet-header">
+    <div class="header-fields">
+      <input name="name" type="text" value="{{item.name}}" placeholder="{{localize 'STA_TC.Progression.NamePlaceholder'}}" />
+    </div>
+  </header>
+
+  {{!-- Saved toggle --}}
+  <section class="progression-saved-section">
+    <label class="progression-saved-label">
+      <input type="checkbox" name="system.saved" {{#if system.saved}}checked{{/if}} />
+      {{localize "STA_TC.Progression.Saved"}}
+    </label>
+  </section>
+
+  {{!-- Notes --}}
+  <section class="progression-notes-section">
+    <div class="section-header">{{localize "STA_TC.Progression.Notes"}}</div>
+    <textarea name="system.notes" rows="6" class="progression-textarea" placeholder="{{localize 'STA_TC.Progression.NotesPlaceholder'}}">{{system.notes}}</textarea>
+  </section>
+</div>

@@ -55,7 +55,6 @@ export class AssetGenerator {
    */
   static getTableSettings() {
     return {
-      assetType: game.settings.get(MODULE_ID, "tableAssetType"),
       character: game.settings.get(MODULE_ID, "tableAssetCharacter"),
       ship: game.settings.get(MODULE_ID, "tableAssetShip"),
       resource: game.settings.get(MODULE_ID, "tableAssetResource"),
@@ -170,7 +169,7 @@ export class AssetGenerator {
 
   /**
    * Generate an Asset by rolling on the configured tables.
-   * Posts the result to chat with a link to the resolved actor.
+   * First rolls the Asset Type table, then rolls the matching sub-table.
    *
    * @returns {Promise<{typeResult: object, subResult: object, subTableKey: string, actor: Actor|null}|null>}
    */
@@ -199,7 +198,6 @@ export class AssetGenerator {
           type: typeName,
         }),
       );
-
       await ChatMessage.create({
         content: this._buildFallbackHtml(typeResult),
         speaker: {
@@ -210,9 +208,36 @@ export class AssetGenerator {
       return null;
     }
 
-    // Step 2 – Roll on the sub-table (returns a UUID in the text field)
+    return this._generateFromSubTableKey(subTableKey, typeResult);
+  }
+
+  /**
+   * Generate an Asset of a specific type, skipping the type-table roll.
+   * @param {"character"|"ship"|"resource"} subTableKey
+   * @returns {Promise<{typeResult: object, subResult: object, subTableKey: string, actor: Actor|null}|null>}
+   */
+  static async generateForType(subTableKey) {
+    // Build a synthetic typeResult so the HTML builders still work
+    const config = TYPE_CONFIG[subTableKey];
+    const typeResult = {
+      roll: "—",
+      name: game.i18n.localize(config.nameKey),
+      documentUuid: "",
+      description: "",
+    };
+    return this._generateFromSubTableKey(subTableKey, typeResult);
+  }
+
+  /**
+   * Shared steps 2-4: roll sub-table, resolve actor, post chat.
+   * @private
+   */
+  static async _generateFromSubTableKey(subTableKey, typeResult) {
+    const tables = this.getTableSettings();
     const config = TYPE_CONFIG[subTableKey];
     const configName = game.i18n.localize(config.nameKey);
+
+    // Step 2 – Roll on the sub-table (returns a UUID in the text field)
     const subResult = await this.rollOnTable(tables[subTableKey], configName);
 
     if (!subResult) {

@@ -1,0 +1,68 @@
+<div class="sta-tc-sheet event-sheet">
+  {{!-- Header --}}
+  <header class="sheet-header event-sheet-header">
+    <div class="header-fields">
+      <input name="name" type="text" value="{{item.name}}" placeholder="{{localize 'STA_TC.Event.NamePlaceholder'}}" />
+    </div>
+  </header>
+
+  {{!-- Description --}}
+  <section class="event-description-section">
+    <div class="section-header">{{localize "STA_TC.Description"}}</div>
+    <textarea name="system.description" rows="4" class="event-textarea" placeholder="{{localize 'STA_TC.Event.DescriptionPlaceholder'}}">{{system.description}}</textarea>
+  </section>
+
+  {{!-- Effects (Active Effects + Conditional Effects combined) --}}
+  <section class="event-effects-section">
+    <div class="event-effects-header">
+      <div class="section-header">{{localize "STA_TC.Event.Effects"}}</div>
+      <div class="event-add-buttons">
+        <button type="button" class="btn btn-sm event-add-effect-btn" data-action="addEffect">
+          <i class="fas fa-plus"></i> {{localize "STA_TC.Event.AddEffect"}}
+        </button>
+        <button type="button" class="btn btn-sm" data-action="addComplexEffect">
+          <i class="fas fa-plus"></i> {{localize "STA_TC.Event.AddComplexEffect"}}
+        </button>
+      </div>
+    </div>
+
+    {{#if hasAnyEffects}}
+      <ul class="event-effects-list">
+        {{#each effects as |effect|}}
+          <li class="event-effect-row {{#unless effect.transfer}}no-transfer{{/unless}}" data-effect-id="{{effect.id}}">
+            <img class="effect-icon" src="{{effect.img}}" title="{{effect.name}}" />
+            <span class="effect-name">{{effect.name}}</span>
+            <div class="effect-controls">
+              <button type="button" class="effect-toggle {{#if effect.disabled}}disabled{{/if}}" data-action="toggleEffect" title="{{#if effect.disabled}}{{localize 'STA_TC.Event.EnableEffect'}}{{else}}{{localize 'STA_TC.Event.DisableEffect'}}{{/if}}">
+                <i class="fas {{#if effect.disabled}}fa-toggle-off{{else}}fa-toggle-on{{/if}}"></i>
+              </button>
+              <button type="button" class="effect-edit" data-action="editEffect" title="{{localize 'STA_TC.Event.EditEffect'}}">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button type="button" class="effect-delete" data-action="deleteEffect" title="{{localize 'STA_TC.Event.DeleteEffect'}}">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </li>
+        {{/each}}
+        {{#each complexEffects as |ce|}}
+          <li class="event-effect-row" data-complex-id="{{ce.id}}">
+            <i class="fas fa-code-branch effect-complex-icon" title="{{ce.typeName}}"></i>
+            <span class="effect-name">{{ce.label}}</span>
+            <span class="effect-type-badge">{{ce.typeName}}</span>
+            <div class="effect-controls">
+              <button type="button" class="effect-edit" data-action="editComplexEffect" title="{{localize 'STA_TC.Event.EditComplexEffect'}}">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button type="button" class="effect-delete" data-action="deleteComplexEffect" title="{{localize 'STA_TC.Event.DeleteComplexEffect'}}">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </li>
+        {{/each}}
+      </ul>
+    {{else}}
+      <p class="event-no-effects">{{localize "STA_TC.Event.NoEffects"}}</p>
+    {{/if}}
+  </section>
+</div>

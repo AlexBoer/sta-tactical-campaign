@@ -213,6 +213,20 @@ export class PoiGenerator {
       );
     }
 
+    // Import into the world as a sidebar actor (the source may be in a compendium)
+    if (actor) {
+      if (actor.pack) {
+        // Actor lives in a compendium — import a copy into the world
+        const data = actor.toObject();
+        data.system = data.system || {};
+        data.system.poiType = subTableKey;
+        actor = await Actor.create(data);
+      } else {
+        // Already a world actor — just update poiType
+        await actor.update({ "system.poiType": subTableKey });
+      }
+    }
+
     // Step 4 – Build and send chat message
     const html = this._buildChatHtml(
       typeResult,

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * STA Tactical Campaign Module Styles
  * Styling for Asset and Point of Interest sheets
  * Uses colors and patterns from the STA system
@@ -24,10 +24,32 @@
 .sta-tc-sheet {
   font-family: "Roboto Condensed", "Roboto", sans-serif !important;
   color: var(--sta-tc-text);
-  padding: 10px;
   display: flex;
   flex-direction: column;
   height: 100%;
+}
+
+.sta-tc-sheet * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(60, 120, 210, 0.4) transparent;
+}
+
+.sta-tc-sheet *::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.sta-tc-sheet *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sta-tc-sheet *::-webkit-scrollbar-thumb {
+  background: rgba(60, 120, 210, 0.4);
+  border-radius: 3px;
+}
+
+.sta-tc-sheet *::-webkit-scrollbar-thumb:hover {
+  background: rgba(60, 120, 210, 0.7);
 }
 
 .sta-tc-sheet .sheet-body {
@@ -38,16 +60,14 @@
   overflow-y: auto;
 }
 
-/* Lock asset sheet width while allowing height resize */
+/* Lock asset sheet minimum width; allow horizontal resize */
 .asset-sheet.application {
-  min-width: 330px !important;
-  max-width: 330px !important;
-  width: 330px !important;
+  min-width: 640px !important;
 }
 
-/* POI sheet: allow horizontal resize, just enforce a minimum */
+/* POI sheet: default wider, allow horizontal resize */
 .poi-sheet.application {
-  min-width: 330px !important;
+  min-width: 640px !important;
 }
 
 .sta-tc-sheet input,
@@ -107,8 +127,16 @@
   justify-content: center;
 }
 
-.sta-tc-sheet .actor-name {
+.sta-tc-sheet .poi-name-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
   margin: 0 0 8px 0;
+}
+
+.sta-tc-sheet .actor-name {
+  margin: 0;
+  flex: 1;
 }
 
 .sta-tc-sheet .actor-name input {
@@ -148,50 +176,67 @@
   font-size: 1.1em;
 }
 
-/* ===== POI Header Stats ===== */
-.sta-tc-sheet .poi-power-select select {
-  width: 100%;
-  font-size: 0.9em;
-}
-
 /* ===== POI Stats Section ===== */
 .sta-tc-sheet .poi-stats-section {
   margin-bottom: 10px;
 }
 
-.sta-tc-sheet .poi-stats-table {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.sta-tc-sheet .poi-stats-header {
+.sta-tc-sheet .poi-powers-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.sta-tc-sheet .poi-power-block-header {
+  display: grid;
+  grid-template-columns: 1fr 52px;
   gap: 8px;
-  padding: 4px 8px;
   font-weight: bold;
   font-size: 0.9em;
   color: var(--sta-tc-text-muted);
+  margin-bottom: 4px;
   text-align: center;
 }
 
-.sta-tc-sheet .poi-stats-row {
+.sta-tc-sheet .poi-power-block-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 52px;
   gap: 8px;
-  padding: 4px 8px;
+  align-items: center;
 }
 
-.sta-tc-sheet .poi-stats-row input[type="number"] {
+.sta-tc-sheet .poi-power-block-row select {
+  width: 100%;
+  font-size: 0.9em;
+}
+
+.sta-tc-sheet .poi-power-block-row input[type="number"] {
   width: 100%;
   text-align: center;
+}
+
+.sta-tc-sheet .poi-urgency-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.sta-tc-sheet .poi-urgency-header label {
+  color: var(--sta-tc-text-muted);
+  font-size: 0.85em;
+}
+
+.sta-tc-sheet .poi-urgency-header input[type="number"] {
+  width: 52px;
 }
 
 /* ===== Section Headers (STA-style) ===== */
 .sta-tc-sheet .section-header,
 .sta-tc-sheet .powers-section h2,
-.sta-tc-sheet .description-section h2 {
+.sta-tc-sheet .description-section h2,
+.sta-tc-sheet .effects-section-header h2 {
   font-family: "Roboto Condensed", "Roboto", sans-serif;
   font-size: 0.95em;
   font-weight: bold;
@@ -314,7 +359,7 @@
   border-radius: 50% !important;
 }
 
-/* Primary power radio buttons — star style */
+/* Primary power radio buttons â€” star style */
 .sta-tc-sheet .primary-select-input {
   display: none !important;
 }
@@ -336,29 +381,71 @@
 
 .sta-tc-sheet .powers-actions {
   display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   margin-top: 10px;
-  margin-left: 140px;
-  width: 128px;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
-/* ===== STA-style Buttons ===== */
+.sta-tc-sheet .powers-actions .undo-loss {
+  border-color: rgba(231, 76, 60, 0.6);
+  color: #f5a09a;
+}
+
+.sta-tc-sheet .powers-actions .undo-loss:hover {
+  background: rgba(231, 76, 60, 0.2);
+  color: #fff;
+}
+
+/* ===== Module Buttons ===== */
 .sta-tc-sheet .btn {
-  border: solid var(--sta-tc-hover);
-  border-radius: 20px;
-  border-width: 0 15px;
-  font-weight: bold;
-  font-size: 0.9em;
-  padding: 4px 8px;
-  background-color: transparent;
-  color: var(--sta-tc-text);
+  background: rgba(0, 30, 70, 0.55);
+  border: 1px solid rgba(60, 120, 210, 0.5);
+  border-radius: 3px;
+  color: #b0c8e4;
+  font-size: 0.88em;
+  font-weight: 500;
+  padding: 4px 10px;
   cursor: pointer;
   white-space: nowrap;
+  overflow: visible;
+  width: auto;
+  min-width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  line-height: 1.1;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  box-shadow: none;
 }
 
 .sta-tc-sheet .btn:hover {
-  background-color: var(--sta-tc-hover);
+  background: rgba(0, 60, 140, 0.6);
+  border-color: rgba(100, 170, 255, 0.8);
+  color: #e0efff;
   box-shadow: none;
+}
+
+.sta-tc-sheet .btn:active {
+  background: rgba(0, 80, 180, 0.55);
+}
+
+.sta-tc-sheet .btn.btn-sm {
+  font-size: 0.82em;
+  padding: 2px;
+  margin: unset;
+  gap: 4px;
+}
+
+.sta-tc-sheet .btn.cancel {
+  border-color: rgba(180, 60, 60, 0.55);
+  color: #d4a0a0;
+}
+
+.sta-tc-sheet .btn.cancel:hover {
+  background: rgba(120, 20, 20, 0.5);
+  border-color: rgba(220, 80, 80, 0.8);
+  color: #ffd0d0;
 }
 
 
@@ -381,36 +468,151 @@
   margin-top: 10px;
 }
 
-.sta-tc-sheet .editor-container {
-  min-height: 100px;
+/* ===== Asset Sheet 2-Column Powers Layout ===== */
+.sta-tc-sheet .powers-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
-.sta-tc-sheet .editor-container prose-mirror {
-  min-height: 80px;
-  position: relative;
-}
-
-/* In view mode, content flows naturally with the sheet */
-.sta-tc-sheet .editor-container prose-mirror .ProseMirror {
-  overflow-y: visible;
-}
-
-/* In edit mode, contain the editor and enable scrolling */
-.sta-tc-sheet .editor-container prose-mirror:not(.inactive) {
-  flex: 1;
+.sta-tc-sheet .powers-col {
   display: flex;
   flex-direction: column;
-  min-height: 150px;
 }
 
-.sta-tc-sheet .editor-container prose-mirror:not(.inactive) .ProseMirror {
+/* ===== Asset Sheet Bottom 2-Column (Description + Effects) ===== */
+.sta-tc-sheet .asset-body-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.sta-tc-sheet .asset-effects-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.sta-tc-sheet .effects-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.sta-tc-sheet .effects-section-header h2 {
+  margin: 0;
+}
+
+.sta-tc-sheet .asset-effects-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sta-tc-sheet .asset-effect-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  border-radius: 3px;
+  background: rgba(0, 39, 63, 0.35);
+  font-size: 0.88em;
+}
+
+.sta-tc-sheet .asset-effect-row.effect-unavailable {
+  border-left: 2px solid var(--sta-tc-accent);
+}
+
+.sta-tc-sheet .effect-img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.sta-tc-sheet .effect-name {
   flex: 1;
-  overflow-y: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* Keep the edit toggle button in place */
-.sta-tc-sheet .editor-container prose-mirror .editor-edit {
-  bottom: 8px;
+.sta-tc-sheet .effect-expiry {
+  font-size: 0.8em;
+  color: var(--sta-tc-text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sta-tc-sheet .effects-empty {
+  font-style: italic;
+  color: var(--sta-tc-text-muted);
+  font-size: 0.88em;
+  padding: 4px 0;
+}
+
+/* ===== Asset Type Divider with Add Button ===== */
+.sta-tc-sheet .asset-type-divider {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sta-tc-sheet .asset-type-add-btn {
+  padding: 1px 5px !important;
+  font-size: 0.78em !important;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+/* ===== POI Bottom Two-Column Layout (Note + Event) ===== */
+.sta-tc-sheet .poi-bottom-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.sta-tc-sheet .poi-note-col,
+.sta-tc-sheet .poi-event-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.sta-tc-sheet .poi-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  font-size: var(--font-size-13, 13px);
+}
+
+.sta-tc-sheet .event-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.sta-tc-sheet .event-section-header .section-header {
+  margin-bottom: 0;
+  margin-top: 0;
+  flex-shrink: 0;
+}
+
+.sta-tc-sheet .poi-roll-event-btn {
+  font-size: 0.8em;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+.sta-tc-sheet .event-name-input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 6px;
 }
 
 /* ===== Responsive Adjustments ===== */
@@ -425,3 +627,2434 @@
     gap: 8px;
   }
 }
+
+/* ===================================================================
+   Campaign Tracker Sheet
+   =================================================================== */
+
+/* ===================================================================
+   Campaign Tracker Sheet
+   =================================================================== */
+
+/* Window sizing */
+.campaign-tracker-sheet.application {
+  min-width: 450px !important;
+}
+
+/* Application flex chain */
+.campaign-tracker-sheet.application .window-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.campaign-tracker-sheet.application .window-content > form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* ===== Scale all em-based fonts 10% larger ===== */
+.sta-tc-sheet.campaign-tracker-sheet {
+  font-size: 1.1em;
+}
+
+/* ===== Tracker Header ===== */
+.campaign-tracker-sheet .tracker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.campaign-tracker-sheet .tracker-header .actor-name {
+  flex: 1;
+  margin: 0;
+}
+
+.campaign-tracker-sheet .campaign-wizard-btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-size: 0.9em;
+  padding: 5px 12px;
+}
+
+/* ===== Stats Row - Always Visible ===== */
+.campaign-tracker-sheet .tracker-stats {
+  display: flex;
+  gap: 12px;
+  padding: 5px 0;
+  justify-content: center;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--sta-tc-border);
+  margin-bottom: 4px;
+}
+
+.campaign-tracker-sheet .stat-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.campaign-tracker-sheet .stat-group label {
+  font-size: 0.9em;
+  font-weight: bold;
+  color: var(--sta-tc-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  max-width: 70px;
+  text-align: center;
+  line-height: 1.2;
+  white-space: normal;
+  min-height: 2.4em;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.campaign-tracker-sheet .stat-group input[type="number"] {
+  width: 48px;
+  text-align: center;
+  font-size: 1.1em;
+  font-weight: bold;
+  color: var(--sta-tc-accent);
+  border: 1px solid var(--sta-tc-border);
+  background: rgba(0, 39, 63, 0.4);
+  padding: 3px;
+  border-radius: 4px;
+}
+
+/* ===== Tracker Wizard Bar (progress bar area) ===== */
+.campaign-tracker-sheet .tracker-wizard-bar {
+  background: rgba(0, 39, 63, 0.5);
+  border: 1px solid var(--sta-tc-border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.campaign-tracker-sheet .tracker-wizard-bar .wizard-progress {
+  margin-bottom: 0;
+}
+
+/* ===== Progress Bar Steps ===== */
+.wizard-progress {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 3px 6px;
+  background: rgba(0, 39, 63, 0.4);
+  border-radius: 6px;
+}
+
+.wizard-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 40px;
+}
+
+.step-indicator {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(0, 51, 153, 0.4);
+  border: 2px solid var(--sta-tc-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.75em;
+  color: var(--sta-tc-text-muted);
+  transition: all 0.2s;
+}
+
+.wizard-step.active .step-indicator {
+  background: var(--sta-tc-primary);
+  border-color: var(--sta-tc-accent);
+  color: var(--sta-tc-accent);
+  box-shadow: 0 0 6px rgba(242, 204, 13, 0.4);
+}
+
+.wizard-step.completed .step-indicator {
+  background: var(--sta-tc-primary);
+  border-color: #2e8b57;
+  color: #2e8b57;
+}
+
+.step-label {
+  font-size: 0.72em;
+  color: var(--sta-tc-text-muted);
+  text-align: center;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  max-width: none;
+  line-height: 1.15;
+  display: none;
+}
+
+.wizard-step.active .step-label {
+  display: block;
+  color: var(--sta-tc-accent);
+  font-weight: bold;
+}
+
+.step-connector {
+  flex: 1;
+  height: 2px;
+  background: var(--sta-tc-border);
+  margin: 0 2px;
+  margin-bottom: 11px;
+  min-width: 8px;
+}
+
+.step-connector.completed {
+  background: #2e8b57;
+}
+
+/* ===== Dual Progress Bar: Phase (top) vs Steps (bottom) ===== */
+
+/* Phase bar — larger indicators, labels always visible */
+.wizard-progress.wizard-phases {
+  background: rgba(0, 39, 63, 0.6);
+  border: 1px solid rgba(0, 51, 153, 0.5);
+  margin-bottom: 2px;
+}
+
+.wizard-progress.wizard-phases .step-indicator {
+  width: 26px;
+  height: 26px;
+  font-size: 0.82em;
+}
+
+.wizard-progress.wizard-phases .step-label {
+  display: block;
+  font-size: 0.73em;
+  font-weight: 600;
+}
+
+.wizard-progress.wizard-phases .wizard-step.active .step-label {
+  color: var(--sta-tc-accent);
+}
+
+.wizard-progress.wizard-phases .wizard-step.completed .step-label {
+  color: #2e8b57;
+  display: block;
+}
+
+/* Steps bar — smaller, subtler */
+.wizard-progress.wizard-steps {
+  background: rgba(0, 39, 63, 0.2);
+  padding: 2px 6px;
+}
+
+.wizard-progress.wizard-steps .step-indicator {
+  width: 17px;
+  height: 17px;
+  font-size: 0.65em;
+}
+
+.wizard-progress.wizard-steps .step-connector {
+  min-width: 6px;
+  margin-bottom: 8px;
+}
+
+.campaign-tracker-sheet .tracker-wizard-bar .wizard-hint {
+  margin-bottom: 0;
+  padding: 2px 6px;
+  font-size: 0.85em;
+}
+
+.campaign-tracker-sheet .tracker-wizard-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--sta-tc-border);
+  padding-top: 6px;
+}
+
+.campaign-tracker-sheet .tracker-wizard-nav .wizard-nav-spacer {
+  flex: 1;
+}
+
+.campaign-tracker-sheet .tracker-wizard-nav .wizard-nav-btn {
+  padding: 4px 14px;
+  font-size: 0.85em;
+  min-width: 80px;
+  justify-content: center;
+}
+
+.campaign-tracker-sheet .tracker-wizard-nav .finish-btn {
+  min-width: fit-content;
+  border-color: rgba(46, 139, 87, 0.7);
+  color: #90d4a8;
+}
+
+.campaign-tracker-sheet .tracker-wizard-nav .finish-btn:hover {
+  background: rgba(46, 139, 87, 0.4);
+  border-color: #2e8b57;
+  color: #c0ffcc;
+}
+
+/* ===== Two-Column Main Layout ===== */
+.campaign-tracker-sheet .sheet-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.campaign-tracker-sheet .tracker-main-layout {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: var(--sidebar-w, 74px) 6px 1fr;
+  gap: 0;
+  overflow: hidden;
+}
+
+.campaign-tracker-sheet .tracker-sidebar {
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  border-right: 1px solid rgba(0, 51, 153, 0.3);
+  padding: 4px;
+}
+
+/* Resize handle between sidebar and poi area */
+.campaign-tracker-sheet .sidebar-resize-handle {
+  grid-column: 2;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 0.15s;
+  z-index: 5;
+  position: relative;
+}
+
+.campaign-tracker-sheet .sidebar-resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 20%;
+  bottom: 20%;
+  left: 2px;
+  width: 2px;
+  border-radius: 1px;
+  background: rgba(0, 51, 153, 0.3);
+  transition: background 0.15s;
+}
+
+.campaign-tracker-sheet .sidebar-resize-handle:hover::after,
+.campaign-tracker-sheet .sidebar-resize-handle.is-dragging::after {
+  background: var(--sta-tc-accent, #3399ff);
+}
+
+.campaign-tracker-sheet .tracker-poi-area {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 6px;
+}
+
+/* ===== Asset Thumbnail Strip ===== */
+.campaign-tracker-sheet .sidebar-add-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 4px;
+  width: 100%;
+}
+
+.campaign-tracker-sheet .sidebar-add-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 0.85em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.campaign-tracker-sheet .asset-type-divider {
+  width: 100%;
+  text-align: center;
+  font-size: 0.6em;
+  font-weight: bold;
+  padding: 2px 0 1px;
+  margin-top: 4px;
+  border-top: 1px solid var(--sta-tc-border);
+  color: var(--sta-tc-text-muted);
+}
+
+.campaign-tracker-sheet .asset-type-character { color: #5dade2; border-top-color: #5dade2; }
+.campaign-tracker-sheet .asset-type-ship { color: #58d68d; border-top-color: #58d68d; }
+.campaign-tracker-sheet .asset-type-resource { color: #f39c12; border-top-color: #f39c12; }
+
+/* Asset strip entries: flex row — portrait locked left, card info slides out to the right */
+.campaign-tracker-sheet .asset-strip-entry {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  height: 52px;
+  flex-shrink: 0;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* Portrait wrapper holds the thumb and the hover-overlay buttons */
+.campaign-tracker-sheet .asset-portrait-wrap {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+.campaign-tracker-sheet .asset-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--sta-tc-border);
+  display: block;
+  cursor: pointer;
+}
+
+.campaign-tracker-sheet .asset-thumb.asset-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 30, 80, 0.7);
+  font-size: 1em;
+  font-weight: bold;
+  color: var(--sta-tc-accent);
+  letter-spacing: 0.03em;
+  user-select: none;
+}
+
+.campaign-tracker-sheet .asset-strip-entry:hover .asset-thumb {
+  border-color: var(--sta-tc-accent);
+}
+
+.campaign-tracker-sheet .asset-strip-entry.is-assigned .asset-thumb {
+  opacity: 0.45;
+  filter: grayscale(40%);
+}
+
+.campaign-tracker-sheet .asset-strip-entry.is-assigned:hover .asset-thumb {
+  opacity: 0.65;
+  filter: none;
+}
+
+.campaign-tracker-sheet .asset-strip-recall {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 15px;
+  height: 15px;
+  font-size: 0.55em;
+  background: #1a5276;
+  color: #aed6f1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.campaign-tracker-sheet .asset-strip-entry:hover .asset-strip-recall {
+  opacity: 1;
+}
+
+.campaign-tracker-sheet .asset-strip-remove {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 15px;
+  height: 15px;
+  font-size: 0.55em;
+  background: #c0392b;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.campaign-tracker-sheet .asset-strip-entry:hover .asset-strip-remove {
+  opacity: 1;
+}
+
+/* Card info panel — fixed width, sits to the right of the portrait and clips under it when sidebar is narrow */
+.campaign-tracker-sheet .asset-card-info {
+  flex-shrink: 0;
+  width: 174px;
+  padding: 0 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.campaign-tracker-sheet .asset-card-name {
+  font-size: 0.78em;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--sta-tc-text, #cce);
+}
+
+.campaign-tracker-sheet .asset-card-stats {
+  font-size: 0.62em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--sta-tc-text-muted, #889);
+  letter-spacing: 0.02em;
+}
+
+.campaign-tracker-sheet .asset-card-assigned {
+  font-size: 0.62em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--sta-tc-accent, #39f);
+}
+
+.campaign-tracker-sheet .asset-strip-empty {
+  font-size: 0.7em;
+  color: var(--sta-tc-text-muted);
+  opacity: 0.4;
+  text-align: center;
+  padding: 1px 0;
+  width: 48px;
+}
+
+.campaign-tracker-sheet .remove-btn {
+  color: var(--sta-tc-text-muted);
+  cursor: pointer;
+  font-size: 0.88em;
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+.campaign-tracker-sheet .remove-btn:hover {
+  color: #e74c3c;
+  opacity: 1;
+}
+
+.campaign-tracker-sheet .empty-list {
+  text-align: center;
+  color: var(--sta-tc-text-muted);
+  font-style: italic;
+  font-size: 0.88em;
+  padding: 8px 4px;
+  opacity: 0.7;
+}
+
+/* ===== Phase Panels ===== */
+.campaign-tracker-sheet .phase-panel {
+  background: rgba(0, 39, 63, 0.35);
+  border: 1px solid var(--sta-tc-border);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.campaign-tracker-sheet .phase-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 0.9em;
+  font-weight: bold;
+}
+
+.campaign-tracker-sheet .generated-count {
+  font-size: 0.9em;
+  color: var(--sta-tc-accent);
+}
+
+.campaign-tracker-sheet .phase-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.campaign-tracker-sheet .phase-1c-panel {
+  text-align: center;
+  padding: 6px 10px;
+}
+
+.campaign-tracker-sheet .wizard-subtext {
+  margin: 4px 0 0;
+  font-size: 0.85em;
+  color: var(--sta-tc-text-muted);
+  font-style: italic;
+}
+
+.campaign-tracker-sheet .generated-poi-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.campaign-tracker-sheet .generated-poi-entry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 3px;
+  background: rgba(0, 39, 63, 0.3);
+  border: 1px solid rgba(0, 51, 153, 0.3);
+}
+
+/* ===== Points of Interest Section ===== */
+.campaign-tracker-sheet .tracker-pois {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.campaign-tracker-sheet .poi-column h3 {
+  font-size: 0.95em;
+  font-weight: bold;
+  text-align: center;
+  padding: 3px;
+  margin: 0 0 5px 0;
+  background: rgba(0, 51, 153, 0.4);
+  border-radius: 3px;
+  color: var(--sta-tc-text);
+}
+
+.campaign-tracker-sheet .poi-list {
+  min-height: 30px;
+  border: 1px dashed var(--sta-tc-border);
+  border-radius: 4px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.campaign-tracker-sheet .poi-entry {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 4px;
+  border-radius: 4px;
+  padding: 3px 4px;
+  transition: border-color 0.15s;
+}
+
+.campaign-tracker-sheet .poi-main {
+  flex: 5;
+  min-width: 0;
+}
+
+.campaign-tracker-sheet .poi-sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  min-width: 90px;
+  flex: 1;
+  box-sizing: border-box;
+}
+
+.campaign-tracker-sheet .poi-sidebar-top {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+/* Conflict controls stack vertically in the sidebar */
+.campaign-tracker-sheet .poi-sidebar .poi-conflict-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  width: 100%;
+}
+
+/* Advisory roll result shown between Roll and Pass/Fail buttons */
+.campaign-tracker-sheet .poi-sidebar .poi-advisory-roll {
+  font-size: 0.72em;
+  text-align: center;
+  width: 100%;
+  padding: 2px 0;
+  opacity: 0.85;
+}
+.campaign-tracker-sheet .poi-sidebar .poi-advisory-roll .advisory-nat20 {
+  color: #e74c3c;
+}
+
+/* Sidebar action buttons: keep sizing natural and only tune spacing/text size. */
+.campaign-tracker-sheet .poi-sidebar .poi-event-btn,
+.campaign-tracker-sheet .poi-sidebar .poi-reset-event-btn,
+.campaign-tracker-sheet .poi-sidebar .poi-reset-roll-btn,
+.campaign-tracker-sheet .poi-sidebar .poi-conflict-btn,
+.campaign-tracker-sheet .poi-sidebar .btn-manual-pass,
+.campaign-tracker-sheet .poi-sidebar .btn-manual-fail {
+  font-size: 0.76em;
+  gap: 3px;
+  padding-top: 2px;
+  margin: 2px 0;
+  min-width: 70px;
+  white-space: normal;
+  height: auto;
+  align-items: center;
+}
+
+.campaign-tracker-sheet .poi-reset-roll-btn {
+  border-color: rgba(170, 140, 200, 0.65);
+  color: #cfb6e8;
+}
+
+.campaign-tracker-sheet .poi-reset-roll-btn:hover {
+  background: rgba(120, 90, 160, 0.22);
+  border-color: rgba(200, 160, 240, 0.85);
+  color: #e5d2f9;
+}
+
+.campaign-tracker-sheet .poi-reset-event-btn {
+  border-color: rgba(200, 140, 30, 0.65);
+  color: #e2c874;
+}
+
+.campaign-tracker-sheet .poi-reset-event-btn:hover {
+  background: rgba(180, 130, 20, 0.22);
+  border-color: rgba(235, 180, 70, 0.85);
+  color: #ffe3a0;
+}
+
+.campaign-tracker-sheet .poiListThreat .poi-entry {
+  background: rgba(180, 40, 40, 0.25);
+  border: 1px solid rgba(200, 60, 60, 0.4);
+}
+
+.campaign-tracker-sheet .poiListExploration .poi-entry {
+  background: rgba(40, 120, 180, 0.25);
+  border: 1px solid rgba(60, 140, 200, 0.4);
+}
+
+.campaign-tracker-sheet .poiListRoutine .poi-entry {
+  background: rgba(40, 160, 80, 0.25);
+  border: 1px solid rgba(60, 180, 100, 0.4);
+}
+
+.campaign-tracker-sheet .poiListUnknown .poi-entry {
+  background: rgba(140, 100, 180, 0.25);
+  border: 1px solid rgba(160, 120, 200, 0.4);
+}
+
+.campaign-tracker-sheet .poi-entry.is-scenario {
+  border-left: 3px solid var(--sta-tc-accent);
+}
+
+.campaign-tracker-sheet .poi-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.campaign-tracker-sheet .poi-thumb {
+  width: 26px;
+  height: 26px;
+  object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid var(--sta-tc-border);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.campaign-tracker-sheet .poi-name {
+  flex: 1;
+  font-size: 0.94em;
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.campaign-tracker-sheet .poi-name:hover {
+  color: var(--sta-tc-hover);
+  text-decoration: underline;
+}
+
+.campaign-tracker-sheet .poi-stats {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.campaign-tracker-sheet .poi-stat {
+  white-space: nowrap;
+  font-size: 1.1em;
+  font-weight: bold;
+  color: var(--sta-tc-accent);
+  letter-spacing: 0.02em;
+}
+
+.campaign-tracker-sheet .poi-stat b {
+  font-size: 0.75em;
+  font-weight: normal;
+  opacity: 0.65;
+  color: var(--sta-tc-text);
+  margin-right: 1px;
+}
+
+.campaign-tracker-sheet .poi-power {
+  font-size: 0.82em;
+  font-style: italic;
+  opacity: 0.7;
+  margin-bottom: 2px;
+  padding-left: 32px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.campaign-tracker-sheet .poi-event-effects-badge {
+  font-style: normal;
+  font-size: 0.78em;
+  color: var(--sta-tc-secondary, #6699ff);
+  background: rgba(102, 153, 255, 0.15);
+  border: 1px solid rgba(102, 153, 255, 0.4);
+  border-radius: 3px;
+  padding: 0px 5px;
+  white-space: nowrap;
+  cursor: default;
+  opacity: 1;
+}
+
+.campaign-tracker-sheet .poi-event-effects-badge i {
+  font-size: 0.9em;
+  margin-right: 2px;
+}
+
+/* ===== Scenario Star Button ===== */
+.campaign-tracker-sheet .btn-scenario {
+  cursor: pointer;
+  color: var(--sta-tc-text-muted);
+  font-size: 1.05em;
+  padding: 1px 3px;
+  border: none;
+  background: none;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+
+.campaign-tracker-sheet .btn-scenario:hover { color: var(--sta-tc-accent); }
+.campaign-tracker-sheet .btn-scenario.active { color: var(--sta-tc-accent); }
+
+/* ===== POI Event (Phase 1c) ===== */
+.campaign-tracker-sheet .poi-note {
+  padding-left: 32px;
+  margin-bottom: 3px;
+  font-size: 0.88em;
+  color: #7ecfb3;
+  font-style: italic;
+}
+
+.campaign-tracker-sheet .poi-note i {
+  margin-right: 3px;
+  opacity: 0.7;
+}
+
+.campaign-tracker-sheet .poi-event {
+  padding-left: 32px;
+  margin-bottom: 3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.campaign-tracker-sheet .poi-event-result {
+  font-size: 0.88em;
+  color: #ffd700;
+}
+
+.campaign-tracker-sheet .poi-event-result i { margin-right: 3px; }
+
+.campaign-tracker-sheet .poi-event-btn {
+  font-size: 0.8em;
+  padding: 2px 6px;
+}
+
+/* ===== POI Conflict (Phase 2) ===== */
+.campaign-tracker-sheet .poi-conflict {
+  margin-top: 4px;
+  padding-left: 32px;
+}
+
+.campaign-tracker-sheet .poi-conflict-controls {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.campaign-tracker-sheet .poi-conflict-btn {
+  font-size: 0.82em;
+  padding: 2px 6px;
+  border-color: rgba(200, 170, 30, 0.6);
+  color: #d4c060;
+}
+
+.campaign-tracker-sheet .btn-manual-pass {
+  font-size: 0.78em;
+  padding: 2px 6px;
+  border-color: rgba(46, 139, 87, 0.6);
+  color: #5cb85c;
+}
+
+.campaign-tracker-sheet .btn-manual-pass:hover {
+  background: rgba(46, 139, 87, 0.25);
+  border-color: #2e8b57;
+  color: #7ecf7e;
+}
+
+.campaign-tracker-sheet .btn-manual-fail {
+  font-size: 0.78em;
+  padding: 2px 6px;
+  border-color: rgba(205, 92, 92, 0.6);
+  color: #cd5c5c;
+}
+
+.campaign-tracker-sheet .btn-manual-fail:hover {
+  background: rgba(205, 92, 92, 0.25);
+  border-color: #cd5c5c;
+  color: #e88;
+}
+
+.campaign-tracker-sheet .poi-conflict-btn:hover {
+  background: rgba(180, 150, 0, 0.25);
+  border-color: var(--sta-tc-accent);
+  color: #ffe060;
+}
+
+.campaign-tracker-sheet .poi-conflict-result {
+  border-radius: 4px;
+  overflow: hidden;
+  font-size: 0.88em;
+}
+
+.campaign-tracker-sheet .conflict-result-label {
+  display: inline-block;
+  font-weight: bold;
+  padding: 2px 5px;
+  border-radius: 3px;
+  margin-right: 4px;
+}
+
+.campaign-tracker-sheet .conflict-momentum {
+  color: #ffd700;
+  font-size: 0.85em;
+}
+
+.campaign-tracker-sheet .nat20-warning {
+  color: #e74c3c;
+  font-size: 0.8em;
+}
+
+.campaign-tracker-sheet .poi-conflict-result.result-success {
+  background: rgba(46, 139, 87, 0.15);
+  border-left: 3px solid #2e8b57;
+  padding: 3px 6px;
+}
+.campaign-tracker-sheet .poi-conflict-result.result-success .conflict-result-label { color: #2e8b57; }
+
+.campaign-tracker-sheet .poi-conflict-result.result-flawedSuccess {
+  background: rgba(218, 165, 32, 0.15);
+  border-left: 3px solid #daa520;
+  padding: 3px 6px;
+}
+.campaign-tracker-sheet .poi-conflict-result.result-flawedSuccess .conflict-result-label { color: #daa520; }
+
+.campaign-tracker-sheet .poi-conflict-result.result-failure {
+  background: rgba(205, 92, 92, 0.15);
+  border-left: 3px solid #cd5c5c;
+  padding: 3px 6px;
+}
+.campaign-tracker-sheet .poi-conflict-result.result-failure .conflict-result-label { color: #cd5c5c; }
+
+.campaign-tracker-sheet .poi-conflict-result.result-seriousSetback {
+  background: rgba(139, 0, 0, 0.65);
+  border-left: 3px solid #8b0000;
+  padding: 3px 6px;
+}
+.campaign-tracker-sheet .poi-conflict-result.result-seriousSetback .conflict-result-label { color: #ffffff; }
+
+/* Consequence / failure choice buttons on POI cards */
+.campaign-tracker-sheet .consequence-choices,
+.campaign-tracker-sheet .failure-choices {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.campaign-tracker-sheet .consequence-choices p,
+.campaign-tracker-sheet .failure-choices p {
+  margin: 0 0 2px 0;
+  font-size: 0.9em;
+  font-weight: bold;
+}
+
+.campaign-tracker-sheet .btn-consequence {
+  font-size: 0.82em;
+  padding: 3px 8px;
+  text-align: left;
+  white-space: normal;
+  line-height: 1.3;
+  justify-content: flex-start;
+}
+
+.campaign-tracker-sheet .consequence-chosen {
+  font-size: 0.88em;
+  color: #2e8b57;
+  margin-top: 3px;
+}
+
+/* ===== POI Assignment Slots ===== */
+.campaign-tracker-sheet .poi-assignments {
+  display: flex;
+  gap: 4px;
+  margin-left: 32px;
+  margin-top: 2px;
+}
+
+.campaign-tracker-sheet .poi-slot {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 26px;
+  border: 1px dashed var(--sta-tc-border);
+  border-radius: 3px;
+  padding: 2px 4px;
+  background: rgba(0, 0, 0, 0.15);
+  /* reset button defaults when used as <button> */
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+.campaign-tracker-sheet button.poi-slot:not(.filled):hover,
+.campaign-tracker-sheet button.poi-slot.drag-over {
+  background: rgba(0, 51, 153, 0.3);
+  border-color: var(--sta-tc-accent);
+  border-style: solid;
+}
+
+.campaign-tracker-sheet .poi-slot.filled {
+  border-style: solid;
+  background: rgba(0, 39, 63, 0.4);
+}
+
+.campaign-tracker-sheet button.poi-slot.filled:hover {
+  background: rgba(0, 60, 100, 0.6);
+  border-color: var(--sta-tc-accent);
+}
+
+.campaign-tracker-sheet .slot-label {
+  font-size: 0.78em;
+  text-transform: uppercase;
+  opacity: 0.55;
+  letter-spacing: 0.04em;
+}
+
+.campaign-tracker-sheet .slot-thumb {
+  width: 20px;
+  height: 20px;
+  object-fit: cover;
+  border-radius: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.campaign-tracker-sheet .slot-name {
+  flex: 1;
+  font-size: 0.82em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.campaign-tracker-sheet .poi-slot-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+/* Filled wrapper is the visual box (replaces button.poi-slot.filled) */
+.campaign-tracker-sheet .poi-slot-wrapper.filled {
+  border: 1px solid var(--sta-tc-border);
+  border-style: solid;
+  border-radius: 3px;
+  background: rgba(0, 39, 63, 0.4);
+  overflow: hidden;
+}
+
+.campaign-tracker-sheet .poi-slot-wrapper.filled:hover {
+  background: rgba(0, 60, 100, 0.6);
+  border-color: var(--sta-tc-accent);
+}
+
+/* Transparent full-size open-actor button inside the filled wrapper */
+.campaign-tracker-sheet .poi-slot-open {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 26px;
+  padding: 2px 4px;
+  background: none;
+  border: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  min-width: 0;
+}
+
+/* X button sits absolutely in the top-right of the filled wrapper */
+.campaign-tracker-sheet .poi-slot-wrapper.filled .slot-remove {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  font-size: 0.9em;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.15s;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.campaign-tracker-sheet .poi-slot-wrapper.filled:hover .slot-remove {
+  opacity: 1;
+}
+
+.campaign-tracker-sheet .empty-slot {
+  width: 100%;
+  text-align: center;
+  color: var(--sta-tc-text-muted);
+  opacity: 0.4;
+  font-size: 0.88em;
+}
+
+/* Asset assignment picker dialog */
+.asset-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.asset-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.asset-picker-row:hover {
+  background: rgba(0, 51, 153, 0.2);
+  border-color: rgba(0, 51, 153, 0.4);
+}
+
+.asset-picker-row input[type="radio"] {
+  flex-shrink: 0;
+}
+
+.asset-picker-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.asset-picker-name {
+  font-size: 0.9em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.asset-picker-stats {
+  font-size: 0.75em;
+  color: var(--sta-tc-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Phase 2 summary panel */
+.campaign-tracker-sheet .phase2-summary,
+.campaign-tracker-sheet .phase3-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* Phase 2 Step 2: Momentum breakdown table */
+.campaign-tracker-sheet .phase2-momentum-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.campaign-tracker-sheet .phase2-momentum-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82em;
+}
+
+.campaign-tracker-sheet .phase2-momentum-table th {
+  text-align: left;
+  padding: 3px 6px;
+  color: var(--sta-tc-text-muted);
+  border-bottom: 1px solid rgba(0,51,153,0.4);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.campaign-tracker-sheet .phase2-momentum-table td {
+  padding: 3px 6px;
+  border-bottom: 1px solid rgba(0,51,153,0.15);
+  vertical-align: middle;
+}
+
+.campaign-tracker-sheet .phase2-momentum-table tr.row-success td {
+  color: var(--sta-tc-text);
+}
+
+.campaign-tracker-sheet .phase2-momentum-table tr.row-failure td {
+  color: var(--sta-tc-text-muted);
+  font-style: italic;
+}
+
+.campaign-tracker-sheet .phase2-momentum-table tr.row-pending td {
+  color: var(--sta-tc-text-muted);
+  opacity: 0.6;
+}
+
+.campaign-tracker-sheet .phase2-momentum-table .mom-col-successes,
+.campaign-tracker-sheet .phase2-momentum-table .mom-col-momentum {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.campaign-tracker-sheet .phase2-momentum-table .momentum-value {
+  color: #90d4a8;
+  font-weight: bold;
+}
+
+.campaign-tracker-sheet .phase2-momentum-table tfoot .mom-total-row td {
+  border-top: 1px solid rgba(0,51,153,0.5);
+  border-bottom: none;
+  font-weight: 600;
+  padding-top: 5px;
+}
+
+.campaign-tracker-sheet .phase3-summary h3 {
+  margin: 0 0 4px 0;
+  font-size: 0.9em;
+}
+
+/* ===== Phase 3: Progression / Reinforcement sections in summary panel ===== */
+.campaign-tracker-sheet .phase3-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 4px;
+}
+
+.campaign-tracker-sheet .phase3-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  opacity: 0.4;
+  transition: opacity 0.15s;
+}
+
+.campaign-tracker-sheet .phase3-step.active { opacity: 1; }
+.campaign-tracker-sheet .phase3-step.done   { opacity: 0.7; }
+
+.campaign-tracker-sheet .phase3-step-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75em;
+  font-weight: bold;
+}
+
+.campaign-tracker-sheet .phase3-step.active .phase3-step-num {
+  background: var(--sta-tc-accent, #003399);
+  border-color: var(--sta-tc-accent, #003399);
+  color: #fff;
+}
+
+.campaign-tracker-sheet .phase3-step.done .phase3-step-num {
+  background: #27ae60;
+  border-color: #27ae60;
+  color: #fff;
+}
+
+.campaign-tracker-sheet .phase3-step-lbl {
+  font-size: 0.65em;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--sta-tc-text-muted);
+}
+
+.campaign-tracker-sheet .phase3-step.active .phase3-step-lbl { color: inherit; }
+
+.campaign-tracker-sheet .phase3-step-connector {
+  height: 1px;
+  flex: 0 0 8px;
+  background: rgba(255, 255, 255, 0.15);
+  margin-bottom: 14px;
+}
+
+.campaign-tracker-sheet .phase3-step-connector.done { background: #27ae60; }
+
+.campaign-tracker-sheet .phase3-step-hint {
+  font-size: 0.78em;
+  color: var(--sta-tc-text-muted);
+  padding: 4px 0 4px 0;
+  line-height: 1.35;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 4px;
+}
+
+.campaign-tracker-sheet .phase3-step-nav {
+  display: flex;
+  align-items: center;
+  margin-top: 6px;
+  gap: 4px;
+}
+
+.campaign-tracker-sheet .phase3-nav-spacer { flex: 1; }
+
+.campaign-tracker-sheet .phase3-nav-btn {
+  font-size: 0.78em;
+  padding: 2px 8px;
+}
+
+.campaign-tracker-sheet .phase3-no-action {
+  padding: 6px 8px;
+  font-size: 0.83em;
+  color: #27ae60;
+}
+
+.campaign-tracker-sheet .outcome-rolled {
+  font-size: 0.75em;
+  color: #27ae60;
+}
+
+.campaign-tracker-sheet .outcome-pending {
+  font-size: 0.75em;
+  color: var(--sta-tc-text-muted);
+  opacity: 0.6;
+}
+.campaign-tracker-sheet .phase3-section {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 8px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+}
+
+.campaign-tracker-sheet .phase3-section-header {
+  font-size: 0.8em;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sta-tc-text-muted);
+  margin-bottom: 2px;
+}
+
+.campaign-tracker-sheet .phase3-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.campaign-tracker-sheet .breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.83em;
+  padding: 1px 0;
+}
+
+.campaign-tracker-sheet .breakdown-row label { margin: 0; }
+
+.campaign-tracker-sheet .breakdown-value { font-weight: bold; }
+.campaign-tracker-sheet .breakdown-value.positive { color: #27ae60; }
+.campaign-tracker-sheet .breakdown-value.warn { color: #e74c3c; }
+
+.campaign-tracker-sheet .breakdown-total {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 3px;
+}
+
+.campaign-tracker-sheet .breakdown-new-total { font-weight: bold; }
+
+.campaign-tracker-sheet .breakdown-input {
+  width: 48px;
+  text-align: center;
+  padding: 1px 4px;
+}
+
+.campaign-tracker-sheet .phase3-roll-btn {
+  margin-top: 4px;
+  width: 100%;
+  font-size: 0.83em;
+}
+
+.campaign-tracker-sheet .phase3-roll-btn .roll-count {
+  font-weight: bold;
+  opacity: 0.8;
+}
+
+.campaign-tracker-sheet .phase3-progression-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.campaign-tracker-sheet .phase3-choose-btn {
+  width: 100%;
+  font-size: 0.83em;
+}
+
+/* ===== Phase 3: POI card outcome badge ===== */
+.campaign-tracker-sheet .poi-phase3-outcome {
+  margin-top: 5px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.campaign-tracker-sheet .poi-phase3-outcome .outcome-label { font-weight: bold; }
+
+.campaign-tracker-sheet .poi-phase3-outcome.outcome-resolved {
+  background: rgba(39, 174, 96, 0.2);
+  color: #27ae60;
+}
+
+.campaign-tracker-sheet .poi-phase3-outcome.outcome-threat {
+  background: rgba(231, 76, 60, 0.15);
+  color: #e74c3c;
+}
+
+.campaign-tracker-sheet .poi-phase3-outcome.outcome-routine {
+  background: rgba(243, 156, 18, 0.15);
+  color: #f39c12;
+}
+
+.campaign-tracker-sheet .poi-phase3-outcome.outcome-exploration {
+  background: rgba(52, 152, 219, 0.15);
+  color: #3498db;
+}
+
+.campaign-tracker-sheet .poi-phase3-outcome.outcome-unknown {
+  background: rgba(155, 89, 182, 0.15);
+  color: #9b59b6;
+}
+
+.campaign-tracker-sheet .poi-escalation-btn,
+.campaign-tracker-sheet .poi-commandeer-btn {
+  width: 100%;
+  font-size: 0.75em;
+  padding: 2px 6px;
+}
+
+/* ===== Commandeered asset badge in sidebar ===== */
+.campaign-tracker-sheet .asset-portrait-wrap { position: relative; }
+
+.campaign-tracker-sheet .commandeered-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: rgba(231, 76, 60, 0.9);
+  color: #fff;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6em;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.campaign-tracker-sheet .asset-strip-entry.is-commandeered { opacity: 0.55; }
+
+/* ===== Unavailable asset badge (loss AE) in sidebar ===== */
+.campaign-tracker-sheet .unavail-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: rgba(230, 126, 34, 0.9);
+  color: #fff;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6em;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.campaign-tracker-sheet .asset-strip-entry.is-unavailable { opacity: 0.6; filter: sepia(0.3) hue-rotate(-10deg); }
+
+/* ===== Lost asset badge in sidebar ===== */
+.campaign-tracker-sheet .lost-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(90, 10, 10, 0.92);
+  color: #f0a0a0;
+  border-radius: 0 0 3px 3px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.campaign-tracker-sheet .asset-strip-entry.is-lost { opacity: 0.45; filter: grayscale(60%) sepia(0.4) hue-rotate(-30deg); }
+
+.campaign-tracker-sheet .asset-strip-clear-unavail {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  background: rgba(39, 174, 96, 0.85);
+  color: #fff;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6em;
+  cursor: pointer;
+  z-index: 2;
+  text-decoration: none;
+}
+
+.campaign-tracker-sheet .asset-portrait-wrap:hover .asset-strip-clear-unavail { display: flex; }
+
+.campaign-tracker-sheet .summary-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  font-size: 0.88em;
+}
+
+.campaign-tracker-sheet .summary-label { color: var(--sta-tc-text-muted); }
+.campaign-tracker-sheet .summary-value { font-weight: bold; }
+.campaign-tracker-sheet .summary-momentum .summary-value { color: #ffd700; }
+.campaign-tracker-sheet .summary-threat .summary-value { color: #e74c3c; }
+
+/* ===== Responsive: stack columns below 450px ===== */
+@media (max-width: 450px) {
+  .campaign-tracker-sheet .tracker-main-layout {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+
+  .campaign-tracker-sheet .tracker-sidebar {
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 51, 153, 0.3);
+    padding-right: 0;
+    padding-bottom: 8px;
+    overflow-x: visible;
+  }
+
+  .campaign-tracker-sheet .sidebar-resize-handle {
+    display: none;
+  }
+}
+
+
+/* ===== Active Effect Indicators ===== */
+.poi-sheet .ae-modified {
+  outline: 2px solid #f0a000;
+  outline-offset: 1px;
+  border-radius: 3px;
+}
+
+/* ===== Event Item Sheet ===== */
+.event-sheet .event-sheet-header {
+  padding: 8px;
+  background: rgba(0, 51, 153, 0.08);
+  border-bottom: 1px solid rgba(0, 51, 153, 0.3);
+}
+
+.event-sheet .event-sheet-header input[name="name"] {
+  width: 100%;
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+.event-sheet .event-description-section {
+  padding: 8px;
+}
+
+.event-sheet .event-textarea {
+  width: 100%;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.event-sheet .event-effects-section {
+  padding: 8px;
+  border-top: 1px solid rgba(0, 51, 153, 0.2);
+}
+
+.event-sheet .event-effects-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.event-sheet .event-add-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.event-sheet .event-effects-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.event-sheet .event-effect-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 2px;
+  border-bottom: 1px solid rgba(0, 51, 153, 0.1);
+}
+
+.event-sheet .event-effect-row .effect-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.event-sheet .event-effect-row .effect-name {
+  flex: 1;
+  font-size: 0.9em;
+}
+
+.event-sheet .event-effect-row .effect-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.event-sheet .event-effect-row .effect-controls button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  color: var(--sta-tc-text-muted, #666);
+}
+
+.event-sheet .event-effect-row .effect-controls button:hover {
+  color: var(--sta-tc-accent, #003399);
+}
+
+.event-sheet .event-effect-row.no-transfer .effect-name::after {
+  content: " (local)";
+  font-size: 0.8em;
+  opacity: 0.6;
+}
+
+.event-sheet .event-no-effects {
+  font-style: italic;
+  color: var(--sta-tc-text-muted, #666);
+  font-size: 0.85em;
+  text-align: center;
+  padding: 8px 0;
+}
+
+
+.event-sheet .effect-complex-icon {
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+  color: var(--sta-tc-secondary, #6699ff);
+  font-size: 0.9em;
+}
+
+.event-sheet .effect-type-badge {
+  font-size: 0.72em;
+  color: var(--sta-tc-text-muted, #bdc3c7);
+  background: rgba(0, 51, 153, 0.25);
+  border-radius: 3px;
+  padding: 1px 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ===== PoI Events Section ===== */
+.poi-sheet .poi-events-section {
+  padding: 0;
+}
+
+.poi-sheet .poi-event-items-list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+}
+
+.poi-sheet .poi-event-item-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 2px;
+  border-bottom: 1px solid rgba(0, 51, 153, 0.1);
+}
+
+.poi-sheet .poi-event-item-row .event-item-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.poi-sheet .poi-event-item-row .event-item-name {
+  flex: 1;
+  font-size: 0.9em;
+}
+
+.poi-sheet .poi-event-item-row .event-item-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.poi-sheet .poi-event-item-row .event-item-controls button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  color: var(--sta-tc-text-muted, #666);
+}
+
+.poi-sheet .poi-event-item-row .event-item-controls button:hover {
+  color: var(--sta-tc-accent, #003399);
+}
+
+.poi-sheet .poi-event-drop-zone {
+  border: 2px dashed rgba(0, 51, 153, 0.3);
+  border-radius: 4px;
+  text-align: center;
+  padding: 10px;
+  margin-top: 4px;
+  font-style: italic;
+  color: var(--sta-tc-text-muted, #666);
+  font-size: 0.85em;
+}
+
+/* Complex effect + asset effect description lists in the Events column */
+.poi-sheet .poi-effect-descriptions {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.poi-sheet .poi-effect-descriptions li {
+  font-size: 0.8em;
+  color: var(--sta-tc-secondary, #6699ff);
+  padding: 1px 2px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.poi-sheet .poi-effect-descriptions li i {
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
+.poi-sheet .poi-asset-effect-descriptions li {
+  color: #f0a000;
+}
+
+
+/* ===== PoI Effect Editor Dialog ===== */
+.poi-effect-editor .poi-effect-editor-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}
+
+.poi-effect-editor .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.poi-effect-editor .form-group label {
+  font-size: 0.85em;
+  font-weight: bold;
+  color: var(--sta-tc-text-muted, #555);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.poi-effect-editor .form-group input,
+.poi-effect-editor .form-group select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.poi-effect-editor .editor-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding-top: 4px;
+  border-top: 1px solid rgba(0, 51, 153, 0.2);
+}
+
+
+/* ===== Complex Effect Editor Dialog ===== */
+.complex-effect-editor .complex-effect-editor-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  font-family: "Roboto Condensed", "Roboto", sans-serif;
+}
+
+.complex-effect-editor .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.complex-effect-editor .form-group label {
+  font-size: 0.85em;
+  font-weight: bold;
+  color: var(--sta-tc-text-muted, #bdc3c7);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.complex-effect-editor .form-group input[type="text"],
+.complex-effect-editor .form-group select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.complex-effect-editor .form-group input[type="number"] {
+  width: 70px;
+  text-align: center;
+}
+
+.complex-effect-editor .params-divider {
+  margin: 2px 0;
+  border-color: rgba(0, 51, 153, 0.4);
+}
+
+.complex-effect-editor fieldset.effect-params {
+  border: 1px solid rgba(0, 51, 153, 0.5);
+  border-radius: 4px;
+  padding: 6px 8px 8px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.complex-effect-editor fieldset.effect-params legend {
+  font-size: 0.78em;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0 4px;
+}
+
+.complex-effect-editor .checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.complex-effect-editor .checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.9em;
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: normal;
+  cursor: pointer;
+}
+
+.complex-effect-editor .checkbox-item input[type="checkbox"] {
+  width: auto;
+  cursor: pointer;
+}
+
+.complex-effect-editor .legend-checkbox {
+  color: inherit;
+}
+
+/* inline-number: label + narrow number input side-by-side */
+.complex-effect-editor .inline-number {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.complex-effect-editor .inline-number label {
+  flex-shrink: 0;
+}
+
+/* inline-row: label then a flex row of controls */
+.complex-effect-editor .inline-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.complex-effect-editor .inline-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.complex-effect-editor .inline-controls select {
+  flex: 1;
+  min-width: 80px;
+  width: auto;
+}
+
+.complex-effect-editor .inline-controls input[type="number"] {
+  width: 60px;
+}
+
+.complex-effect-editor .form-footer.editor-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding-top: 6px;
+  border-top: 1px solid rgba(0, 51, 153, 0.3);
+  margin-top: 2px;
+}
+
+/* ===== Progression Log button in stats bar ===== */
+.campaign-tracker-sheet .tracker-stats {
+  position: relative;
+}
+
+.campaign-tracker-sheet .progression-log-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  color: var(--sta-tc-text-muted);
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 1em;
+  line-height: 1;
+}
+
+.campaign-tracker-sheet .progression-log-btn:hover {
+  color: var(--sta-tc-accent);
+  border-color: var(--sta-tc-border);
+}
+
+/* ===== Progression Item Sheet ===== */
+.progression-sheet .progression-sheet-header {
+  padding: 8px;
+  background: rgba(0, 51, 153, 0.08);
+  border-bottom: 1px solid rgba(0, 51, 153, 0.3);
+}
+
+.progression-sheet .progression-sheet-header input[name="name"] {
+  width: 100%;
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+.progression-sheet .progression-saved-section {
+  padding: 8px;
+  border-bottom: 1px solid rgba(0, 51, 153, 0.1);
+}
+
+.progression-sheet .progression-saved-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.95em;
+}
+
+.progression-sheet .progression-notes-section {
+  padding: 8px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.progression-sheet .progression-textarea {
+  flex: 1;
+  width: 100%;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+/* ===== Progression Log Popup ===== */
+.progression-log .progression-log-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 8px;
+  gap: 8px;
+}
+
+.progression-log .progression-log-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.progression-log .progression-entries-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.progression-log .progression-entry-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 5px 2px;
+  border-bottom: 1px solid rgba(0, 51, 153, 0.12);
+}
+
+.progression-log .progression-saved-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  color: var(--sta-tc-text-muted);
+  font-size: 0.9em;
+  flex-shrink: 0;
+}
+
+.progression-log .progression-saved-btn.is-saved {
+  color: var(--sta-tc-accent);
+}
+
+.progression-log .progression-entry-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.progression-log .progression-entry-name {
+  font-size: 0.95em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.progression-log .progression-entry-desc {
+  font-size: 0.8em;
+  color: var(--sta-tc-text-muted);
+  line-height: 1.3;
+  white-space: normal;
+}
+
+.progression-log .progression-entry-controls {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.progression-log .progression-entry-controls button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  color: var(--sta-tc-text-muted);
+  font-size: 0.85em;
+}
+
+.progression-log .progression-entry-controls button:hover {
+  color: var(--sta-tc-accent);
+}
+
+.progression-log .progression-delete-btn:hover {
+  color: #e74c3c !important;
+}
+
+.progression-log .progression-activate-btn {
+  color: var(--sta-tc-accent, #f2cc0d) !important;
+}
+
+.progression-log .progression-activate-btn:hover {
+  color: #fff !important;
+  background: rgba(242, 204, 13, 0.25) !important;
+  border-radius: 3px;
+}
+
+.progression-log .progression-no-entries {
+  font-style: italic;
+  color: var(--sta-tc-text-muted);
+  font-size: 0.85em;
+  text-align: center;
+  padding: 16px 0;
+}
+
+
+/* ===================================================================
+   Asset Effect Editor Dialog
+   =================================================================== */
+
+.asset-effect-editor .asset-effect-editor-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 10px 12px 12px;
+  font-family: "Roboto Condensed", "Roboto", sans-serif;
+  color: var(--sta-tc-text, #ecf0f1);
+  font-size: 0.9em;
+}
+
+/* ---- Inputs, selects, textareas ---- */
+.asset-effect-editor input[type="text"],
+.asset-effect-editor input[type="number"],
+.asset-effect-editor select {
+  background: transparent;
+  border: 1px solid var(--sta-tc-border, #003399);
+  color: var(--sta-tc-text, #ecf0f1);
+  padding: 3px 6px;
+  border-radius: 3px;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.asset-effect-editor select {
+  background: var(--sta-tc-surface, #00273f);
+}
+
+.asset-effect-editor select option {
+  background: var(--sta-tc-surface, #00273f);
+  color: var(--sta-tc-text, #ecf0f1);
+}
+
+.asset-effect-editor input:focus,
+.asset-effect-editor select:focus {
+  outline: none;
+  border-color: var(--sta-tc-secondary, #6699ff);
+  box-shadow: 0 0 3px var(--sta-tc-secondary, #6699ff);
+}
+
+/* ---- HR dividers ---- */
+.asset-effect-editor hr {
+  border: none;
+  border-top: 1px solid var(--sta-tc-border, #003399);
+  margin: 8px 0;
+  opacity: 0.6;
+}
+
+/* ---- Section headers: h3 → pill-banner style ---- */
+.asset-effect-editor .ae-section h3 {
+  font-family: "Roboto Condensed", "Roboto", sans-serif;
+  font-size: 0.92em;
+  font-weight: bold;
+  background-color: var(--sta-tc-primary, #003399);
+  border-radius: 0 100px 100px 0;
+  padding: 3px 12px 3px 8px;
+  margin: 0 0 8px -12px;
+  display: inline-block;
+  color: var(--sta-tc-text, #ecf0f1);
+}
+
+/* ---- Meta row: name | image | duration ---- */
+.asset-effect-editor .ae-meta {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 10px;
+  align-items: start;
+  margin-bottom: 4px;
+}
+
+.asset-effect-editor .ae-name-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.asset-effect-editor .ae-name-input {
+  width: 100%;
+  font-size: 1em;
+  font-weight: bold;
+}
+
+.asset-effect-editor .ae-img-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.asset-effect-editor .ae-img-row > label {
+  font-size: 0.8em;
+  color: var(--sta-tc-text-muted, #bdc3c7);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.asset-effect-editor .ae-img-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.asset-effect-editor .ae-img-preview {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  border: 1px solid var(--sta-tc-secondary, #6699ff);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.asset-effect-editor .ae-img-path {
+  width: 130px;
+  font-size: 0.72em;
+  text-align: center;
+  color: var(--sta-tc-text-muted, #bdc3c7);
+}
+
+.asset-effect-editor .ae-duration-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.asset-effect-editor .ae-duration-row > label {
+  font-size: 0.8em;
+  color: var(--sta-tc-text-muted, #bdc3c7);
+  text-align: right;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.asset-effect-editor .ae-duration-input {
+  width: 72px;
+  text-align: center;
+}
+
+.asset-effect-editor .ae-duration-hint {
+  font-size: 0.72em;
+  color: var(--sta-tc-text-muted, #bdc3c7);
+  font-style: italic;
+  text-align: right;
+  line-height: 1.3;
+}
+
+/* ---- Status toggles ---- */
+.asset-effect-editor .ae-status-grid {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  padding: 2px 0;
+}
+
+.asset-effect-editor .ae-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.9em;
+  color: var(--sta-tc-text, #ecf0f1);
+  user-select: none;
+}
+
+.asset-effect-editor .ae-status-icon    { font-size: 0.9em; }
+.asset-effect-editor .ae-lost-icon      { color: #e74c3c; }
+.asset-effect-editor .ae-unavail-icon   { color: var(--sta-tc-accent, #F2CC0D); }
+
+/* ---- Power modifiers grid ---- */
+.asset-effect-editor .ae-power-grid {
+  display: grid;
+  grid-template-columns: 1fr 64px 64px;
+  gap: 2px 4px;
+  align-items: center;
+}
+
+.asset-effect-editor .ae-grid-header {
+  font-size: 0.78em;
+  font-weight: bold;
+  color: var(--sta-tc-text-muted, #bdc3c7);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 4px 4px;
+  border-bottom: 1px solid var(--sta-tc-border, #003399);
+}
+
+.asset-effect-editor .ae-grid-header.ae-grid-power { text-align: left; }
+.asset-effect-editor .ae-grid-header.ae-grid-delta { text-align: center; }
+
+.asset-effect-editor .ae-grid-label {
+  font-size: 0.88em;
+  font-weight: bold;
+  text-transform: capitalize;
+  color: var(--sta-tc-text, #ecf0f1);
+  padding: 3px 4px;
+}
+
+.asset-effect-editor .ae-delta-input {
+  width: 100%;
+  text-align: center;
+  padding: 3px 4px;
+  box-sizing: border-box;
+}
+
+/* Alternating row backgrounds on the power grid rows */
+.asset-effect-editor .ae-power-grid .ae-grid-label:nth-child(6n+4),
+.asset-effect-editor .ae-power-grid .ae-delta-input:nth-child(6n+5),
+.asset-effect-editor .ae-power-grid .ae-delta-input:nth-child(6n+6) {
+  background: rgba(0, 39, 63, 0.35);
+  border-radius: 2px;
+}
+
+/* ---- Override rows (Primary Power, Asset Type) ---- */
+.asset-effect-editor .ae-override-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.asset-effect-editor .ae-override-row label {
+  font-size: 0.85em;
+  color: var(--sta-tc-text-muted, #bdc3c7);
+  font-weight: bold;
+}
+
+.asset-effect-editor .ae-override-row select {
+  width: 100%;
+}
+
+/* ---- Submit footer ---- */
+.asset-effect-editor .sheet-footer {
+  display: flex;
+  justify-content: center;
+  padding-top: 4px;
+}
+
+.asset-effect-editor .sheet-footer .btn {
+  background: rgba(0, 30, 70, 0.55);
+  border: 1px solid rgba(60, 120, 210, 0.5);
+  border-radius: 3px;
+  color: #b0c8e4;
+  font-size: 0.88em;
+  font-weight: 500;
+  padding: 5px 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  line-height: 1.1;
+  font-family: inherit;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  box-shadow: none;
+}
+
+.asset-effect-editor .sheet-footer .btn:hover {
+  background: rgba(0, 60, 140, 0.6);
+  border-color: rgba(100, 170, 255, 0.8);
+  color: #e0efff;
+  box-shadow: none;
+}
+

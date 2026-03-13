@@ -49,7 +49,12 @@
   "documentTypes": {
     "Actor": {
       "asset": {},
-      "poi": {}
+      "poi": {},
+      "campaignTracker": {}
+    },
+    "Item": {
+      "event": {},
+      "progression": {}
     }
   },
   "packs": [

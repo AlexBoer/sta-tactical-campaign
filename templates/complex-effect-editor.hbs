@@ -1,0 +1,212 @@
+<form class="complex-effect-editor-form">
+
+  {{!-- Effect Label (auto-generated if left blank) --}}
+  <div class="form-group">
+    <label>{{localize "STA_TC.ComplexEffect.Editor.Label"}}</label>
+    <input type="text" name="effectLabel" value="{{label}}"
+      placeholder="{{localize 'STA_TC.ComplexEffect.Editor.LabelPlaceholder'}}" />
+  </div>
+
+  {{!-- Effect Type --}}
+  <div class="form-group">
+    <label>{{localize "STA_TC.ComplexEffect.Editor.Type"}}</label>
+    <select name="effectType" class="type-select">
+      {{#each types as |t|}}
+        <option value="{{t.value}}" {{#if t.selected}}selected{{/if}}>{{t.label}}</option>
+      {{/each}}
+    </select>
+  </div>
+
+  <hr class="params-divider" />
+
+  {{!-- ── difficulty_if_power ─────────────────────────────────────────── --}}
+  {{#if isDifficultyIfPower}}
+  <fieldset class="effect-params">
+    <legend>{{localize "STA_TC.ComplexEffect.Editor.Params"}}</legend>
+
+    <div class="form-group">
+      <label>{{localize "STA_TC.ComplexEffect.Editor.MatchPowers"}}</label>
+      <div class="checkbox-group">
+        {{#each matchPowers as |pw|}}
+          <label class="checkbox-item">
+            <input type="checkbox" name="matchPowers" value="{{pw.value}}" {{#if pw.checked}}checked{{/if}} />
+            {{pw.label}}
+          </label>
+        {{/each}}
+      </div>
+    </div>
+
+    <div class="form-group inline-number">
+      <label>{{localize "STA_TC.ComplexEffect.Editor.Delta"}}</label>
+      <input type="number" name="difDelta" value="{{difDelta}}" min="-4" max="4" />
+    </div>
+  </fieldset>
+  {{/if}}
+
+  {{!-- ── substitute_power ──────────────────────────────────────────────── --}}
+  {{#if isSubstitutePower}}
+  <fieldset class="effect-params">
+    <legend>{{localize "STA_TC.ComplexEffect.Editor.Params"}}</legend>
+
+    <div class="form-group">
+      <label>{{localize "STA_TC.ComplexEffect.Editor.FromPowers"}}</label>
+      <div class="checkbox-group">
+        {{#each fromPowers as |pw|}}
+          <label class="checkbox-item">
+            <input type="checkbox" name="fromPowers" value="{{pw.value}}" {{#if pw.checked}}checked{{/if}} />
+            {{pw.label}}
+          </label>
+        {{/each}}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>{{localize "STA_TC.ComplexEffect.Editor.ToPower"}}</label>
+      <select name="toPower">
+        {{#each toPowerChoices as |c|}}
+          <option value="{{c.value}}" {{#if c.selected}}selected{{/if}}>{{c.label}}</option>
+        {{/each}}
+      </select>
+    </div>
+  </fieldset>
+  {{/if}}
+
+  {{!-- ── asset_power_modify ─────────────────────────────────────────────── --}}
+  {{#if isAssetPowerModify}}
+  <fieldset class="effect-params">
+    <legend>{{localize "STA_TC.ComplexEffect.Editor.Params"}}</legend>
+
+    <div class="form-group">
+      <label>{{localize "STA_TC.ComplexEffect.Editor.TargetAssetTypes"}}</label>
+      <div class="checkbox-group">
+        {{#each assetTypeChoices as |c|}}
+          <label class="checkbox-item">
+            <input type="checkbox" name="targetAssetTypes" value="{{c.value}}" {{#if c.checked}}checked{{/if}} />
+            {{c.label}}
+          </label>
+        {{/each}}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>{{localize "STA_TC.ComplexEffect.Editor.TargetPowers"}}</label>
+      <div class="checkbox-group">
+        {{#each assetPowerChoices as |c|}}
+          <label class="checkbox-item">
+            <input type="checkbox" name="targetPowers" value="{{c.value}}" {{#if c.checked}}checked{{/if}} />
+            {{c.label}}
+          </label>
+        {{/each}}
+      </div>
+    </div>
+
+    <div class="form-group inline-number">
+      <label>{{localize "STA_TC.ComplexEffect.Editor.Delta"}}</label>
+      <input type="number" name="assetDelta" value="{{assetDelta}}" min="-10" max="10" />
+    </div>
+  </fieldset>
+  {{/if}}
+
+  {{!-- ── conditional ──────────────────────────────────────────────────────── --}}
+  {{#if isConditional}}
+  <fieldset class="effect-params">
+    <legend>{{localize "STA_TC.ComplexEffect.Editor.Condition"}}</legend>
+    <div class="form-group inline-row">
+      <label>{{localize "STA_TC.ComplexEffect.Editor.ConditionField"}}</label>
+      <div class="inline-controls">
+        <select name="conditionField">
+          {{#each conditionFieldChoices as |c|}}
+            <option value="{{c.value}}" {{#if c.selected}}selected{{/if}}>{{c.label}}</option>
+          {{/each}}
+        </select>
+        <select name="conditionOp">
+          {{#each conditionOpChoices as |c|}}
+            <option value="{{c.value}}" {{#if c.selected}}selected{{/if}}>{{c.label}}</option>
+          {{/each}}
+        </select>
+        <input type="number" name="conditionValue" value="{{conditionValue}}" min="1" max="5" />
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset class="effect-params">
+    <legend>{{localize "STA_TC.ComplexEffect.Editor.ThenEffect"}}</legend>
+    <div class="form-group inline-row">
+      <label>{{localize "STA_TC.ComplexEffect.Editor.EffectField"}}</label>
+      <div class="inline-controls">
+        <select name="thenField">
+          {{#each thenFieldChoices as |c|}}
+            <option value="{{c.value}}" {{#if c.selected}}selected{{/if}}>{{c.label}}</option>
+          {{/each}}
+        </select>
+        <select name="thenOp">
+          {{#each thenOpChoices as |c|}}
+            <option value="{{c.value}}" {{#if c.selected}}selected{{/if}}>{{c.label}}</option>
+          {{/each}}
+        </select>
+        <input type="number" name="thenValue" value="{{thenValue}}" min="-4" max="5" />
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset class="effect-params">
+    <legend>
+      <label class="checkbox-item legend-checkbox">
+        <input type="checkbox" name="hasElseEffect" {{#if hasElseEffect}}checked{{/if}} />
+        {{localize "STA_TC.ComplexEffect.Editor.ElseEffect"}}
+      </label>
+    </legend>
+    <div class="form-group inline-row">
+      <label>{{localize "STA_TC.ComplexEffect.Editor.EffectField"}}</label>
+      <div class="inline-controls">
+        <select name="elseField">
+          {{#each elseFieldChoices as |c|}}
+            <option value="{{c.value}}" {{#if c.selected}}selected{{/if}}>{{c.label}}</option>
+          {{/each}}
+        </select>
+        <select name="elseOp">
+          {{#each elseOpChoices as |c|}}
+            <option value="{{c.value}}" {{#if c.selected}}selected{{/if}}>{{c.label}}</option>
+          {{/each}}
+        </select>
+        <input type="number" name="elseValue" value="{{elseValue}}" min="-4" max="5" />
+      </div>
+    </div>
+  </fieldset>
+  {{/if}}
+
+  {{!-- ── asset_unavailable ─────────────────────────────────────────────── --}}
+  {{#if isAssetUnavailable}}
+  <fieldset class="effect-params">
+    <legend>{{localize "STA_TC.ComplexEffect.Editor.Params"}}</legend>
+
+    <div class="form-group">
+      <label>{{localize "STA_TC.ComplexEffect.Editor.TargetAssetTypes"}}</label>
+      <div class="checkbox-group">
+        {{#each assetTypeChoices as |c|}}
+          <label class="checkbox-item">
+            <input type="checkbox" name="targetAssetTypes" value="{{c.value}}" {{#if c.checked}}checked{{/if}} />
+            {{c.label}}
+          </label>
+        {{/each}}
+      </div>
+    </div>
+
+    <div class="form-group inline-number">
+      <label>{{localize "STA_TC.ComplexEffect.Editor.Turns"}}</label>
+      <input type="number" name="unavailTurns" value="{{unavailTurns}}" min="1" max="10" />
+    </div>
+  </fieldset>
+  {{/if}}
+
+  {{!-- Buttons --}}
+  <div class="form-footer editor-buttons">
+    <button type="button" data-action="submitEditor">
+      <i class="fas fa-check"></i> {{localize "STA_TC.ComplexEffect.Editor.Submit"}}
+    </button>
+    <button type="button" data-action="cancelEditor">
+      <i class="fas fa-xmark"></i> {{localize "STA_TC.Cancel"}}
+    </button>
+  </div>
+
+</form>

@@ -123,6 +123,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       openActor: CampaignTrackerSheet._onOpenActor,
       createRandomAsset: CampaignTrackerSheet._onCreateRandomAsset,
       createCustomAsset: CampaignTrackerSheet._onCreateCustomAsset,
+      createAssetForType: CampaignTrackerSheet._onCreateAssetForType,
       removePoi: CampaignTrackerSheet._onRemovePoi,
       removePoiAsset: CampaignTrackerSheet._onRemovePoiAsset,
       assignAsset: CampaignTrackerSheet._onAssignAsset,
@@ -157,6 +158,8 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
 
       clearUnavailable: CampaignTrackerSheet._onClearUnavailable,
       openProgressionLog: CampaignTrackerSheet._onOpenProgressionLog,
+      revealPoi: CampaignTrackerSheet._onRevealPoi,
+      hidePoi: CampaignTrackerSheet._onHidePoi,
     },
     form: {
       submitOnChange: true,
@@ -741,6 +744,42 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
             poi: {
               uuid: entry.actorUuid,
               name: poi.name,
+              displayName: (() => {
+                const isUnknown =
+                  (poi.system?.poiType || "unknown") === "unknown";
+                if (isUnknown) {
+                  if (poi.system?.revealed && poi.system?.realName)
+                    return poi.system.realName;
+                  return poi.name;
+                }
+                if (poi.system?.hiddenByGM)
+                  return game.i18n.localize("STA_TC.Poi.HiddenDefaultName");
+                return poi.name;
+              })(),
+              showMasked: (() => {
+                if (game.user.isGM) return false;
+                const isUnknown =
+                  (poi.system?.poiType || "unknown") === "unknown";
+                return isUnknown
+                  ? !poi.system?.revealed
+                  : !!poi.system?.hiddenByGM;
+              })(),
+              showRevealButton: (() => {
+                if (!game.user.isGM) return false;
+                const isUnknown =
+                  (poi.system?.poiType || "unknown") === "unknown";
+                return isUnknown
+                  ? !poi.system?.revealed
+                  : !!poi.system?.hiddenByGM;
+              })(),
+              showHideButton: (() => {
+                if (!game.user.isGM) return false;
+                const isUnknown =
+                  (poi.system?.poiType || "unknown") === "unknown";
+                return isUnknown
+                  ? !!poi.system?.revealed
+                  : !poi.system?.hiddenByGM;
+              })(),
               img: poi.img,
               difficulty: _ov("difficulty", poi.system?.difficulty),
               urgency: _ov("urgency", poi.system?.urgency),
@@ -793,10 +832,20 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
                 null,
             },
             asset1: asset1
-              ? { uuid: entry.asset1Uuid, name: asset1.name, img: asset1.img }
+              ? {
+                  uuid: entry.asset1Uuid,
+                  name: asset1.name,
+                  img: asset1.img,
+                  note: asset1.system?.note || "",
+                }
               : null,
             asset2: asset2
-              ? { uuid: entry.asset2Uuid, name: asset2.name, img: asset2.img }
+              ? {
+                  uuid: entry.asset2Uuid,
+                  name: asset2.name,
+                  img: asset2.img,
+                  note: asset2.system?.note || "",
+                }
               : null,
           };
         }),
@@ -984,7 +1033,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       }
       const handle = this.element.querySelector(".sidebar-resize-handle");
       if (handle) {
-        const SIDEBAR_MIN = 74;
+        const SIDEBAR_MIN = 58;
         const SIDEBAR_MAX = 230;
         handle.addEventListener("pointerdown", (e) => {
           e.preventDefault();
@@ -1040,6 +1089,33 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
         });
       }
 
+      // Make filled POI assignment slots draggable so assets can be moved
+      // between slots and POIs without having to unassign first.
+      for (const wrapper of this.element.querySelectorAll(
+        ".poi-slot-wrapper.filled[data-drag-context='poi-asset']",
+      )) {
+        wrapper.setAttribute("draggable", "true");
+        wrapper.addEventListener("dragstart", (event) => {
+          // Stop the event from bubbling to the parent .poi-entry so the
+          // whole POI card doesn't get dragged instead.
+          event.stopPropagation();
+          event.dataTransfer.setData(
+            "text/plain",
+            JSON.stringify({
+              type: "Actor",
+              uuid: wrapper.dataset.uuid,
+              sourceContext: "poi-asset",
+              sourceKey: wrapper.dataset.sourceKey,
+              sourceIndex: parseInt(wrapper.dataset.sourceIndex),
+              sourceSlot: parseInt(wrapper.dataset.sourceSlot),
+              sourceTrackerId: this.actor.id,
+            }),
+          );
+          const thumb = wrapper.querySelector(".slot-thumb");
+          if (thumb) event.dataTransfer.setDragImage(thumb, 16, 16);
+        });
+      }
+
       // Drag-over highlight for empty POI slots
       for (const slot of this.element.querySelectorAll(
         "[data-drop-target='poi-slot']",
@@ -1053,6 +1129,53 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
         );
         slot.addEventListener("drop", () => slot.classList.remove("drag-over"));
       }
+    }
+
+    // POI column collapse: restore saved state then attach toggle listener
+    const collapseKey = `sta-tc.poi-col-collapsed.${this.actor.id}`;
+    let collapsed;
+    try {
+      collapsed = JSON.parse(localStorage.getItem(collapseKey) ?? "{}");
+    } catch {
+      collapsed = {};
+    }
+    for (const col of this.element.querySelectorAll(".poi-column")) {
+      const key = col.querySelector(".poi-column-toggle")?.dataset.colKey ?? "";
+      if (collapsed[key]) col.classList.add("collapsed");
+    }
+    this.element.addEventListener("click", (e) => {
+      const toggle = e.target.closest(".poi-column-toggle");
+      if (!toggle) return;
+      const col = toggle.closest(".poi-column");
+      if (!col) return;
+      const key = toggle.dataset.colKey ?? "";
+      col.classList.toggle("collapsed");
+      let state;
+      try {
+        state = JSON.parse(localStorage.getItem(collapseKey) ?? "{}");
+      } catch {
+        state = {};
+      }
+      state[key] = col.classList.contains("collapsed");
+      localStorage.setItem(collapseKey, JSON.stringify(state));
+    });
+
+    // Sidebar overflow indicator
+    const sidebar = this.element.querySelector(".tracker-sidebar");
+    const sidebarWrap = this.element.querySelector(".tracker-sidebar-wrap");
+    if (sidebar && sidebarWrap) {
+      const updateOverflow = () => {
+        const hasMore =
+          sidebar.scrollTop + sidebar.clientHeight < sidebar.scrollHeight - 4;
+        sidebarWrap.classList.toggle("has-overflow-below", hasMore);
+        sidebarWrap.classList.toggle(
+          "has-overflow-above",
+          sidebar.scrollTop > 4,
+        );
+      };
+      sidebar.addEventListener("scroll", updateOverflow, { passive: true });
+      // Run once after layout has settled
+      requestAnimationFrame(updateOverflow);
     }
   }
 
@@ -1951,6 +2074,81 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
         updates["system.turnReinforcementsReceived"] =
           (this.actor.system.turnReinforcementsReceived || 0) + 1;
       await this.actor.update(updates);
+    }
+  }
+
+  static async _onCreateAssetForType(event, target) {
+    const assetType = target.dataset.assetType;
+    const typeName = game.i18n.localize(
+      `STA_TC.Asset.Generator.Types.${assetType.charAt(0).toUpperCase() + assetType.slice(1)}`,
+    );
+    const choice = await foundry.applications.api.DialogV2.wait({
+      window: {
+        title: game.i18n.format("STA_TC.CampaignTracker.AddAsset", {
+          type: typeName,
+        }),
+      },
+      content: `<p>${game.i18n.format("STA_TC.CampaignTracker.AddAsset", { type: typeName })}</p>`,
+      buttons: [
+        {
+          action: "random",
+          label: game.i18n.localize("STA_TC.CampaignTracker.CreateRandomAsset"),
+          icon: "fas fa-random",
+          default: true,
+          callback: () => "random",
+        },
+        {
+          action: "custom",
+          label: game.i18n.localize("STA_TC.CampaignTracker.CreateCustomAsset"),
+          icon: "fas fa-plus",
+          default: false,
+          callback: () => "custom",
+        },
+      ],
+      rejectClose: false,
+    });
+    if (!choice) return;
+
+    const keyMap = {
+      character: "characterAssets",
+      ship: "shipAssets",
+      resource: "resourceAssets",
+    };
+    const key = keyMap[assetType] ?? "resourceAssets";
+
+    if (choice === "random") {
+      const result = await AssetGenerator.generateForType(assetType);
+      if (!result?.actor) return;
+      const actor = await this._importActorIfNeeded(result.actor);
+      if (!actor) return;
+      const assetTypeFolder = await this._getOrCreateAssetFolder(assetType);
+      if (assetTypeFolder) await actor.update({ folder: assetTypeFolder.id });
+      const list = [...(this.actor.system[key] || [])];
+      if (!list.includes(actor.uuid)) {
+        list.push(actor.uuid);
+        const updates = { [`system.${key}`]: list };
+        if (this.actor.system.turnPhase === "3")
+          updates["system.turnReinforcementsReceived"] =
+            (this.actor.system.turnReinforcementsReceived || 0) + 1;
+        await this.actor.update(updates);
+      }
+    } else {
+      const actor = await Actor.create({
+        name: game.i18n.localize("STA_TC.AssetName"),
+        type: `${MODULE_ID}.asset`,
+        system: { assetType },
+      });
+      if (!actor) return;
+      actor.sheet.render(true);
+      const list = [...(this.actor.system[key] || [])];
+      if (!list.includes(actor.uuid)) {
+        list.push(actor.uuid);
+        const updates = { [`system.${key}`]: list };
+        if (this.actor.system.turnPhase === "3")
+          updates["system.turnReinforcementsReceived"] =
+            (this.actor.system.turnReinforcementsReceived || 0) + 1;
+        await this.actor.update(updates);
+      }
     }
   }
 
@@ -3465,6 +3663,38 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
    */
   static _onOpenProgressionLog(event, target) {
     ProgressionLog.open(this.actor);
+  }
+
+  /**
+   * Reveal a POI to all players.
+   * For unknown POIs: sets system.revealed = true.
+   * For other types: sets system.hiddenByGM = false.
+   */
+  static async _onRevealPoi(event, target) {
+    const uuid = target.closest("[data-uuid]").dataset.uuid;
+    const poi = await fromUuid(uuid);
+    if (!poi) return;
+    if (poi.system?.poiType === "unknown") {
+      await poi.update({ "system.revealed": true });
+    } else {
+      await poi.update({ "system.hiddenByGM": false });
+    }
+  }
+
+  /**
+   * Hide a POI from players.
+   * For unknown POIs: sets system.revealed = false.
+   * For other types: sets system.hiddenByGM = true.
+   */
+  static async _onHidePoi(event, target) {
+    const uuid = target.closest("[data-uuid]").dataset.uuid;
+    const poi = await fromUuid(uuid);
+    if (!poi) return;
+    if (poi.system?.poiType === "unknown") {
+      await poi.update({ "system.revealed": false });
+    } else {
+      await poi.update({ "system.hiddenByGM": true });
+    }
   }
 
   async _rollForLoss(poiUuid) {

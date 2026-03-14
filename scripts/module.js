@@ -283,6 +283,29 @@ function _rerenderTrackersForAsset(actor) {
 }
 
 /**
+ * Helper: re-render any open campaign tracker sheets that reference the given POI UUID.
+ */
+function _rerenderTrackersForPoi(actor) {
+  if (actor.type !== `${MODULE_ID}.poi`) return;
+  const uuid = actor.uuid;
+  const trackerType = `${MODULE_ID}.campaignTracker`;
+  const poiLists = [
+    "poiListThreat",
+    "poiListExploration",
+    "poiListRoutine",
+    "poiListUnknown",
+  ];
+  for (const tracker of game.actors.filter((a) => a.type === trackerType)) {
+    const sys = tracker.system;
+    const inPois = poiLists.some((key) =>
+      (sys[key] || []).some((e) => e.actorUuid === uuid),
+    );
+    const inGenerated = (sys.turnGeneratedPois || []).includes(uuid);
+    if (inPois || inGenerated) tracker.sheet?.render();
+  }
+}
+
+/**
  * When an Active Effect is created on an asset actor, re-render referencing
  * campaign trackers so the unavailable badge updates immediately.
  */
@@ -298,6 +321,37 @@ Hooks.on("createActiveEffect", (_effect, _options, _userId) => {
 Hooks.on("deleteActiveEffect", (_effect, _options, _userId) => {
   const parent = _effect.parent;
   if (parent) _rerenderTrackersForAsset(parent);
+});
+
+/**
+ * When an Event item is created on a POI actor (e.g. dragged onto the POI
+ * sheet), re-render any open campaign tracker sheets that show that POI so
+ * the event description and effects badge update immediately.
+ */
+Hooks.on("createItem", (item, _options, _userId) => {
+  const parent = item.parent;
+  if (!parent || item.type !== `${MODULE_ID}.event`) return;
+  _rerenderTrackersForPoi(parent);
+});
+
+/**
+ * When an Event item is updated on a POI actor (e.g. its description changes),
+ * re-render referencing campaign tracker sheets.
+ */
+Hooks.on("updateItem", (item, _changes, _options, _userId) => {
+  const parent = item.parent;
+  if (!parent || item.type !== `${MODULE_ID}.event`) return;
+  _rerenderTrackersForPoi(parent);
+});
+
+/**
+ * When an Event item is removed from a POI actor, re-render referencing
+ * campaign tracker sheets so the event description and effects badge clear.
+ */
+Hooks.on("deleteItem", (item, _options, _userId) => {
+  const parent = item.parent;
+  if (!parent || item.type !== `${MODULE_ID}.event`) return;
+  _rerenderTrackersForPoi(parent);
 });
 
 /**

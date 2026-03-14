@@ -96,6 +96,11 @@ export class PoiSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       system,
       poiTypes: poiTypeChoices,
       isTacticalThreat: system.poiType === "tacticalThreat",
+      isLimitedUnknown:
+        !game.user.isGM &&
+        (system.poiType === "unknown"
+          ? !system.revealed
+          : !!system.hiddenByGM),
       events,
       displayOverrides,
       complexDescriptions: descriptions,

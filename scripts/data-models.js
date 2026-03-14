@@ -75,6 +75,11 @@ export class AssetData extends foundry.abstract.TypeDataModel {
         blank: true,
         initial: "",
       }),
+      note: new StringField({
+        required: false,
+        blank: true,
+        initial: "",
+      }),
       powers: new SchemaField({
         medical: powerField(),
         military: powerField(),
@@ -171,6 +176,21 @@ export class PoiData extends foundry.abstract.TypeDataModel {
         integer: true,
         initial: 0,
         min: 0,
+      }),
+      // Unknown POI reveal system
+      realName: new StringField({
+        required: false,
+        blank: true,
+        initial: "",
+      }),
+      revealed: new BooleanField({
+        required: false,
+        initial: false,
+      }),
+      // GM-controlled visibility for non-unknown POI types
+      hiddenByGM: new BooleanField({
+        required: false,
+        initial: false,
       }),
     };
   }

@@ -16,12 +16,11 @@
     </div>
   </header>
 
-  {{!-- Powers Section (2-column layout) --}}
+  {{!-- Two-column body: Powers (left) | Note + Effects (right) --}}
   <section class="sheet-body">
-    <div class="powers-section">
-      <h2>{{localize "STA_TC.Powers.Title"}}</h2>
-      <div class="powers-two-col">
-        {{!-- Column 1: Medical, Military, Personal --}}
+    <div class="asset-main-row">
+      {{!-- Left: powers --}}
+      <div class="powers-section">
         <div class="powers-col">
           <div class="powers-header {{#unless hasPrimaryPower}}no-primary{{/unless}}">
             <span class="col-select"></span>
@@ -43,18 +42,6 @@
             {{/if}}
           </div>
           {{/each}}
-        </div>
-        {{!-- Column 2: Science, Social --}}
-        <div class="powers-col">
-          <div class="powers-header {{#unless hasPrimaryPower}}no-primary{{/unless}}">
-            <span class="col-select"></span>
-            <span class="col-type">{{localize "STA_TC.Powers.Type"}}</span>
-            <span class="col-power">{{localize "STA_TC.Powers.Power"}}</span>
-            <span class="col-focus">{{localize "STA_TC.Powers.Focus"}}</span>
-            {{#if hasPrimaryPower}}
-            <span class="col-primary">{{localize "STA_TC.Powers.Primary"}}</span>
-            {{/if}}
-          </div>
           {{#each powersCol2}}
           <div class="power-row {{#unless ../hasPrimaryPower}}no-primary{{/unless}}">
             <input class="col-select power-select" type="radio" name="system.selectedPower" value="{{this.key}}" {{#if this.isSelected}}checked{{/if}} />
@@ -67,59 +54,65 @@
           </div>
           {{/each}}
         </div>
+        <div class="powers-actions">
+          <button type="button" class="btn perform-test" data-action="performTest">{{localize "STA_TC.PerformTest"}}</button>
+          {{#unless (eq system.assetType "resource")}}
+          <button type="button" class="btn roll-loss" data-action="rollForLoss">{{localize "STA_TC.RollForLoss"}}</button>
+          {{/unless}}
+          {{#if hasLossEffect}}
+          <button type="button" class="btn undo-loss" data-action="undoLossResult">{{localize "STA_TC.UndoLossResult"}}</button>
+          {{/if}}
+        </div>
       </div>
-      <div class="powers-actions">
-        <button type="button" class="btn perform-test" data-action="performTest">{{localize "STA_TC.PerformTest"}}</button>
-        {{#unless (eq system.assetType "resource")}}
-        <button type="button" class="btn roll-loss" data-action="rollForLoss">{{localize "STA_TC.RollForLoss"}}</button>
-        {{/unless}}
-        {{#if hasLossEffect}}
-        <button type="button" class="btn undo-loss" data-action="undoLossResult">{{localize "STA_TC.UndoLossResult"}}</button>
-        {{/if}}
-      </div>
-    </div>
 
-    {{!-- Bottom row: Description + Active Effects side-by-side --}}
-    <div class="asset-body-bottom">
-      <div class="description-section">
-        <h2>{{localize "STA_TC.Description"}}</h2>
-        <div class="editor-container">
-          <prose-mirror name="system.description" data-document-u-u-i-d="{{actor.uuid}}" value="{{system.description}}" collaborate="true" toggled="true">
-            {{{enrichedDescription}}}
-          </prose-mirror>
+      {{!-- Right: Note + Active Effects stacked --}}
+      <div class="asset-side-col">
+        <div class="asset-note-section">
+          <label class="asset-note-label"><i class="fas fa-sticky-note"></i> {{localize "STA_TC.Asset.Note"}}</label>
+          <textarea name="system.note" placeholder="{{localize 'STA_TC.Asset.NotePlaceholder'}}" class="asset-note-input">{{system.note}}</textarea>
+        </div>
+        <div class="asset-effects-section">
+          <div class="effects-section-header">
+            <h2>{{localize "STA_TC.Asset.Effects.Title"}}</h2>
+            <button type="button" class="btn btn-sm" data-action="addTimedEffect" title="{{localize 'STA_TC.Asset.Effects.Add'}}"><i class="fas fa-plus"></i></button>
+          </div>
+          {{#if effects.length}}
+          <ul class="asset-effects-list">
+            {{#each effects}}
+            <li class="asset-effect-row{{#if this.isUnavailable}} effect-unavailable{{/if}}">
+              <img class="effect-img" src="{{this.img}}" title="{{this.name}}" />
+              <div class="effect-body">
+                <span class="effect-name">{{this.name}}</span>
+                {{#if this.changesSummary.length}}
+                <span class="effect-changes">{{#each this.changesSummary}}<span class="effect-change-tag">{{this}}</span>{{/each}}</span>
+                {{/if}}
+              </div>
+              <span class="effect-expiry">
+                {{#if this.isPermanent}}
+                {{localize "STA_TC.Asset.Effects.Permanent"}}
+                {{else}}
+                {{localize "STA_TC.Asset.Effects.ExpiresIn" turns=this.turnsLeft}}
+                {{/if}}
+              </span>
+              <button type="button" class="btn btn-sm effect-edit-btn" data-action="editEffect" data-effect-id="{{this.id}}" title="{{localize 'STA_TC.Asset.Effects.Edit'}}"><i class="fas fa-pen"></i></button>
+              <button type="button" class="btn btn-sm effect-delete-btn" data-action="deleteEffect" data-effect-id="{{this.id}}" title="{{localize 'STA_TC.Asset.Effects.Delete'}}"><i class="fas fa-times"></i></button>
+            </li>
+            {{/each}}
+          </ul>
+          {{else}}
+          <p class="effects-empty">{{localize "STA_TC.Asset.Effects.None"}}</p>
+          {{/if}}
         </div>
       </div>
-      <div class="asset-effects-section">
-        <div class="effects-section-header">
-          <h2>{{localize "STA_TC.Asset.Effects.Title"}}</h2>
-          <button type="button" class="btn btn-sm" data-action="addTimedEffect" title="{{localize 'STA_TC.Asset.Effects.Add'}}"><i class="fas fa-plus"></i></button>
-        </div>
-        {{#if effects.length}}
-        <ul class="asset-effects-list">
-          {{#each effects}}
-          <li class="asset-effect-row{{#if this.isUnavailable}} effect-unavailable{{/if}}">
-            <img class="effect-img" src="{{this.img}}" title="{{this.name}}" />
-            <div class="effect-body">
-              <span class="effect-name">{{this.name}}</span>
-              {{#if this.changesSummary.length}}
-              <span class="effect-changes">{{#each this.changesSummary}}<span class="effect-change-tag">{{this}}</span>{{/each}}</span>
-              {{/if}}
-            </div>
-            <span class="effect-expiry">
-              {{#if this.isPermanent}}
-              {{localize "STA_TC.Asset.Effects.Permanent"}}
-              {{else}}
-              {{localize "STA_TC.Asset.Effects.ExpiresIn" turns=this.turnsLeft}}
-              {{/if}}
-            </span>
-            <button type="button" class="btn btn-sm effect-edit-btn" data-action="editEffect" data-effect-id="{{this.id}}" title="{{localize 'STA_TC.Asset.Effects.Edit'}}"><i class="fas fa-pen"></i></button>
-            <button type="button" class="btn btn-sm effect-delete-btn" data-action="deleteEffect" data-effect-id="{{this.id}}" title="{{localize 'STA_TC.Asset.Effects.Delete'}}"><i class="fas fa-times"></i></button>
-          </li>
-          {{/each}}
-        </ul>
-        {{else}}
-        <p class="effects-empty">{{localize "STA_TC.Asset.Effects.None"}}</p>
-        {{/if}}
+    </div>{{!-- end .asset-main-row --}}
+
+    {{!-- Full-width Description --}}
+    <div class="description-section">
+      <h2>{{localize "STA_TC.Description"}}</h2>
+      <div class="editor-container">
+        <prose-mirror name="system.description" data-document-u-u-i-d="{{actor.uuid}}" value="{{system.description}}" collaborate="true" toggled="true">
+          {{{enrichedDescription}}}
+        </prose-mirror>
       </div>
     </div>
   </section>

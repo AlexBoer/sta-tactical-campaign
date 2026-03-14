@@ -55,26 +55,24 @@
       {{#unless @last}}<div class="step-connector {{#if this.completed}}completed{{/if}}"></div>{{/unless}}
       {{/each}}
     </div>
-    {{!-- Bottom bar: sub-steps of current phase --}}
-    <div class="wizard-progress wizard-steps">
-      {{#each subSteps}}
-      <div class="wizard-step {{#if this.active}}active{{/if}} {{#if this.completed}}completed{{/if}}">
-        <div class="step-indicator">{{this.index}}</div>
-        <div class="step-label">{{this.label}}</div>
-      </div>
-      {{#unless @last}}<div class="step-connector {{#if this.completed}}completed{{/if}}"></div>{{/unless}}
-      {{/each}}
-    </div>
-    <div class="wizard-hint">
-      <i class="fas fa-info-circle"></i> {{phaseHint}}
-    </div>
-    <div class="tracker-wizard-nav">
+    {{!-- Bottom row: Back | sub-steps | Next --}}
+    <div class="wizard-steps-row">
       {{#unless isFirstPhase}}
       <button type="button" class="btn wizard-nav-btn" data-action="prevPhase">
         <i class="fas fa-arrow-left"></i> {{localize "STA_TC.Wizard.Back"}}
       </button>
+      {{else}}
+      <div class="wizard-nav-placeholder"></div>
       {{/unless}}
-      <div class="wizard-nav-spacer"></div>
+      <div class="wizard-progress wizard-steps">
+        {{#each subSteps}}
+        <div class="wizard-step {{#if this.active}}active{{/if}} {{#if this.completed}}completed{{/if}}">
+          <div class="step-indicator">{{this.index}}</div>
+          <div class="step-label">{{this.label}}</div>
+        </div>
+        {{#unless @last}}<div class="step-connector {{#if this.completed}}completed{{/if}}"></div>{{/unless}}
+        {{/each}}
+      </div>
       {{#if isLastPhase}}
       <button type="button" class="btn wizard-nav-btn finish-btn" data-action="endTurn">
         <i class="fas fa-flag-checkered"></i> {{localize "STA_TC.Wizard.FinishTurn"}}
@@ -85,6 +83,9 @@
       </button>
       {{/if}}
     </div>
+    <div class="wizard-hint">
+      <i class="fas fa-info-circle"></i> {{phaseHint}}
+    </div>
   </div>
   {{/if}}
 
@@ -92,6 +93,7 @@
     <div class="tracker-main-layout">
 
       {{!-- LEFT COLUMN: Assets --}}
+      <div class="tracker-sidebar-wrap">
       <div class="tracker-sidebar" data-preserve-scroll="sidebar" data-drop-target="asset">
 
         {{!-- Add asset buttons --}}
@@ -192,6 +194,11 @@
         {{#unless resourceAssets.length}}<div class="asset-strip-empty">&mdash;</div>{{/unless}}
 
       </div>{{!-- end .tracker-sidebar --}}
+      <div class="sidebar-overflow-fade-top"></div>
+      <div class="sidebar-overflow-fade-bottom"></div>
+      <div class="sidebar-overflow-chevron-top"><i class="fas fa-chevron-up"></i></div>
+      <div class="sidebar-overflow-chevron-bottom"><i class="fas fa-chevron-down"></i></div>
+      </div>{{!-- end .tracker-sidebar-wrap --}}
 
       {{!-- Drag handle between sidebar and poi area --}}
       <div class="sidebar-resize-handle"></div>
@@ -445,7 +452,7 @@
         <div class="tracker-pois">
           {{#each poiColumns}}
           <div class="poi-column {{this.key}}">
-            <h3>{{this.label}}</h3>
+            <h3 class="poi-column-toggle" data-col-key="{{this.key}}"><i class="fas fa-chevron-down poi-col-chevron"></i> {{this.label}}</h3>
             <div class="poi-list" data-drop-target="poi" data-poi-list="{{this.key}}">
               {{#each this.entries}}
               <div class="poi-entry {{#if this.isScenario}}is-scenario{{/if}}" draggable="true" data-drag data-uuid="{{this.poi.uuid}}" data-source-context="poi" data-source-key="{{this.listKey}}" data-source-index="{{this.index}}">
@@ -456,7 +463,7 @@
                   {{!-- POI header row --}}
                   <div class="poi-info">
                     <img class="poi-thumb" src="{{this.poi.img}}" data-action="openActor" data-uuid="{{this.poi.uuid}}" />
-                    <span class="poi-name" data-action="openActor" data-uuid="{{this.poi.uuid}}">{{this.poi.name}}</span>
+                    <span class="poi-name" data-action="openActor" data-uuid="{{this.poi.uuid}}">{{this.poi.displayName}}</span>
                     {{#if this.canSelectScenario}}
                     <a class="btn-scenario {{#if this.isScenario}}active{{/if}}" data-action="selectScenario" data-uuid="{{this.poi.uuid}}" title="{{#if this.isScenario}}{{localize 'STA_TC.Wizard.ScenarioSelected'}}{{else}}{{localize 'STA_TC.Wizard.SelectScenario'}}{{/if}}">
                       <i class="{{#if this.isScenario}}fas{{else}}far{{/if}} fa-star"></i>
@@ -465,17 +472,21 @@
                   </div>
 
                   {{!-- Power type --}}
+                  {{#unless this.poi.showMasked}}
                   <div class="poi-power">
                     {{this.poi.powerLabel}} {{this.poi.difficulty}}{{#if this.poi.power2}} / {{this.poi.powerLabel2}} {{this.poi.difficulty2}}{{/if}}
                     {{#if this.poi.hasEventEffects}}
                     <span class="poi-event-effects-badge" title="{{this.poi.eventEffectTooltip}}"><i class="fas fa-wand-magic-sparkles"></i> Effects Applied</span>
                     {{/if}}
                   </div>
+                  {{/unless}}
 
                   {{!-- Note (always visible when present) --}}
+                  {{#unless this.poi.showMasked}}
                   {{#if this.poi.note}}
                   <div class="poi-note"><i class="fas fa-sticky-note"></i> {{this.poi.note}}</div>
                   {{/if}}
+                  {{/unless}}
 
                   {{!-- Event result text (non-event phases) --}}
                   {{#unless this.canRollEvent}}
@@ -553,7 +564,16 @@
                   {{!-- Asset Assignment Slots --}}
                   <div class="poi-assignments">
                     {{#if this.asset1}}
-                    <div class="poi-slot-wrapper filled">
+                    <div class="poi-slot-wrapper filled"
+                      data-drag-context="poi-asset"
+                      data-uuid="{{this.asset1.uuid}}"
+                      data-source-key="{{this.listKey}}"
+                      data-source-index="{{this.index}}"
+                      data-source-slot="0"
+                      data-drop-target="poi-slot"
+                      data-poi-list="{{this.listKey}}"
+                      data-poi-index="{{this.index}}"
+                      data-slot="0">
                       <button type="button" class="poi-slot-open" data-action="openActor" data-uuid="{{this.asset1.uuid}}">
                         <span class="slot-label">{{localize "STA_TC.CampaignTracker.Primary"}}</span>
                         <img class="slot-thumb" draggable="false" src="{{this.asset1.img}}" title="{{this.asset1.name}}" />
@@ -568,7 +588,16 @@
                     </button>
                     {{/if}}
                     {{#if this.asset2}}
-                    <div class="poi-slot-wrapper filled">
+                    <div class="poi-slot-wrapper filled"
+                      data-drag-context="poi-asset"
+                      data-uuid="{{this.asset2.uuid}}"
+                      data-source-key="{{this.listKey}}"
+                      data-source-index="{{this.index}}"
+                      data-source-slot="1"
+                      data-drop-target="poi-slot"
+                      data-poi-list="{{this.listKey}}"
+                      data-poi-index="{{this.index}}"
+                      data-slot="1">
                       <button type="button" class="poi-slot-open" data-action="openActor" data-uuid="{{this.asset2.uuid}}">
                         <span class="slot-label">{{localize "STA_TC.CampaignTracker.Assisting"}}</span>
                         <img class="slot-thumb" draggable="false" src="{{this.asset2.img}}" title="{{this.asset2.name}}" />
@@ -584,6 +613,14 @@
                     {{/if}}
                   </div>
 
+                  {{!-- Asset notes (shown when an assigned asset has a note) --}}
+                  {{#if this.asset1.note}}
+                  <div class="poi-asset-note"><i class="fas fa-user"></i> <strong>{{this.asset1.name}}:</strong> {{this.asset1.note}}</div>
+                  {{/if}}
+                  {{#if this.asset2.note}}
+                  <div class="poi-asset-note"><i class="fas fa-user"></i> <strong>{{this.asset2.name}}:</strong> {{this.asset2.note}}</div>
+                  {{/if}}
+
                 </div>{{!-- end .poi-main --}}
 
                 {{!-- RIGHT: urgency + action buttons column --}}
@@ -596,6 +633,20 @@
                     {{/if}}
                     <a class="remove-btn" data-action="removePoi" data-poi-list="{{this.listKey}}" data-index="{{this.index}}"><i class="fas fa-times"></i></a>
                   </div>
+
+                  {{!-- Reveal Unknown POI (GM only) --}}
+                  {{#if this.poi.showRevealButton}}
+                  <button type="button" class="btn btn-sm poi-reveal-btn" data-action="revealPoi" data-uuid="{{this.poi.uuid}}">
+                    <i class="fas fa-eye"></i> {{localize "STA_TC.Poi.RevealToPlayers"}}
+                  </button>
+                  {{/if}}
+
+                  {{!-- Hide Unknown POI from players (GM only, after revealed) --}}
+                  {{#if this.poi.showHideButton}}
+                  <button type="button" class="btn btn-sm poi-hide-btn" data-action="hidePoi" data-uuid="{{this.poi.uuid}}">
+                    <i class="fas fa-eye-slash"></i> {{localize "STA_TC.Poi.HideFromPlayers"}}
+                  </button>
+                  {{/if}}
 
                   {{!-- Phase 1 Step 3: Roll / Reroll Event --}}
                   {{#if this.canRollEvent}}

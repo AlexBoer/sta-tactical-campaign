@@ -1,4 +1,11 @@
 <div class="sta-tc-sheet poi-sheet">
+  {{#if isLimitedUnknown}}
+  {{!-- Limited view: non-GM sees only portrait and generic name --}}
+  <div class="poi-limited-view">
+    <img class="profile-img" src="{{actor.img}}" title="{{actor.name}}" />
+    <h2 class="poi-limited-name">{{actor.name}}</h2>
+  </div>
+  {{else}}
   {{!-- Header Section --}}
   <header class="sheet-header">
     <img class="profile-img" src="{{actor.img}}" data-action="editImage" title="{{actor.name}}" />
@@ -14,6 +21,12 @@
         </div>
         {{/if}}
       </div>
+      {{#if (eq system.poiType "unknown")}}
+      <div class="poi-real-name-row">
+        <label>{{localize "STA_TC.Poi.RealName"}}</label>
+        <input type="text" name="system.realName" value="{{system.realName}}" placeholder="{{localize 'STA_TC.Poi.RealNamePlaceholder'}}" />
+      </div>
+      {{/if}}
       <div class="poi-type-select">
         <select name="system.poiType" class="{{#if (lookup displayOverrides 'system.poiType')}}ae-modified{{/if}}">
           {{#each poiTypes}}
@@ -81,6 +94,8 @@
       <div class="poi-event-col poi-events-section">
         <div class="event-section-header">
           <div class="section-header">{{localize "STA_TC.Poi.Events"}}</div>
+        </div>
+        <div class="event-action-row">
           <button type="button" class="btn btn-sm" data-action="rollRandomEvent"
             {{#unless hasEventTable}}disabled title="{{localize 'STA_TC.Wizard.EventTableNotConfigured'}}"{{/unless}}>
             <i class="fas fa-dice"></i> {{localize "STA_TC.Poi.RollRandomEvent"}}
@@ -132,4 +147,5 @@
       </div>
     </div>
   </section>
+  {{/if}}{{!-- end isLimitedUnknown else --}}
 </div>

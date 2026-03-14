@@ -220,10 +220,29 @@ export class PoiGenerator {
         const data = actor.toObject();
         data.system = data.system || {};
         data.system.poiType = subTableKey;
+        if (subTableKey === "unknown") {
+          const defaultName = game.i18n.localize(
+            "STA_TC.Poi.UnknownDefaultName",
+          );
+          if (data.name !== defaultName) {
+            data.system.realName = data.name;
+            data.name = defaultName;
+          }
+        }
         actor = await Actor.create(data);
       } else {
         // Already a world actor — just update poiType
-        await actor.update({ "system.poiType": subTableKey });
+        const updateData = { "system.poiType": subTableKey };
+        if (subTableKey === "unknown") {
+          const defaultName = game.i18n.localize(
+            "STA_TC.Poi.UnknownDefaultName",
+          );
+          if (actor.name !== defaultName) {
+            updateData.name = defaultName;
+            updateData["system.realName"] = actor.name;
+          }
+        }
+        await actor.update(updateData);
       }
     }
 
@@ -305,14 +324,17 @@ export class PoiGenerator {
       const difficulty = system.difficulty ?? 1;
       const urgency = system.urgency ?? 1;
 
-      const statsLine = [
-        `<span style="color:#ffd700;">${powerLabel} ${difficulty}</span>`,
-        `<span style="color:#ff8c00;">${game.i18n.localize("STA_TC.Poi.Urgency")}: ${urgency}</span>`,
-      ].join(" &nbsp;|&nbsp; ");
+      const statsLine =
+        subTableKey !== "unknown"
+          ? [
+              `<span style="color:#ffd700;">${powerLabel} ${difficulty}</span>`,
+              `<span style="color:#ff8c00;">${game.i18n.localize("STA_TC.Poi.Urgency")}: ${urgency}</span>`,
+            ].join(" &nbsp;|&nbsp; ")
+          : null;
 
       html += `
         <div style="background:#333; padding:8px; border-radius:4px; margin-top:5px;">
-          <p style="margin:5px 0 0 0; font-size:12px;">${statsLine}</p>
+          ${statsLine ? `<p style="margin:5px 0 0 0; font-size:12px;">${statsLine}</p>` : ""}
           <p style="margin:5px 0 0 0; font-size:10px; color:#666;">
             ${game.i18n.localize("STA_TC.Poi.Generator.SubTableRoll")}: ${subResult.roll}
           </p>

@@ -155,7 +155,12 @@
       "Difficulty": "Difficulty",
       "Difficulty2": "Difficulty 2",
       "Urgency": "Urgency",
-      "Type": "PoI Type",
+      "RevealToPlayers": "Reveal",
+      "HideFromPlayers": "Hide",
+      "RealName": "Real Name",
+      "RealNamePlaceholder": "The true name of this POI",
+      "UnknownDefaultName": "Unknown Point of Interest",
+      "HiddenDefaultName": "Hidden Point of Interest",
       "Event": "Event",
       "EventName": "Event Name",
       "EventDescription": "Event Description",
@@ -203,6 +208,8 @@
       }
     },
     "Asset": {
+      "Note": "Note",
+      "NotePlaceholder": "Brief note shown on tracker POI cards…",
       "Generator": {
         "Rolling": "Rolling for Asset…",
         "TypeTableName": "Asset Type",
@@ -363,7 +370,8 @@
       "PrimaryArrow": "Primary → {power}",
       "TypeArrow": "Type → {type}",
       "FocusSummary": "{power} Focus {delta}",
-      "NamePlaceholder": "Effect name…"
+      "NamePlaceholder": "Effect name…",
+      "DefaultName": "New Effect"
     },
     "CampaignTracker": {
       "Name": "Campaign Tracker",
@@ -417,7 +425,7 @@
       "LockedBy": "This wizard is currently in use by {user}. Override?",
       "Override": "Override",
       "Phase1": "Generate Problems",
-      "Phase2": "Resolve Problems",
+      "Phase2": "Resolve Conflicts",
       "Phase3": "Determine Outcomes",
       "Phase1Step1": "Generate & Select POIs",
       "Phase1Step2": "Assign Assets",
@@ -441,8 +449,6 @@
       "Phase1a": "Generate Points of Interest",
       "Phase1b": "Assign Assets & Select Scenario",
       "Phase1c": "Roll for Events",
-      "Phase2": "Resolve Conflicts",
-      "Phase3": "Determine Outcomes",
       "Phase3Step1": "POI Outcomes",
       "Phase3Step2": "Progression",
       "Phase3Step3": "Reinforcements",

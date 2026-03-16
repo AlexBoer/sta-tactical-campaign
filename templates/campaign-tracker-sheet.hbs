@@ -231,7 +231,9 @@
               <img class="poi-thumb" src="{{this.img}}" data-action="openActor" data-uuid="{{this.uuid}}" />
               <div class="wizard-poi-info">
                 <span class="wizard-poi-name" data-action="openActor" data-uuid="{{this.uuid}}">{{this.name}}</span>
+                {{#unless this.showMasked}}
                 <span class="wizard-poi-meta">{{this.poiTypeLabel}} &middot; D{{this.difficulty}} {{this.power}}{{#if this.power2}} / D{{this.difficulty2}} {{this.power2}}{{/if}}</span>
+                {{/unless}}
               </div>
               <a class="remove-btn" data-action="removeGeneratedPoi" data-uuid="{{this.uuid}}"><i class="fas fa-times"></i></a>
             </div>
@@ -628,9 +630,11 @@
 
                   {{!-- Urgency badge + remove button --}}
                   <div class="poi-sidebar-top">
+                    {{#unless this.poi.showMasked}}
                     {{#if this.poi.isTacticalThreat}}
                     <span class="poi-stat">{{localize "STA_TC.Poi.Urgency"}} {{this.poi.urgency}}</span>
                     {{/if}}
+                    {{/unless}}
                     <a class="remove-btn" data-action="removePoi" data-poi-list="{{this.listKey}}" data-index="{{this.index}}"><i class="fas fa-times"></i></a>
                   </div>
 

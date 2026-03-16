@@ -859,6 +859,12 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
         uuids.map(async (uuid) => {
           const actor = await fromUuid(uuid);
           if (!actor) return null;
+          const isUnknown = (actor.system?.poiType || "unknown") === "unknown";
+          const showMasked = game.user.isGM
+            ? false
+            : isUnknown
+              ? !actor.system?.revealed
+              : !!actor.system?.hiddenByGM;
           return {
             uuid,
             name: actor.name,
@@ -867,6 +873,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
             poiTypeLabel: game.i18n.localize(
               `STA_TC.Poi.Types.${this._capitalize(actor.system?.poiType || "unknown")}`,
             ),
+            showMasked,
             difficulty: actor.system?.difficulty || 1,
             power: game.i18n.localize(
               `STA_TC.Powers.${this._capitalize(actor.system?.power || "military")}`,

@@ -93,31 +93,13 @@ export function registerSettings() {
   // Campaign Tracker Settings
   // -------------------------------------------------------------------------
 
-  game.settings.register(MODULE_ID, "campaignMomentum", {
-    name: "STA_TC.Settings.CampaignMomentum",
-    hint: "STA_TC.Settings.CampaignMomentumHint",
+  game.settings.register(MODULE_ID, "worldCampaignTracker", {
+    name: "STA_TC.Settings.WorldCampaignTracker",
+    hint: "STA_TC.Settings.WorldCampaignTrackerHint",
     scope: "world",
     config: true,
-    type: Number,
-    default: 0,
-  });
-
-  game.settings.register(MODULE_ID, "campaignThreat", {
-    name: "STA_TC.Settings.CampaignThreat",
-    hint: "STA_TC.Settings.CampaignThreatHint",
-    scope: "world",
-    config: true,
-    type: Number,
-    default: 0,
-  });
-
-  game.settings.register(MODULE_ID, "progressionPoints", {
-    name: "STA_TC.Settings.ProgressionPoints",
-    hint: "STA_TC.Settings.ProgressionPointsHint",
-    scope: "world",
-    config: true,
-    type: Number,
-    default: 0,
+    type: String,
+    default: "",
   });
 
   // -------------------------------------------------------------------------

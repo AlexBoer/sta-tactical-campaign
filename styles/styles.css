@@ -1341,6 +1341,81 @@
   border: 1px solid rgba(0, 51, 153, 0.3);
 }
 
+/* Visibility-state dim for hidden entries in the staging list */
+.campaign-tracker-sheet .generated-poi-entry.vis-hidden {
+  opacity: 0.55;
+}
+
+/* Segmented visibility toggle — three connected cells */
+.campaign-tracker-sheet .poi-vis-toggle {
+  display: inline-flex;
+  border: 1px solid rgba(100, 140, 180, 0.35);
+  border-radius: 3px;
+  overflow: hidden;
+  flex-shrink: 0;
+  width: fit-content;
+}
+.campaign-tracker-sheet .poi-vis-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 18px;
+  font-size: 0.65em;
+  cursor: pointer;
+  color: var(--sta-tc-text-muted);
+  background: rgba(0, 20, 40, 0.3);
+  transition: background 0.15s, color 0.15s;
+  border-right: 1px solid rgba(100, 140, 180, 0.2);
+}
+.campaign-tracker-sheet .poi-vis-seg:last-child {
+  border-right: none;
+}
+.campaign-tracker-sheet .poi-vis-seg:hover {
+  background: rgba(80, 120, 160, 0.3);
+  color: var(--sta-tc-text);
+}
+/* Active state colors: hidden=red, masked=amber, revealed=green */
+.campaign-tracker-sheet .poi-vis-seg.active[data-visibility="hidden"] {
+  background: rgba(180, 40, 40, 0.45);
+  color: #f88;
+}
+.campaign-tracker-sheet .poi-vis-seg.active[data-visibility="masked"] {
+  background: rgba(180, 160, 40, 0.4);
+  color: #ee6;
+}
+.campaign-tracker-sheet .poi-vis-seg.active[data-visibility="revealed"] {
+  background: rgba(40, 160, 60, 0.4);
+  color: #8e8;
+}
+
+/* Inline actions row in the staging list */
+.campaign-tracker-sheet .wizard-poi-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Event result text in the staging list */
+.campaign-tracker-sheet .wizard-poi-event {
+  font-size: 0.7em;
+  color: var(--sta-tc-text-muted);
+}
+
+/* Bulk action bar */
+.campaign-tracker-sheet .generated-poi-bulk-bar {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  justify-content: flex-start;
+}
+.campaign-tracker-sheet .generated-poi-bulk-bar .btn {
+  font-size: 0.7em;
+  padding: 2px 6px;
+}
+
 /* ===== Points of Interest Section ===== */
 .campaign-tracker-sheet .tracker-pois {
   display: grid;

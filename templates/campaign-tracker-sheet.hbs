@@ -209,6 +209,7 @@
         {{!-- Phase 1a: POI generation panel --}}
         {{#if canGeneratePoi}}
         <div class="phase-panel phase-1a-panel">
+          {{#if @root.isGM}}
           <div class="phase-panel-header">
             <span><i class="fas fa-plus-circle"></i> {{localize "STA_TC.Wizard.Phase1a"}}</span>
             <span class="generated-count">{{countLabel}}</span>
@@ -227,18 +228,34 @@
           {{#if generatedPois.length}}
           <div class="generated-poi-list">
             {{#each generatedPois}}
-            <div class="generated-poi-entry poi-type-{{this.poiType}}" draggable="true" data-drag data-uuid="{{this.uuid}}">
+            <div class="generated-poi-entry poi-type-{{this.poiType}} vis-{{this.visibilityState}}" draggable="true" data-drag data-uuid="{{this.uuid}}">
               <img class="poi-thumb" src="{{this.img}}" data-action="openActor" data-uuid="{{this.uuid}}" />
               <div class="wizard-poi-info">
                 <span class="wizard-poi-name" data-action="openActor" data-uuid="{{this.uuid}}">{{this.name}}</span>
-                {{#unless this.showMasked}}
                 <span class="wizard-poi-meta">{{this.poiTypeLabel}} &middot; D{{this.difficulty}} {{this.power}}{{#if this.power2}} / D{{this.difficulty2}} {{this.power2}}{{/if}}</span>
-                {{/unless}}
+                {{#if this.eventResult}}
+                <span class="wizard-poi-event"><i class="fas fa-bolt"></i> {{this.eventResult}}</span>
+                {{/if}}
               </div>
-              <a class="remove-btn" data-action="removeGeneratedPoi" data-uuid="{{this.uuid}}"><i class="fas fa-times"></i></a>
+              <div class="wizard-poi-actions">
+                <div class="poi-vis-toggle" data-uuid="{{this.uuid}}">
+                  <a class="poi-vis-seg {{#if (eq this.visibilityState "hidden")}}active{{/if}}" data-action="setPoiVisibility" data-visibility="hidden" data-uuid="{{this.uuid}}" title="{{localize 'STA_TC.Poi.StatusHidden'}}"><i class="fas fa-eye-slash"></i></a>
+                  <a class="poi-vis-seg {{#if (eq this.visibilityState "masked")}}active{{/if}}" data-action="setPoiVisibility" data-visibility="masked" data-uuid="{{this.uuid}}" title="{{localize 'STA_TC.Poi.StatusMasked'}}"><i class="fas fa-mask"></i></a>
+                  <a class="poi-vis-seg {{#if (eq this.visibilityState "revealed")}}active{{/if}}" data-action="setPoiVisibility" data-visibility="revealed" data-uuid="{{this.uuid}}" title="{{localize 'STA_TC.Poi.StatusRevealed'}}"><i class="fas fa-eye"></i></a>
+                </div>
+                <a class="remove-btn" data-action="removeGeneratedPoi" data-uuid="{{this.uuid}}" title="{{localize 'STA_TC.Poi.Remove'}}"><i class="fas fa-times"></i></a>
+              </div>
             </div>
             {{/each}}
           </div>
+          <div class="generated-poi-bulk-bar">
+            <button type="button" class="btn btn-sm" data-action="setAllPoiVisibility" data-visibility="hidden"><i class="fas fa-eye-slash"></i> {{localize "STA_TC.Poi.StatusHidden"}}</button>
+            <button type="button" class="btn btn-sm" data-action="setAllPoiVisibility" data-visibility="masked"><i class="fas fa-mask"></i> {{localize "STA_TC.Poi.StatusMasked"}}</button>
+            <button type="button" class="btn btn-sm" data-action="setAllPoiVisibility" data-visibility="revealed"><i class="fas fa-eye"></i> {{localize "STA_TC.Poi.StatusRevealed"}}</button>
+          </div>
+          {{/if}}
+          {{else}}
+          <p class="wizard-subtext"><i class="fas fa-hourglass-half"></i> {{localize "STA_TC.Wizard.GMPreparingPois"}}</p>
           {{/if}}
         </div>
         {{/if}}
@@ -474,14 +491,16 @@
                   </div>
 
                   {{!-- Power type --}}
-                  {{#unless this.poi.showMasked}}
                   <div class="poi-power">
+                    {{#if this.poi.showMasked}}
+                    ????? {{this.poi.difficulty}}{{#if this.poi.power2}} / ????? {{this.poi.difficulty2}}{{/if}}
+                    {{else}}
                     {{this.poi.powerLabel}} {{this.poi.difficulty}}{{#if this.poi.power2}} / {{this.poi.powerLabel2}} {{this.poi.difficulty2}}{{/if}}
+                    {{/if}}
                     {{#if this.poi.hasEventEffects}}
                     <span class="poi-event-effects-badge" title="{{this.poi.eventEffectTooltip}}"><i class="fas fa-wand-magic-sparkles"></i> Effects Applied</span>
                     {{/if}}
                   </div>
-                  {{/unless}}
 
                   {{!-- Note (always visible when present) --}}
                   {{#unless this.poi.showMasked}}
@@ -638,18 +657,13 @@
                     <a class="remove-btn" data-action="removePoi" data-poi-list="{{this.listKey}}" data-index="{{this.index}}"><i class="fas fa-times"></i></a>
                   </div>
 
-                  {{!-- Reveal Unknown POI (GM only) --}}
-                  {{#if this.poi.showRevealButton}}
-                  <button type="button" class="btn btn-sm poi-reveal-btn" data-action="revealPoi" data-uuid="{{this.poi.uuid}}">
-                    <i class="fas fa-eye"></i> {{localize "STA_TC.Poi.RevealToPlayers"}}
-                  </button>
-                  {{/if}}
-
-                  {{!-- Hide Unknown POI from players (GM only, after revealed) --}}
-                  {{#if this.poi.showHideButton}}
-                  <button type="button" class="btn btn-sm poi-hide-btn" data-action="hidePoi" data-uuid="{{this.poi.uuid}}">
-                    <i class="fas fa-eye-slash"></i> {{localize "STA_TC.Poi.HideFromPlayers"}}
-                  </button>
+                  {{!-- Visibility controls (GM only) --}}
+                  {{#if @root.isGM}}
+                  <div class="poi-vis-toggle" data-uuid="{{this.poi.uuid}}">
+                    <a class="poi-vis-seg {{#if (eq this.poi.visibilityState "hidden")}}active{{/if}}" data-action="setPoiVisibility" data-visibility="hidden" data-uuid="{{this.poi.uuid}}" title="{{localize 'STA_TC.Poi.StatusHidden'}}"><i class="fas fa-eye-slash"></i></a>
+                    <a class="poi-vis-seg {{#if (eq this.poi.visibilityState "masked")}}active{{/if}}" data-action="setPoiVisibility" data-visibility="masked" data-uuid="{{this.poi.uuid}}" title="{{localize 'STA_TC.Poi.StatusMasked'}}"><i class="fas fa-mask"></i></a>
+                    <a class="poi-vis-seg {{#if (eq this.poi.visibilityState "revealed")}}active{{/if}}" data-action="setPoiVisibility" data-visibility="revealed" data-uuid="{{this.poi.uuid}}" title="{{localize 'STA_TC.Poi.StatusRevealed'}}"><i class="fas fa-eye"></i></a>
+                  </div>
                   {{/if}}
 
                   {{!-- Phase 1 Step 3: Roll / Reroll Event --}}

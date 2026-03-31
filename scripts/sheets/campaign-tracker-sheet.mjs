@@ -158,8 +158,8 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
 
       clearUnavailable: CampaignTrackerSheet._onClearUnavailable,
       openProgressionLog: CampaignTrackerSheet._onOpenProgressionLog,
-      revealPoi: CampaignTrackerSheet._onRevealPoi,
-      hidePoi: CampaignTrackerSheet._onHidePoi,
+      setPoiVisibility: CampaignTrackerSheet._onSetPoiVisibility,
+      setAllPoiVisibility: CampaignTrackerSheet._onSetAllPoiVisibility,
     },
     form: {
       submitOnChange: true,
@@ -271,15 +271,15 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       : null;
     const phase3data = isPhase3 ? this._computePhase3Data(system) : null;
 
+    const hasEventTable = !!game.settings.get(MODULE_ID, "tableEvents");
+    const isGM = game.user?.isGM ?? false;
+
     let generatedPois = [];
-    if (turnPhase === "1" && turnStep === 1) {
+    if (turnPhase === "1" && turnStep === 1 && isGM) {
       generatedPois = await this._resolveGeneratedPois(
         system.turnGeneratedPois || [],
       );
     }
-
-    const hasEventTable = !!game.settings.get(MODULE_ID, "tableEvents");
-    const isGM = game.user?.isGM ?? false;
 
     // Phase 3 sub-step (1=POI outcomes, 2=Progression, 3=Reinforcements, 4=Summary)
     const phase3Step = isPhase3 ? turnStep : 1;
@@ -712,6 +712,8 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
         (entries || []).map(async (entry, index) => {
           const poi = await fromUuid(entry.actorUuid);
           if (!poi) return null;
+          // Completely skip hidden POIs for non-GM users
+          if (!game.user.isGM && poi.system?.hiddenByGM) return null;
           const asset1 = entry.asset1Uuid
             ? await fromUuid(entry.asset1Uuid)
             : null;
@@ -745,40 +747,25 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
               uuid: entry.actorUuid,
               name: poi.name,
               displayName: (() => {
-                const isUnknown =
-                  (poi.system?.poiType || "unknown") === "unknown";
-                if (isUnknown) {
-                  if (poi.system?.revealed && poi.system?.realName)
-                    return poi.system.realName;
-                  return poi.name;
+                if (poi.system?.revealed) {
+                  // Revealed: show real name (realName for unknowns, actor name for others)
+                  const isUnknown =
+                    (poi.system?.poiType || "unknown") === "unknown";
+                  return isUnknown && poi.system?.realName
+                    ? poi.system.realName
+                    : poi.name;
                 }
-                if (poi.system?.hiddenByGM)
-                  return game.i18n.localize("STA_TC.Poi.HiddenDefaultName");
+                // Not revealed: show masked default name
                 return poi.name;
               })(),
               showMasked: (() => {
                 if (game.user.isGM) return false;
-                const isUnknown =
-                  (poi.system?.poiType || "unknown") === "unknown";
-                return isUnknown
-                  ? !poi.system?.revealed
-                  : !!poi.system?.hiddenByGM;
+                return !poi.system?.revealed;
               })(),
-              showRevealButton: (() => {
-                if (!game.user.isGM) return false;
-                const isUnknown =
-                  (poi.system?.poiType || "unknown") === "unknown";
-                return isUnknown
-                  ? !poi.system?.revealed
-                  : !!poi.system?.hiddenByGM;
-              })(),
-              showHideButton: (() => {
-                if (!game.user.isGM) return false;
-                const isUnknown =
-                  (poi.system?.poiType || "unknown") === "unknown";
-                return isUnknown
-                  ? !!poi.system?.revealed
-                  : !poi.system?.hiddenByGM;
+              visibilityState: (() => {
+                if (poi.system?.hiddenByGM) return "hidden";
+                if (!poi.system?.revealed) return "masked";
+                return "revealed";
               })(),
               img: poi.img,
               difficulty: _ov("difficulty", poi.system?.difficulty),
@@ -859,12 +846,29 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
         uuids.map(async (uuid) => {
           const actor = await fromUuid(uuid);
           if (!actor) return null;
-          const isUnknown = (actor.system?.poiType || "unknown") === "unknown";
-          const showMasked = game.user.isGM
-            ? false
-            : isUnknown
-              ? !actor.system?.revealed
-              : !!actor.system?.hiddenByGM;
+          // Compute three-state visibility
+          const visibilityState = actor.system?.hiddenByGM
+            ? "hidden"
+            : !actor.system?.revealed
+              ? "masked"
+              : "revealed";
+          // Retrieve event result from tracker entry data
+          const poiLists = [
+            "poiListThreat",
+            "poiListExploration",
+            "poiListRoutine",
+            "poiListUnknown",
+          ];
+          let eventResult = "";
+          for (const lk of poiLists) {
+            const e = (this.actor.system[lk] || []).find(
+              (e) => e.actorUuid === uuid,
+            );
+            if (e?.eventResult) {
+              eventResult = e.eventResult;
+              break;
+            }
+          }
           return {
             uuid,
             name: actor.name,
@@ -873,7 +877,8 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
             poiTypeLabel: game.i18n.localize(
               `STA_TC.Poi.Types.${this._capitalize(actor.system?.poiType || "unknown")}`,
             ),
-            showMasked,
+            visibilityState,
+            eventResult,
             difficulty: actor.system?.difficulty || 1,
             power: game.i18n.localize(
               `STA_TC.Powers.${this._capitalize(actor.system?.power || "military")}`,
@@ -1523,6 +1528,26 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     const turnPhase = system.turnPhase;
     const turnStep = system.turnStep || 1;
     const stepCount = STEP_COUNTS[turnPhase] || 1;
+
+    // Validation: warn if hidden POIs exist when leaving Phase 1 Step 1
+    if (turnPhase === "1" && turnStep === 1) {
+      const generatedUuids = system.turnGeneratedPois || [];
+      let hasHidden = false;
+      for (const uuid of generatedUuids) {
+        const poi = await fromUuid(uuid);
+        if (poi?.system?.hiddenByGM) {
+          hasHidden = true;
+          break;
+        }
+      }
+      if (hasHidden) {
+        const proceed = await foundry.applications.api.DialogV2.confirm({
+          window: { title: game.i18n.localize("STA_TC.Wizard.Title") },
+          content: `<p>${game.i18n.localize("STA_TC.Poi.HiddenPoisWarning")}</p>`,
+        });
+        if (!proceed) return;
+      }
+    }
 
     // Validation: warn if no scenario selected when leaving Phase 1 Step 2
     if (turnPhase === "1" && turnStep === 2 && !system.scenarioPoi) {
@@ -2333,7 +2358,11 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     const folder = await this._getOrCreatePoiFolder(
       actor.system?.poiType || "unknown",
     );
-    if (folder) await actor.update({ folder: folder.id });
+    // Start hidden so the GM can prep before revealing to players
+    await actor.update({
+      folder: folder?.id ?? null,
+      "system.hiddenByGM": true,
+    });
     const uuid = actor.uuid;
     const listKey = CampaignTrackerSheet._poiTypeToListKey(
       actor,
@@ -2355,6 +2384,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       name: game.i18n.localize("STA_TC.PoiName"),
       type: `${MODULE_ID}.poi`,
       folder: folder?.id ?? null,
+      "system.hiddenByGM": true,
     });
     if (!actor) return;
     actor.sheet.render(true);
@@ -2391,7 +2421,11 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       const poiFolder = await this._getOrCreatePoiFolder(
         actor.system?.poiType || "unknown",
       );
-      if (poiFolder) await actor.update({ folder: poiFolder.id });
+      // Start hidden so the GM can prep before revealing to players
+      await actor.update({
+        folder: poiFolder?.id ?? null,
+        "system.hiddenByGM": true,
+      });
       const uuid = actor.uuid;
       const listKey = CampaignTrackerSheet._poiTypeToListKey(
         actor,
@@ -2822,8 +2856,40 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
         if (intent === "success") {
           finalResult = advisoryNat20 ? "flawedSuccess" : "success";
           finalMomentum = Math.max(0, advisorySuccesses - difficulty);
+        } else if (advisoryNat20) {
+          // Built-in roll recorded a nat20 complication — auto serious setback.
+          finalResult = "seriousSetback";
         } else {
-          finalResult = advisoryNat20 ? "seriousSetback" : "failure";
+          // No nat20 in advisory data; ask the GM whether a complication was rolled.
+          const isSeriousSetback = await foundry.applications.api.DialogV2.wait(
+            {
+              window: {
+                title: game.i18n.localize("STA_TC.Wizard.RollConflict"),
+              },
+              content: `<p>${game.i18n.localize("STA_TC.Dialog.FailureTypePrompt")}</p>`,
+              buttons: [
+                {
+                  action: "serious",
+                  label: game.i18n.localize(
+                    "STA_TC.Wizard.ResultSeriousSetback",
+                  ),
+                  icon: "fas fa-skull",
+                  default: false,
+                  callback: () => true,
+                },
+                {
+                  action: "failure",
+                  label: game.i18n.localize("STA_TC.Wizard.ResultFailure"),
+                  icon: "fas fa-times",
+                  default: true,
+                  callback: () => false,
+                },
+              ],
+              rejectClose: false,
+            },
+          );
+          if (isSeriousSetback === null) return;
+          finalResult = isSeriousSetback ? "seriousSetback" : "failure";
         }
         entries[idx].conflictResult = finalResult;
         entries[idx].conflictMomentum = finalMomentum;
@@ -3673,34 +3739,38 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
   }
 
   /**
-   * Reveal a POI to all players.
-   * For unknown POIs: sets system.revealed = true.
-   * For other types: sets system.hiddenByGM = false.
+   * Set a single POI's visibility state.
+   * Reads data-visibility="hidden|masked|revealed" from the clicked element.
    */
-  static async _onRevealPoi(event, target) {
+  static async _onSetPoiVisibility(event, target) {
+    const state = target.dataset.visibility;
     const uuid = target.closest("[data-uuid]").dataset.uuid;
     const poi = await fromUuid(uuid);
     if (!poi) return;
-    if (poi.system?.poiType === "unknown") {
-      await poi.update({ "system.revealed": true });
-    } else {
-      await poi.update({ "system.hiddenByGM": false });
-    }
+    const updates = {
+      hidden: { "system.hiddenByGM": true },
+      masked: { "system.hiddenByGM": false, "system.revealed": false },
+      revealed: { "system.hiddenByGM": false, "system.revealed": true },
+    }[state];
+    if (updates) await poi.update(updates);
   }
 
   /**
-   * Hide a POI from players.
-   * For unknown POIs: sets system.revealed = false.
-   * For other types: sets system.hiddenByGM = true.
+   * Bulk: set all generated POIs to a given visibility state.
+   * Reads data-visibility="hidden|masked|revealed" from the clicked element.
    */
-  static async _onHidePoi(event, target) {
-    const uuid = target.closest("[data-uuid]").dataset.uuid;
-    const poi = await fromUuid(uuid);
-    if (!poi) return;
-    if (poi.system?.poiType === "unknown") {
-      await poi.update({ "system.revealed": false });
-    } else {
-      await poi.update({ "system.hiddenByGM": true });
+  static async _onSetAllPoiVisibility(event, target) {
+    const state = target.dataset.visibility;
+    const updates = {
+      hidden: { "system.hiddenByGM": true },
+      masked: { "system.hiddenByGM": false, "system.revealed": false },
+      revealed: { "system.hiddenByGM": false, "system.revealed": true },
+    }[state];
+    if (!updates) return;
+    const uuids = this.actor.system.turnGeneratedPois || [];
+    for (const uuid of uuids) {
+      const poi = await fromUuid(uuid);
+      if (poi) await poi.update(updates);
     }
   }
 

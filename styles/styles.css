@@ -97,6 +97,13 @@
   box-shadow: 0 0 3px var(--sta-tc-secondary);
 }
 
+.sta-tc-sheet input:focus-visible,
+.sta-tc-sheet select:focus-visible,
+.sta-tc-sheet textarea:focus-visible {
+  outline: 2px solid var(--sta-tc-secondary);
+  outline-offset: 1px;
+}
+
 .sta-tc-sheet input[type="number"] {
   width: 60px;
   text-align: center;
@@ -335,6 +342,11 @@
   outline: none !important;
 }
 
+.sta-tc-sheet .power-select:focus-visible {
+  outline: 2px solid var(--sta-tc-secondary) !important;
+  outline-offset: 2px;
+}
+
 .sta-tc-sheet .power-select::before,
 .sta-tc-sheet .power-select::after {
   content: none !important;
@@ -370,7 +382,8 @@
   line-height: 1;
 }
 
-.sta-tc-sheet .primary-select-label:hover {
+.sta-tc-sheet .primary-select-label:hover,
+.sta-tc-sheet .primary-select-label:focus-visible {
   color: var(--sta-tc-secondary);
 }
 
@@ -391,7 +404,8 @@
   color: #f5a09a;
 }
 
-.sta-tc-sheet .powers-actions .undo-loss:hover {
+.sta-tc-sheet .powers-actions .undo-loss:hover,
+.sta-tc-sheet .powers-actions .undo-loss:focus-visible {
   background: rgba(231, 76, 60, 0.2);
   color: #fff;
 }
@@ -418,11 +432,17 @@
   box-shadow: none;
 }
 
-.sta-tc-sheet .btn:hover {
+.sta-tc-sheet .btn:hover,
+.sta-tc-sheet .btn:focus-visible {
   background: rgba(0, 60, 140, 0.6);
   border-color: rgba(100, 170, 255, 0.8);
   color: #e0efff;
   box-shadow: none;
+}
+
+.sta-tc-sheet .btn:focus-visible {
+  outline: 2px solid var(--sta-tc-secondary);
+  outline-offset: 1px;
 }
 
 .sta-tc-sheet .btn:active {
@@ -441,7 +461,8 @@
   color: #d4a0a0;
 }
 
-.sta-tc-sheet .btn.cancel:hover {
+.sta-tc-sheet .btn.cancel:hover,
+.sta-tc-sheet .btn.cancel:focus-visible {
   background: rgba(120, 20, 20, 0.5);
   border-color: rgba(220, 80, 80, 0.8);
   color: #ffd0d0;
@@ -930,7 +951,8 @@
   color: #90d4a8;
 }
 
-.campaign-tracker-sheet .wizard-steps-row .finish-btn:hover {
+.campaign-tracker-sheet .wizard-steps-row .finish-btn:hover,
+.campaign-tracker-sheet .wizard-steps-row .finish-btn:focus-visible {
   background: rgba(46, 139, 87, 0.4);
   border-color: #2e8b57;
   color: #c0ffcc;
@@ -1187,7 +1209,8 @@
   z-index: 1;
 }
 
-.campaign-tracker-sheet .asset-strip-entry:hover .asset-strip-recall {
+.campaign-tracker-sheet .asset-strip-entry:hover .asset-strip-recall,
+.campaign-tracker-sheet .asset-strip-entry:focus-within .asset-strip-recall {
   opacity: 1;
 }
 
@@ -1210,7 +1233,8 @@
   z-index: 1;
 }
 
-.campaign-tracker-sheet .asset-strip-entry:hover .asset-strip-remove {
+.campaign-tracker-sheet .asset-strip-entry:hover .asset-strip-remove,
+.campaign-tracker-sheet .asset-strip-entry:focus-within .asset-strip-remove {
   opacity: 1;
 }
 
@@ -1270,7 +1294,8 @@
   opacity: 0.5;
 }
 
-.campaign-tracker-sheet .remove-btn:hover {
+.campaign-tracker-sheet .remove-btn:hover,
+.campaign-tracker-sheet .remove-btn:focus-visible {
   color: #e74c3c;
   opacity: 1;
 }
@@ -1371,7 +1396,8 @@
 .campaign-tracker-sheet .poi-vis-seg:last-child {
   border-right: none;
 }
-.campaign-tracker-sheet .poi-vis-seg:hover {
+.campaign-tracker-sheet .poi-vis-seg:hover,
+.campaign-tracker-sheet .poi-vis-seg:focus-visible {
   background: rgba(80, 120, 160, 0.3);
   color: var(--sta-tc-text);
 }
@@ -1443,7 +1469,8 @@
   transition: color 0.15s;
 }
 
-.campaign-tracker-sheet .poi-column h3:hover {
+.campaign-tracker-sheet .poi-column h3:hover,
+.campaign-tracker-sheet .poi-column h3:focus-visible {
   color: var(--sta-tc-text);
 }
 
@@ -1535,7 +1562,8 @@
   color: #cfb6e8;
 }
 
-.campaign-tracker-sheet .poi-reset-roll-btn:hover {
+.campaign-tracker-sheet .poi-reset-roll-btn:hover,
+.campaign-tracker-sheet .poi-reset-roll-btn:focus-visible {
   background: rgba(120, 90, 160, 0.22);
   border-color: rgba(200, 160, 240, 0.85);
   color: #e5d2f9;
@@ -1546,7 +1574,8 @@
   color: #e2c874;
 }
 
-.campaign-tracker-sheet .poi-reset-event-btn:hover {
+.campaign-tracker-sheet .poi-reset-event-btn:hover,
+.campaign-tracker-sheet .poi-reset-event-btn:focus-visible {
   background: rgba(180, 130, 20, 0.22);
   border-color: rgba(235, 180, 70, 0.85);
   color: #ffe3a0;
@@ -1603,7 +1632,8 @@
   cursor: pointer;
 }
 
-.campaign-tracker-sheet .poi-name:hover {
+.campaign-tracker-sheet .poi-name:hover,
+.campaign-tracker-sheet .poi-name:focus-visible {
   color: var(--sta-tc-hover);
   text-decoration: underline;
 }
@@ -1672,7 +1702,8 @@
   flex-shrink: 0;
 }
 
-.campaign-tracker-sheet .btn-scenario:hover { color: var(--sta-tc-accent); }
+.campaign-tracker-sheet .btn-scenario:hover,
+.campaign-tracker-sheet .btn-scenario:focus-visible { color: var(--sta-tc-accent); }
 .campaign-tracker-sheet .btn-scenario.active { color: var(--sta-tc-accent); }
 
 /* ===== POI Event (Phase 1c) ===== */
@@ -1737,7 +1768,8 @@
   color: #5cb85c;
 }
 
-.campaign-tracker-sheet .btn-manual-pass:hover {
+.campaign-tracker-sheet .btn-manual-pass:hover,
+.campaign-tracker-sheet .btn-manual-pass:focus-visible {
   background: rgba(46, 139, 87, 0.25);
   border-color: #2e8b57;
   color: #7ecf7e;
@@ -1750,13 +1782,15 @@
   color: #cd5c5c;
 }
 
-.campaign-tracker-sheet .btn-manual-fail:hover {
+.campaign-tracker-sheet .btn-manual-fail:hover,
+.campaign-tracker-sheet .btn-manual-fail:focus-visible {
   background: rgba(205, 92, 92, 0.25);
   border-color: #cd5c5c;
   color: #e88;
 }
 
-.campaign-tracker-sheet .poi-conflict-btn:hover {
+.campaign-tracker-sheet .poi-conflict-btn:hover,
+.campaign-tracker-sheet .poi-conflict-btn:focus-visible {
   background: rgba(180, 150, 0, 0.25);
   border-color: var(--sta-tc-accent);
   color: #ffe060;
@@ -1967,7 +2001,8 @@
   z-index: 1;
 }
 
-.campaign-tracker-sheet .poi-slot-wrapper.filled:hover .slot-remove {
+.campaign-tracker-sheet .poi-slot-wrapper.filled:hover .slot-remove,
+.campaign-tracker-sheet .poi-slot-wrapper.filled:focus-within .slot-remove {
   opacity: 1;
 }
 
@@ -2401,16 +2436,20 @@
   border-radius: 50%;
   width: 16px;
   height: 16px;
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.6em;
   cursor: pointer;
   z-index: 2;
   text-decoration: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
-.campaign-tracker-sheet .asset-portrait-wrap:hover .asset-strip-clear-unavail { display: flex; }
+.campaign-tracker-sheet .asset-portrait-wrap:hover .asset-strip-clear-unavail,
+.campaign-tracker-sheet .asset-portrait-wrap:focus-within .asset-strip-clear-unavail,
+.campaign-tracker-sheet .asset-strip-clear-unavail:focus-visible { opacity: 1; pointer-events: auto; }
 
 .campaign-tracker-sheet .summary-stat {
   display: flex;
@@ -2533,7 +2572,8 @@
   color: var(--sta-tc-text-muted, #666);
 }
 
-.event-sheet .event-effect-row .effect-controls button:hover {
+.event-sheet .event-effect-row .effect-controls button:hover,
+.event-sheet .event-effect-row .effect-controls button:focus-visible {
   color: var(--sta-tc-accent, #003399);
 }
 
@@ -2613,7 +2653,8 @@
   color: var(--sta-tc-text-muted, #666);
 }
 
-.poi-sheet .poi-event-item-row .event-item-controls button:hover {
+.poi-sheet .poi-event-item-row .event-item-controls button:hover,
+.poi-sheet .poi-event-item-row .event-item-controls button:focus-visible {
   color: var(--sta-tc-accent, #003399);
 }
 
@@ -2841,7 +2882,8 @@
   line-height: 1;
 }
 
-.campaign-tracker-sheet .progression-log-btn:hover {
+.campaign-tracker-sheet .progression-log-btn:hover,
+.campaign-tracker-sheet .progression-log-btn:focus-visible {
   color: var(--sta-tc-accent);
   border-color: var(--sta-tc-border);
 }
@@ -2967,11 +3009,13 @@
   font-size: 0.85em;
 }
 
-.progression-log .progression-entry-controls button:hover {
+.progression-log .progression-entry-controls button:hover,
+.progression-log .progression-entry-controls button:focus-visible {
   color: var(--sta-tc-accent);
 }
 
-.progression-log .progression-delete-btn:hover {
+.progression-log .progression-delete-btn:hover,
+.progression-log .progression-delete-btn:focus-visible {
   color: #e74c3c !important;
 }
 
@@ -2979,7 +3023,8 @@
   color: var(--sta-tc-accent, #f2cc0d) !important;
 }
 
-.progression-log .progression-activate-btn:hover {
+.progression-log .progression-activate-btn:hover,
+.progression-log .progression-activate-btn:focus-visible {
   color: #fff !important;
   background: rgba(242, 204, 13, 0.25) !important;
   border-radius: 3px;
@@ -3035,6 +3080,12 @@
   outline: none;
   border-color: var(--sta-tc-secondary, #6699ff);
   box-shadow: 0 0 3px var(--sta-tc-secondary, #6699ff);
+}
+
+.asset-effect-editor input:focus-visible,
+.asset-effect-editor select:focus-visible {
+  outline: 2px solid var(--sta-tc-secondary, #6699ff);
+  outline-offset: 1px;
 }
 
 /* ---- HR dividers ---- */
@@ -3253,7 +3304,8 @@
   box-shadow: none;
 }
 
-.asset-effect-editor .sheet-footer .btn:hover {
+.asset-effect-editor .sheet-footer .btn:hover,
+.asset-effect-editor .sheet-footer .btn:focus-visible {
   background: rgba(0, 60, 140, 0.6);
   border-color: rgba(100, 170, 255, 0.8);
   color: #e0efff;
@@ -3342,5 +3394,82 @@
   font-family: inherit;
   box-sizing: border-box;
   width: 100%;
+}
+
+/* =================================================================
+   Accessibility: Reduced Motion
+   ================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  .sta-tc-sheet *,
+  .asset-effect-editor * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =================================================================
+   Accessibility: High Contrast
+   ================================================================= */
+@media (prefers-contrast: more) {
+  .sta-tc-sheet .btn,
+  .asset-effect-editor .btn {
+    border-color: rgba(100, 170, 255, 1);
+    color: #fff;
+  }
+
+  .sta-tc-sheet input,
+  .sta-tc-sheet select,
+  .sta-tc-sheet textarea,
+  .asset-effect-editor input,
+  .asset-effect-editor select {
+    border-color: var(--sta-tc-secondary);
+  }
+
+  .campaign-tracker-sheet .remove-btn {
+    opacity: 1;
+  }
+
+  .campaign-tracker-sheet .asset-strip-recall,
+  .campaign-tracker-sheet .asset-strip-remove,
+  .campaign-tracker-sheet .poi-slot-wrapper.filled .slot-remove {
+    opacity: 1;
+  }
+
+  .campaign-tracker-sheet .poi-vis-seg {
+    border-color: var(--sta-tc-text-muted);
+  }
+}
+
+/* =================================================================
+   Accessibility: Forced Colors (Windows High Contrast)
+   ================================================================= */
+@media (forced-colors: active) {
+  .sta-tc-sheet .btn,
+  .asset-effect-editor .btn {
+    border: 1px solid ButtonText;
+    color: ButtonText;
+  }
+
+  .sta-tc-sheet .btn:hover,
+  .sta-tc-sheet .btn:focus-visible,
+  .asset-effect-editor .btn:hover,
+  .asset-effect-editor .btn:focus-visible {
+    outline: 2px solid Highlight;
+  }
+
+  .sta-tc-sheet input:focus-visible,
+  .sta-tc-sheet select:focus-visible,
+  .sta-tc-sheet textarea:focus-visible {
+    outline: 2px solid Highlight;
+  }
+
+  .campaign-tracker-sheet .poi-vis-seg.active {
+    border: 2px solid Highlight;
+  }
+
+  .campaign-tracker-sheet .wizard-step.active .step-indicator {
+    border: 2px solid Highlight;
+  }
 }
 

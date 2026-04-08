@@ -12,8 +12,8 @@
   <ul class="progression-entries-list">
     {{#each entries as |entry|}}
     <li class="progression-entry-row" data-item-id="{{entry.id}}">
-      <button type="button" class="progression-saved-btn {{#if entry.saved}}is-saved{{/if}}" data-action="toggleSaved" title="{{localize 'STA_TC.Progression.ToggleSaved'}}">
-        <i class="fas fa-star"></i>
+      <button type="button" class="progression-saved-btn {{#if entry.saved}}is-saved{{/if}}" data-action="toggleSaved" aria-label="{{localize 'STA_TC.Progression.ToggleSaved'}}" title="{{localize 'STA_TC.Progression.ToggleSaved'}}">
+        <i class="fas fa-star" aria-hidden="true"></i>
       </button>
       <div class="progression-entry-info">
         <span class="progression-entry-name">{{entry.name}}</span>
@@ -23,15 +23,15 @@
       </div>
       <div class="progression-entry-controls">
         {{#if entry.saved}}
-        <button type="button" class="progression-activate-btn" data-action="activateEntry" title="{{localize 'STA_TC.Progression.Activate'}}">
-          <i class="fas fa-bolt"></i>
+        <button type="button" class="progression-activate-btn" data-action="activateEntry" aria-label="{{localize 'STA_TC.Progression.Activate'}}" title="{{localize 'STA_TC.Progression.Activate'}}">
+          <i class="fas fa-bolt" aria-hidden="true"></i>
         </button>
         {{/if}}
-        <button type="button" class="progression-open-btn" data-action="openEntry" title="{{localize 'STA_TC.Progression.Open'}}">
-          <i class="fas fa-external-link-alt"></i>
+        <button type="button" class="progression-open-btn" data-action="openEntry" aria-label="{{localize 'STA_TC.Progression.Open'}}" title="{{localize 'STA_TC.Progression.Open'}}">
+          <i class="fas fa-external-link-alt" aria-hidden="true"></i>
         </button>
-        <button type="button" class="progression-delete-btn" data-action="deleteEntry" title="{{localize 'STA_TC.Progression.Delete'}}">
-          <i class="fas fa-trash"></i>
+        <button type="button" class="progression-delete-btn" data-action="deleteEntry" aria-label="{{localize 'STA_TC.Progression.Delete'}}" title="{{localize 'STA_TC.Progression.Delete'}}">
+          <i class="fas fa-trash" aria-hidden="true"></i>
         </button>
       </div>
     </li>

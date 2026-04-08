@@ -37,8 +37,8 @@
       <label>{{localize "STA_TC.CampaignTracker.PrioritySupply"}}</label>
       <input type="number" name="system.prioritySupply" value="{{system.prioritySupply}}" min="0" />
     </div>
-    <button type="button" class="btn progression-log-btn" data-action="openProgressionLog" title="{{localize 'STA_TC.CampaignTracker.OpenProgressionLog'}}">
-      <i class="fas fa-list-check"></i>
+    <button type="button" class="btn progression-log-btn" data-action="openProgressionLog" aria-label="{{localize 'STA_TC.CampaignTracker.OpenProgressionLog'}}" title="{{localize 'STA_TC.CampaignTracker.OpenProgressionLog'}}">
+      <i class="fas fa-list-check" aria-hidden="true"></i>
     </button>
   </div>
 
@@ -98,18 +98,18 @@
 
         {{!-- Add asset buttons --}}
         <div class="sidebar-add-btns">
-          <button type="button" class="btn btn-sm sidebar-add-btn" data-action="createRandomAsset" title="{{localize 'STA_TC.CampaignTracker.CreateRandomAsset'}}">
-            <i class="fas fa-random"></i>
+          <button type="button" class="btn btn-sm sidebar-add-btn" data-action="createRandomAsset" aria-label="{{localize 'STA_TC.CampaignTracker.CreateRandomAsset'}}" title="{{localize 'STA_TC.CampaignTracker.CreateRandomAsset'}}">
+            <i class="fas fa-random" aria-hidden="true"></i>
           </button>
-          <button type="button" class="btn btn-sm sidebar-add-btn" data-action="createCustomAsset" title="{{localize 'STA_TC.CampaignTracker.CreateCustomAsset'}}">
-            <i class="fas fa-plus"></i>
+          <button type="button" class="btn btn-sm sidebar-add-btn" data-action="createCustomAsset" aria-label="{{localize 'STA_TC.CampaignTracker.CreateCustomAsset'}}" title="{{localize 'STA_TC.CampaignTracker.CreateCustomAsset'}}">
+            <i class="fas fa-plus" aria-hidden="true"></i>
           </button>
         </div>
 
         {{!-- Character Assets --}}
         <div class="asset-type-divider asset-type-character">
           <span>{{localize 'STA_TC.Asset.Generator.Types.Character'}}</span>
-          <button type="button" class="btn asset-type-add-btn" data-action="createAssetForType" data-asset-type="character" title="{{localize 'STA_TC.CampaignTracker.AddAsset' type=(localize 'STA_TC.Asset.Generator.Types.Character')}}"><i class="fas fa-plus"></i></button>
+          <button type="button" class="btn asset-type-add-btn" data-action="createAssetForType" data-asset-type="character" aria-label="{{localize 'STA_TC.CampaignTracker.AddAsset' type=(localize 'STA_TC.Asset.Generator.Types.Character')}}" title="{{localize 'STA_TC.CampaignTracker.AddAsset' type=(localize 'STA_TC.Asset.Generator.Types.Character')}}"><i class="fas fa-plus" aria-hidden="true"></i></button>
         </div>
         {{#each characterAssets}}
         <div class="asset-strip-entry{{#if this.assignedTo}} is-assigned{{/if}}{{#if this.isCommandeered}} is-commandeered{{/if}}{{#if this.isUnavailable}} is-unavailable{{/if}}{{#if this.isLost}} is-lost{{/if}}" draggable="true" data-drag data-uuid="{{this.uuid}}" title="{{this.name}}{{#if this.assignedTo}} → {{this.assignedTo}}{{/if}}">
@@ -117,14 +117,14 @@
             {{#if this.initials}}
             <div class="asset-thumb asset-initials" data-action="openActor" data-uuid="{{this.uuid}}">{{this.initials}}</div>
             {{else}}
-            <img class="asset-thumb" src="{{this.img}}" draggable="false" data-action="openActor" data-uuid="{{this.uuid}}" />
+            <img class="asset-thumb" src="{{this.img}}" draggable="false" data-action="openActor" data-uuid="{{this.uuid}}" alt="{{this.name}}" />
             {{/if}}
-            {{#if this.isCommandeered}}<span class="commandeered-badge" title="{{localize 'STA_TC.Wizard.OutcomeAssetCommandeered'}}"><i class="fas fa-lock"></i></span>{{/if}}
-            {{#if this.isUnavailable}}<span class="unavail-badge" title="{{localize 'STA_TC.Wizard.UnavailableStatus'}}"><i class="fas fa-bed-pulse"></i></span>{{/if}}
+            {{#if this.isCommandeered}}<span class="commandeered-badge" title="{{localize 'STA_TC.Wizard.OutcomeAssetCommandeered'}}"><i class="fas fa-lock" aria-hidden="true"></i></span>{{/if}}
+            {{#if this.isUnavailable}}<span class="unavail-badge" title="{{localize 'STA_TC.Wizard.UnavailableStatus'}}"><i class="fas fa-bed-pulse" aria-hidden="true"></i></span>{{/if}}
             {{#if this.isLost}}<span class="lost-badge">{{localize 'STA_TC.Lost'}}</span>{{/if}}
-            {{#if this.assignedTo}}<a class="asset-strip-recall" data-action="recallAsset" data-uuid="{{this.uuid}}" title="Recall from {{this.assignedTo}}"><i class="fas fa-undo"></i></a>{{/if}}
-            {{#if @root.isGM}}{{#if this.isUnavailable}}<a class="asset-strip-clear-unavail" data-action="clearUnavailable" data-uuid="{{this.uuid}}" title="{{localize 'STA_TC.Wizard.ClearUnavailable'}}"><i class="fas fa-heart-pulse"></i></a>{{/if}}{{/if}}
-            <a class="asset-strip-remove" data-action="removeAsset" data-asset-type="character" data-index="{{@index}}"><i class="fas fa-times"></i></a>
+            {{#if this.assignedTo}}<a class="asset-strip-recall" role="button" tabindex="0" data-action="recallAsset" data-uuid="{{this.uuid}}" aria-label="Recall from {{this.assignedTo}}" title="Recall from {{this.assignedTo}}"><i class="fas fa-undo" aria-hidden="true"></i></a>{{/if}}
+            {{#if @root.isGM}}{{#if this.isUnavailable}}<a class="asset-strip-clear-unavail" role="button" tabindex="0" data-action="clearUnavailable" data-uuid="{{this.uuid}}" aria-label="{{localize 'STA_TC.Wizard.ClearUnavailable'}}" title="{{localize 'STA_TC.Wizard.ClearUnavailable'}}"><i class="fas fa-heart-pulse" aria-hidden="true"></i></a>{{/if}}{{/if}}
+            <a class="asset-strip-remove" role="button" tabindex="0" data-action="removeAsset" data-asset-type="character" data-index="{{@index}}" aria-label="{{localize 'STA_TC.Poi.Remove'}}"><i class="fas fa-times" aria-hidden="true"></i></a>
           </div>
           <div class="asset-card-info">
             <span class="asset-card-name">{{this.name}}</span>
@@ -138,7 +138,7 @@
         {{!-- Ship Assets --}}
         <div class="asset-type-divider asset-type-ship">
           <span>{{localize 'STA_TC.Asset.Generator.Types.Ship'}}</span>
-          <button type="button" class="btn asset-type-add-btn" data-action="createAssetForType" data-asset-type="ship" title="{{localize 'STA_TC.CampaignTracker.AddAsset' type=(localize 'STA_TC.Asset.Generator.Types.Ship')}}"><i class="fas fa-plus"></i></button>
+          <button type="button" class="btn asset-type-add-btn" data-action="createAssetForType" data-asset-type="ship" aria-label="{{localize 'STA_TC.CampaignTracker.AddAsset' type=(localize 'STA_TC.Asset.Generator.Types.Ship')}}" title="{{localize 'STA_TC.CampaignTracker.AddAsset' type=(localize 'STA_TC.Asset.Generator.Types.Ship')}}"><i class="fas fa-plus" aria-hidden="true"></i></button>
         </div>
         {{#each shipAssets}}
         <div class="asset-strip-entry{{#if this.assignedTo}} is-assigned{{/if}}{{#if this.isCommandeered}} is-commandeered{{/if}}{{#if this.isUnavailable}} is-unavailable{{/if}}{{#if this.isLost}} is-lost{{/if}}" draggable="true" data-drag data-uuid="{{this.uuid}}" title="{{this.name}}{{#if this.assignedTo}} → {{this.assignedTo}}{{/if}}">
@@ -146,14 +146,14 @@
             {{#if this.initials}}
             <div class="asset-thumb asset-initials" data-action="openActor" data-uuid="{{this.uuid}}">{{this.initials}}</div>
             {{else}}
-            <img class="asset-thumb" src="{{this.img}}" draggable="false" data-action="openActor" data-uuid="{{this.uuid}}" />
+            <img class="asset-thumb" src="{{this.img}}" draggable="false" data-action="openActor" data-uuid="{{this.uuid}}" alt="{{this.name}}" />
             {{/if}}
-            {{#if this.isCommandeered}}<span class="commandeered-badge" title="{{localize 'STA_TC.Wizard.OutcomeAssetCommandeered'}}"><i class="fas fa-lock"></i></span>{{/if}}
-            {{#if this.isUnavailable}}<span class="unavail-badge" title="{{localize 'STA_TC.Wizard.UnavailableStatus'}}"><i class="fas fa-bed-pulse"></i></span>{{/if}}
+            {{#if this.isCommandeered}}<span class="commandeered-badge" title="{{localize 'STA_TC.Wizard.OutcomeAssetCommandeered'}}"><i class="fas fa-lock" aria-hidden="true"></i></span>{{/if}}
+            {{#if this.isUnavailable}}<span class="unavail-badge" title="{{localize 'STA_TC.Wizard.UnavailableStatus'}}"><i class="fas fa-bed-pulse" aria-hidden="true"></i></span>{{/if}}
             {{#if this.isLost}}<span class="lost-badge">{{localize 'STA_TC.Lost'}}</span>{{/if}}
-            {{#if this.assignedTo}}<a class="asset-strip-recall" data-action="recallAsset" data-uuid="{{this.uuid}}" title="Recall from {{this.assignedTo}}"><i class="fas fa-undo"></i></a>{{/if}}
-            {{#if @root.isGM}}{{#if this.isUnavailable}}<a class="asset-strip-clear-unavail" data-action="clearUnavailable" data-uuid="{{this.uuid}}" title="{{localize 'STA_TC.Wizard.ClearUnavailable'}}"><i class="fas fa-heart-pulse"></i></a>{{/if}}{{/if}}
-            <a class="asset-strip-remove" data-action="removeAsset" data-asset-type="ship" data-index="{{@index}}"><i class="fas fa-times"></i></a>
+            {{#if this.assignedTo}}<a class="asset-strip-recall" role="button" tabindex="0" data-action="recallAsset" data-uuid="{{this.uuid}}" aria-label="Recall from {{this.assignedTo}}" title="Recall from {{this.assignedTo}}"><i class="fas fa-undo" aria-hidden="true"></i></a>{{/if}}
+            {{#if @root.isGM}}{{#if this.isUnavailable}}<a class="asset-strip-clear-unavail" role="button" tabindex="0" data-action="clearUnavailable" data-uuid="{{this.uuid}}" aria-label="{{localize 'STA_TC.Wizard.ClearUnavailable'}}" title="{{localize 'STA_TC.Wizard.ClearUnavailable'}}"><i class="fas fa-heart-pulse" aria-hidden="true"></i></a>{{/if}}{{/if}}
+            <a class="asset-strip-remove" role="button" tabindex="0" data-action="removeAsset" data-asset-type="ship" data-index="{{@index}}" aria-label="{{localize 'STA_TC.Poi.Remove'}}"><i class="fas fa-times" aria-hidden="true"></i></a>
           </div>
           <div class="asset-card-info">
             <span class="asset-card-name">{{this.name}}</span>
@@ -167,7 +167,7 @@
         {{!-- Resource Assets --}}
         <div class="asset-type-divider asset-type-resource">
           <span>{{localize 'STA_TC.Asset.Generator.Types.Resource'}}</span>
-          <button type="button" class="btn asset-type-add-btn" data-action="createAssetForType" data-asset-type="resource" title="{{localize 'STA_TC.CampaignTracker.AddAsset' type=(localize 'STA_TC.Asset.Generator.Types.Resource')}}"><i class="fas fa-plus"></i></button>
+          <button type="button" class="btn asset-type-add-btn" data-action="createAssetForType" data-asset-type="resource" aria-label="{{localize 'STA_TC.CampaignTracker.AddAsset' type=(localize 'STA_TC.Asset.Generator.Types.Resource')}}" title="{{localize 'STA_TC.CampaignTracker.AddAsset' type=(localize 'STA_TC.Asset.Generator.Types.Resource')}}"><i class="fas fa-plus" aria-hidden="true"></i></button>
         </div>
         {{#each resourceAssets}}
         <div class="asset-strip-entry{{#if this.assignedTo}} is-assigned{{/if}}{{#if this.isCommandeered}} is-commandeered{{/if}}{{#if this.isUnavailable}} is-unavailable{{/if}}{{#if this.isLost}} is-lost{{/if}}" draggable="true" data-drag data-uuid="{{this.uuid}}" title="{{this.name}}{{#if this.assignedTo}} → {{this.assignedTo}}{{/if}}">
@@ -175,14 +175,14 @@
             {{#if this.initials}}
             <div class="asset-thumb asset-initials" data-action="openActor" data-uuid="{{this.uuid}}">{{this.initials}}</div>
             {{else}}
-            <img class="asset-thumb" src="{{this.img}}" draggable="false" data-action="openActor" data-uuid="{{this.uuid}}" />
+            <img class="asset-thumb" src="{{this.img}}" draggable="false" data-action="openActor" data-uuid="{{this.uuid}}" alt="{{this.name}}" />
             {{/if}}
-            {{#if this.isCommandeered}}<span class="commandeered-badge" title="{{localize 'STA_TC.Wizard.OutcomeAssetCommandeered'}}"><i class="fas fa-lock"></i></span>{{/if}}
-            {{#if this.isUnavailable}}<span class="unavail-badge" title="{{localize 'STA_TC.Wizard.UnavailableStatus'}}"><i class="fas fa-bed-pulse"></i></span>{{/if}}
+            {{#if this.isCommandeered}}<span class="commandeered-badge" title="{{localize 'STA_TC.Wizard.OutcomeAssetCommandeered'}}"><i class="fas fa-lock" aria-hidden="true"></i></span>{{/if}}
+            {{#if this.isUnavailable}}<span class="unavail-badge" title="{{localize 'STA_TC.Wizard.UnavailableStatus'}}"><i class="fas fa-bed-pulse" aria-hidden="true"></i></span>{{/if}}
             {{#if this.isLost}}<span class="lost-badge">{{localize 'STA_TC.Lost'}}</span>{{/if}}
-            {{#if this.assignedTo}}<a class="asset-strip-recall" data-action="recallAsset" data-uuid="{{this.uuid}}" title="Recall from {{this.assignedTo}}"><i class="fas fa-undo"></i></a>{{/if}}
-            {{#if @root.isGM}}{{#if this.isUnavailable}}<a class="asset-strip-clear-unavail" data-action="clearUnavailable" data-uuid="{{this.uuid}}" title="{{localize 'STA_TC.Wizard.ClearUnavailable'}}"><i class="fas fa-heart-pulse"></i></a>{{/if}}{{/if}}
-            <a class="asset-strip-remove" data-action="removeAsset" data-asset-type="resource" data-index="{{@index}}"><i class="fas fa-times"></i></a>
+            {{#if this.assignedTo}}<a class="asset-strip-recall" role="button" tabindex="0" data-action="recallAsset" data-uuid="{{this.uuid}}" aria-label="Recall from {{this.assignedTo}}" title="Recall from {{this.assignedTo}}"><i class="fas fa-undo" aria-hidden="true"></i></a>{{/if}}
+            {{#if @root.isGM}}{{#if this.isUnavailable}}<a class="asset-strip-clear-unavail" role="button" tabindex="0" data-action="clearUnavailable" data-uuid="{{this.uuid}}" aria-label="{{localize 'STA_TC.Wizard.ClearUnavailable'}}" title="{{localize 'STA_TC.Wizard.ClearUnavailable'}}"><i class="fas fa-heart-pulse" aria-hidden="true"></i></a>{{/if}}{{/if}}
+            <a class="asset-strip-remove" role="button" tabindex="0" data-action="removeAsset" data-asset-type="resource" data-index="{{@index}}" aria-label="{{localize 'STA_TC.Poi.Remove'}}"><i class="fas fa-times" aria-hidden="true"></i></a>
           </div>
           <div class="asset-card-info">
             <span class="asset-card-name">{{this.name}}</span>
@@ -229,7 +229,7 @@
           <div class="generated-poi-list">
             {{#each generatedPois}}
             <div class="generated-poi-entry poi-type-{{this.poiType}} vis-{{this.visibilityState}}" draggable="true" data-drag data-uuid="{{this.uuid}}">
-              <img class="poi-thumb" src="{{this.img}}" data-action="openActor" data-uuid="{{this.uuid}}" />
+              <img class="poi-thumb" src="{{this.img}}" data-action="openActor" data-uuid="{{this.uuid}}" alt="{{this.name}}" />
               <div class="wizard-poi-info">
                 <span class="wizard-poi-name" data-action="openActor" data-uuid="{{this.uuid}}">{{this.name}}</span>
                 <span class="wizard-poi-meta">{{this.poiTypeLabel}} &middot; D{{this.difficulty}} {{this.power}}{{#if this.power2}} / D{{this.difficulty2}} {{this.power2}}{{/if}}</span>
@@ -239,11 +239,11 @@
               </div>
               <div class="wizard-poi-actions">
                 <div class="poi-vis-toggle" data-uuid="{{this.uuid}}">
-                  <a class="poi-vis-seg {{#if (eq this.visibilityState "hidden")}}active{{/if}}" data-action="setPoiVisibility" data-visibility="hidden" data-uuid="{{this.uuid}}" title="{{localize 'STA_TC.Poi.StatusHidden'}}"><i class="fas fa-eye-slash"></i></a>
-                  <a class="poi-vis-seg {{#if (eq this.visibilityState "masked")}}active{{/if}}" data-action="setPoiVisibility" data-visibility="masked" data-uuid="{{this.uuid}}" title="{{localize 'STA_TC.Poi.StatusMasked'}}"><i class="fas fa-mask"></i></a>
-                  <a class="poi-vis-seg {{#if (eq this.visibilityState "revealed")}}active{{/if}}" data-action="setPoiVisibility" data-visibility="revealed" data-uuid="{{this.uuid}}" title="{{localize 'STA_TC.Poi.StatusRevealed'}}"><i class="fas fa-eye"></i></a>
+                  <a class="poi-vis-seg {{#if (eq this.visibilityState "hidden")}}active{{/if}}" role="button" tabindex="0" data-action="setPoiVisibility" data-visibility="hidden" data-uuid="{{this.uuid}}" aria-label="{{localize 'STA_TC.Poi.StatusHidden'}}" title="{{localize 'STA_TC.Poi.StatusHidden'}}"><i class="fas fa-eye-slash" aria-hidden="true"></i></a>
+                  <a class="poi-vis-seg {{#if (eq this.visibilityState "masked")}}active{{/if}}" role="button" tabindex="0" data-action="setPoiVisibility" data-visibility="masked" data-uuid="{{this.uuid}}" aria-label="{{localize 'STA_TC.Poi.StatusMasked'}}" title="{{localize 'STA_TC.Poi.StatusMasked'}}"><i class="fas fa-mask" aria-hidden="true"></i></a>
+                  <a class="poi-vis-seg {{#if (eq this.visibilityState "revealed")}}active{{/if}}" role="button" tabindex="0" data-action="setPoiVisibility" data-visibility="revealed" data-uuid="{{this.uuid}}" aria-label="{{localize 'STA_TC.Poi.StatusRevealed'}}" title="{{localize 'STA_TC.Poi.StatusRevealed'}}"><i class="fas fa-eye" aria-hidden="true"></i></a>
                 </div>
-                <a class="remove-btn" data-action="removeGeneratedPoi" data-uuid="{{this.uuid}}" title="{{localize 'STA_TC.Poi.Remove'}}"><i class="fas fa-times"></i></a>
+                <a class="remove-btn" role="button" tabindex="0" data-action="removeGeneratedPoi" data-uuid="{{this.uuid}}" aria-label="{{localize 'STA_TC.Poi.Remove'}}" title="{{localize 'STA_TC.Poi.Remove'}}"><i class="fas fa-times" aria-hidden="true"></i></a>
               </div>
             </div>
             {{/each}}
@@ -315,10 +315,10 @@
           <table class="phase2-momentum-table">
             <thead>
               <tr>
-                <th>{{localize "STA_TC.Wizard.Phase2MomColPoi"}}</th>
-                <th>{{localize "STA_TC.Wizard.Phase2MomColResult"}}</th>
-                <th>{{localize "STA_TC.Wizard.Phase2MomColSuccesses"}}</th>
-                <th>{{localize "STA_TC.Wizard.Phase2MomColMomentum"}}</th>
+                <th scope="col">{{localize "STA_TC.Wizard.Phase2MomColPoi"}}</th>
+                <th scope="col">{{localize "STA_TC.Wizard.Phase2MomColResult"}}</th>
+                <th scope="col">{{localize "STA_TC.Wizard.Phase2MomColSuccesses"}}</th>
+                <th scope="col">{{localize "STA_TC.Wizard.Phase2MomColMomentum"}}</th>
               </tr>
             </thead>
             <tbody>
@@ -481,11 +481,11 @@
 
                   {{!-- POI header row --}}
                   <div class="poi-info">
-                    <img class="poi-thumb" src="{{this.poi.img}}" data-action="openActor" data-uuid="{{this.poi.uuid}}" />
+                    <img class="poi-thumb" src="{{this.poi.img}}" data-action="openActor" data-uuid="{{this.poi.uuid}}" alt="{{this.poi.displayName}}" />
                     <span class="poi-name" data-action="openActor" data-uuid="{{this.poi.uuid}}">{{this.poi.displayName}}</span>
                     {{#if this.canSelectScenario}}
-                    <a class="btn-scenario {{#if this.isScenario}}active{{/if}}" data-action="selectScenario" data-uuid="{{this.poi.uuid}}" title="{{#if this.isScenario}}{{localize 'STA_TC.Wizard.ScenarioSelected'}}{{else}}{{localize 'STA_TC.Wizard.SelectScenario'}}{{/if}}">
-                      <i class="{{#if this.isScenario}}fas{{else}}far{{/if}} fa-star"></i>
+                    <a class="btn-scenario {{#if this.isScenario}}active{{/if}}" role="button" tabindex="0" data-action="selectScenario" data-uuid="{{this.poi.uuid}}" aria-label="{{#if this.isScenario}}{{localize 'STA_TC.Wizard.ScenarioSelected'}}{{else}}{{localize 'STA_TC.Wizard.SelectScenario'}}{{/if}}" title="{{#if this.isScenario}}{{localize 'STA_TC.Wizard.ScenarioSelected'}}{{else}}{{localize 'STA_TC.Wizard.SelectScenario'}}{{/if}}">
+                      <i class="{{#if this.isScenario}}fas{{else}}far{{/if}} fa-star" aria-hidden="true"></i>
                     </a>
                     {{/if}}
                   </div>
@@ -597,10 +597,10 @@
                       data-slot="0">
                       <button type="button" class="poi-slot-open" data-action="openActor" data-uuid="{{this.asset1.uuid}}">
                         <span class="slot-label">{{localize "STA_TC.CampaignTracker.Primary"}}</span>
-                        <img class="slot-thumb" draggable="false" src="{{this.asset1.img}}" title="{{this.asset1.name}}" />
+                        <img class="slot-thumb" draggable="false" src="{{this.asset1.img}}" alt="{{this.asset1.name}}" title="{{this.asset1.name}}" />
                         <span class="slot-name">{{this.asset1.name}}</span>
                       </button>
-                      <a class="remove-btn slot-remove" data-action="removePoiAsset" data-poi-list="{{this.listKey}}" data-poi-index="{{this.index}}" data-slot="0"><i class="fas fa-times"></i></a>
+                      <a class="remove-btn slot-remove" role="button" tabindex="0" data-action="removePoiAsset" data-poi-list="{{this.listKey}}" data-poi-index="{{this.index}}" data-slot="0" aria-label="{{localize 'STA_TC.Poi.Remove'}}"><i class="fas fa-times" aria-hidden="true"></i></a>
                     </div>
                     {{else}}
                     <button type="button" class="poi-slot" data-action="assignAsset" data-drop-target="poi-slot" data-poi-list="{{this.listKey}}" data-poi-index="{{this.index}}" data-slot="0">
@@ -621,10 +621,10 @@
                       data-slot="1">
                       <button type="button" class="poi-slot-open" data-action="openActor" data-uuid="{{this.asset2.uuid}}">
                         <span class="slot-label">{{localize "STA_TC.CampaignTracker.Assisting"}}</span>
-                        <img class="slot-thumb" draggable="false" src="{{this.asset2.img}}" title="{{this.asset2.name}}" />
+                        <img class="slot-thumb" draggable="false" src="{{this.asset2.img}}" alt="{{this.asset2.name}}" title="{{this.asset2.name}}" />
                         <span class="slot-name">{{this.asset2.name}}</span>
                       </button>
-                      <a class="remove-btn slot-remove" data-action="removePoiAsset" data-poi-list="{{this.listKey}}" data-poi-index="{{this.index}}" data-slot="1"><i class="fas fa-times"></i></a>
+                      <a class="remove-btn slot-remove" role="button" tabindex="0" data-action="removePoiAsset" data-poi-list="{{this.listKey}}" data-poi-index="{{this.index}}" data-slot="1" aria-label="{{localize 'STA_TC.Poi.Remove'}}"><i class="fas fa-times" aria-hidden="true"></i></a>
                     </div>
                     {{else}}
                     <button type="button" class="poi-slot" data-action="assignAsset" data-drop-target="poi-slot" data-poi-list="{{this.listKey}}" data-poi-index="{{this.index}}" data-slot="1">
@@ -654,15 +654,15 @@
                     <span class="poi-stat">{{localize "STA_TC.Poi.Urgency"}} {{this.poi.urgency}}</span>
                     {{/if}}
                     {{/unless}}
-                    <a class="remove-btn" data-action="removePoi" data-poi-list="{{this.listKey}}" data-index="{{this.index}}"><i class="fas fa-times"></i></a>
+                    <a class="remove-btn" role="button" tabindex="0" data-action="removePoi" data-poi-list="{{this.listKey}}" data-index="{{this.index}}" aria-label="{{localize 'STA_TC.Poi.Remove'}}"><i class="fas fa-times" aria-hidden="true"></i></a>
                   </div>
 
                   {{!-- Visibility controls (GM only) --}}
                   {{#if @root.isGM}}
                   <div class="poi-vis-toggle" data-uuid="{{this.poi.uuid}}">
-                    <a class="poi-vis-seg {{#if (eq this.poi.visibilityState "hidden")}}active{{/if}}" data-action="setPoiVisibility" data-visibility="hidden" data-uuid="{{this.poi.uuid}}" title="{{localize 'STA_TC.Poi.StatusHidden'}}"><i class="fas fa-eye-slash"></i></a>
-                    <a class="poi-vis-seg {{#if (eq this.poi.visibilityState "masked")}}active{{/if}}" data-action="setPoiVisibility" data-visibility="masked" data-uuid="{{this.poi.uuid}}" title="{{localize 'STA_TC.Poi.StatusMasked'}}"><i class="fas fa-mask"></i></a>
-                    <a class="poi-vis-seg {{#if (eq this.poi.visibilityState "revealed")}}active{{/if}}" data-action="setPoiVisibility" data-visibility="revealed" data-uuid="{{this.poi.uuid}}" title="{{localize 'STA_TC.Poi.StatusRevealed'}}"><i class="fas fa-eye"></i></a>
+                    <a class="poi-vis-seg {{#if (eq this.poi.visibilityState "hidden")}}active{{/if}}" role="button" tabindex="0" data-action="setPoiVisibility" data-visibility="hidden" data-uuid="{{this.poi.uuid}}" aria-label="{{localize 'STA_TC.Poi.StatusHidden'}}" title="{{localize 'STA_TC.Poi.StatusHidden'}}"><i class="fas fa-eye-slash" aria-hidden="true"></i></a>
+                    <a class="poi-vis-seg {{#if (eq this.poi.visibilityState "masked")}}active{{/if}}" role="button" tabindex="0" data-action="setPoiVisibility" data-visibility="masked" data-uuid="{{this.poi.uuid}}" aria-label="{{localize 'STA_TC.Poi.StatusMasked'}}" title="{{localize 'STA_TC.Poi.StatusMasked'}}"><i class="fas fa-mask" aria-hidden="true"></i></a>
+                    <a class="poi-vis-seg {{#if (eq this.poi.visibilityState "revealed")}}active{{/if}}" role="button" tabindex="0" data-action="setPoiVisibility" data-visibility="revealed" data-uuid="{{this.poi.uuid}}" aria-label="{{localize 'STA_TC.Poi.StatusRevealed'}}" title="{{localize 'STA_TC.Poi.StatusRevealed'}}"><i class="fas fa-eye" aria-hidden="true"></i></a>
                   </div>
                   {{/if}}
 

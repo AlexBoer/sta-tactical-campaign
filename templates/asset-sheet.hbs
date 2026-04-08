@@ -1,7 +1,7 @@
 <div class="sta-tc-sheet asset-sheet">
   {{!-- Header Section --}}
   <header class="sheet-header">
-    <img class="profile-img" src="{{actor.img}}" data-action="editImage" title="{{actor.name}}" />
+    <img class="profile-img" src="{{actor.img}}" data-action="editImage" alt="{{actor.name}}" title="{{actor.name}}" />
     <div class="header-fields">
       <div class="actor-name">
         <input name="name" type="text" value="{{actor.name}}" placeholder="{{localize 'STA_TC.AssetName'}}" />
@@ -74,13 +74,13 @@
         <div class="asset-effects-section">
           <div class="effects-section-header">
             <h2>{{localize "STA_TC.Asset.Effects.Title"}}</h2>
-            <button type="button" class="btn btn-sm" data-action="addTimedEffect" title="{{localize 'STA_TC.Asset.Effects.Add'}}"><i class="fas fa-plus"></i></button>
+            <button type="button" class="btn btn-sm" data-action="addTimedEffect" aria-label="{{localize 'STA_TC.Asset.Effects.Add'}}"><i class="fas fa-plus" aria-hidden="true"></i></button>
           </div>
           {{#if effects.length}}
           <ul class="asset-effects-list">
             {{#each effects}}
             <li class="asset-effect-row{{#if this.isUnavailable}} effect-unavailable{{/if}}">
-              <img class="effect-img" src="{{this.img}}" title="{{this.name}}" />
+              <img class="effect-img" src="{{this.img}}" alt="{{this.name}}" title="{{this.name}}" />
               <div class="effect-body">
                 <span class="effect-name">{{this.name}}</span>
                 {{#if this.changesSummary.length}}
@@ -94,8 +94,8 @@
                 {{localize "STA_TC.Asset.Effects.ExpiresIn" turns=this.turnsLeft}}
                 {{/if}}
               </span>
-              <button type="button" class="btn btn-sm effect-edit-btn" data-action="editEffect" data-effect-id="{{this.id}}" title="{{localize 'STA_TC.Asset.Effects.Edit'}}"><i class="fas fa-pen"></i></button>
-              <button type="button" class="btn btn-sm effect-delete-btn" data-action="deleteEffect" data-effect-id="{{this.id}}" title="{{localize 'STA_TC.Asset.Effects.Delete'}}"><i class="fas fa-times"></i></button>
+              <button type="button" class="btn btn-sm effect-edit-btn" data-action="editEffect" data-effect-id="{{this.id}}" aria-label="{{localize 'STA_TC.Asset.Effects.Edit'}}"><i class="fas fa-pen" aria-hidden="true"></i></button>
+              <button type="button" class="btn btn-sm effect-delete-btn" data-action="deleteEffect" data-effect-id="{{this.id}}" aria-label="{{localize 'STA_TC.Asset.Effects.Delete'}}"><i class="fas fa-times" aria-hidden="true"></i></button>
             </li>
             {{/each}}
           </ul>

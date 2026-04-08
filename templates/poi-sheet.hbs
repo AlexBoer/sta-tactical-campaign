@@ -2,13 +2,13 @@
   {{#if isLimitedUnknown}}
   {{!-- Limited view: non-GM sees only portrait and generic name --}}
   <div class="poi-limited-view">
-    <img class="profile-img" src="{{actor.img}}" title="{{actor.name}}" />
+    <img class="profile-img" src="{{actor.img}}" alt="{{actor.name}}" title="{{actor.name}}" />
     <h2 class="poi-limited-name">{{actor.name}}</h2>
   </div>
   {{else}}
   {{!-- Header Section --}}
   <header class="sheet-header">
-    <img class="profile-img" src="{{actor.img}}" data-action="editImage" title="{{actor.name}}" />
+    <img class="profile-img" src="{{actor.img}}" data-action="editImage" alt="{{actor.name}}" title="{{actor.name}}" />
     <div class="header-fields">
       <div class="poi-name-row">
         <div class="actor-name">
@@ -108,14 +108,14 @@
           <ul class="poi-event-items-list">
             {{#each events as |event|}}
               <li class="poi-event-item-row" data-item-id="{{event.id}}">
-                <img class="event-item-icon" src="{{event.img}}" title="{{event.name}}" />
+                <img class="event-item-icon" src="{{event.img}}" alt="{{event.name}}" title="{{event.name}}" />
                 <span class="event-item-name">{{event.name}}</span>
                 <div class="event-item-controls">
-                  <button type="button" data-action="openEvent" title="{{localize 'STA_TC.Poi.OpenEvent'}}">
-                    <i class="fas fa-edit"></i>
+                  <button type="button" data-action="openEvent" aria-label="{{localize 'STA_TC.Poi.OpenEvent'}}" title="{{localize 'STA_TC.Poi.OpenEvent'}}">
+                    <i class="fas fa-edit" aria-hidden="true"></i>
                   </button>
-                  <button type="button" data-action="deleteEvent" title="{{localize 'STA_TC.Poi.DeleteEvent'}}">
-                    <i class="fas fa-trash"></i>
+                  <button type="button" data-action="deleteEvent" aria-label="{{localize 'STA_TC.Poi.DeleteEvent'}}" title="{{localize 'STA_TC.Poi.DeleteEvent'}}">
+                    <i class="fas fa-trash" aria-hidden="true"></i>
                   </button>
                 </div>
               </li>

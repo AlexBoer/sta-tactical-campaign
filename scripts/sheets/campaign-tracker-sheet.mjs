@@ -1026,6 +1026,19 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
   }
 
   /** @override */
+  _onFirstRender(context, options) {
+    super._onFirstRender?.(context, options);
+
+    // Keyboard support: allow Enter/Space to activate anchor-based buttons
+    this.element.addEventListener("keydown", (ev) => {
+      if (ev.key !== "Enter" && ev.key !== " ") return;
+      const target = ev.target;
+      if (target.getAttribute("role") !== "button") return;
+      ev.preventDefault();
+      target.click();
+    });
+  }
+
   _onRender(context, options) {
     super._onRender(context, options);
     if (this._savedScrollPositions) {

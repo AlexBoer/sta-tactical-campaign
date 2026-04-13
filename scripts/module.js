@@ -19,6 +19,8 @@ import { registerSettings } from "./settings.js";
 import { PoiGenerator } from "./poi-generator.mjs";
 import { AssetGenerator } from "./asset-generator.mjs";
 import { ActorConverter } from "./actor-converter.mjs";
+import { PoiImporter } from "./poi-importer.mjs";
+import { PoiExporter } from "./poi-exporter.mjs";
 
 const MODULE_ID = "sta-tactical-campaign";
 
@@ -151,6 +153,28 @@ Hooks.once("ready", () => {
 
     /** Direct access to the ActorConverter class for advanced usage. */
     ActorConverter,
+
+    /**
+     * Import an array of key-value strings as POI actors into a new folder.
+     * @param {string[]} strings  Key-value formatted strings (e.g. "name: Fleet, type: threat, power: military, difficulty: 3")
+     * @param {object}   [options]
+     * @param {string}   [options.folderName]  Folder name (defaults to "Imported POIs")
+     * @returns {Promise<Folder|null>}
+     */
+    importPois: (strings, options) => PoiImporter.import(strings, options),
+
+    /**
+     * Export all POI actors in a folder to key-value strings.
+     * @param {string|Folder} folderOrId  Folder instance, ID, or name
+     * @returns {string[]}
+     */
+    exportPois: (folderOrId) => PoiExporter.export(folderOrId),
+
+    /** Direct access to the PoiImporter class for advanced usage. */
+    PoiImporter,
+
+    /** Direct access to the PoiExporter class for advanced usage. */
+    PoiExporter,
   };
 
   console.log(

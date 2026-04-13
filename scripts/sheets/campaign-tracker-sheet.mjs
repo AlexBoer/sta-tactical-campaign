@@ -980,7 +980,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
         e.conflictResult === "success" || e.conflictResult === "flawedSuccess",
     ).length;
     const fromExploration = resolvedExplorationCount * 3;
-    const fromMomentum = system.campaignMomentum || 0;
+    const fromMomentum = system.turnMomentumSpent || 0;
     const roleplayBonus = system.turnRoleplayBonus || 0;
     const progressionGain = fromExploration + fromMomentum + roleplayBonus;
     const newProgressionTotal = (system.progression || 0) + progressionGain;
@@ -1511,6 +1511,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       "system.turnThreatIncrease": 0,
       "system.turnExtraPoisNextTurn": 0,
       "system.turnRoleplayBonus": 0,
+      "system.turnMomentumSpent": 0,
       "system.turnReinforcementsReceived": 0,
       "system.turnStep": 1,
       "system.turnFlexibleDeployments": false,
@@ -1910,19 +1911,24 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     )
       await this.actor.update({ "system.poiListUnknown": finalUnknownEntries });
 
-    // ---- F: Progression (exploration gains + GM roleplay bonus) ------------
-    // Momentum bonus is display-only; it is NOT added here (persists between turns).
+    // ---- F: Progression (exploration gains + momentum spend + GM roleplay bonus) ---
+    const momentumSpent = system.turnMomentumSpent || 0;
     const progressionGain =
-      resolvedExplorationCount * 3 + (system.turnRoleplayBonus || 0);
+      resolvedExplorationCount * 3 +
+      momentumSpent +
+      (system.turnRoleplayBonus || 0);
 
-    // ---- G: Apply progression gain from Phase 2 consequences ----------------
+    // ---- G: Apply progression gain -----------------------------------------
     const sys6 = this.actor.system;
     const finalUpdates = {};
-    // NOTE: turnThreatIncrease is recorded as a note (see _appendPendingNote)
-    // and is NOT applied directly to campaignThreat — GMs resolve threat manually.
     if (progressionGain > 0)
       finalUpdates["system.progression"] =
         (sys6.progression || 0) + progressionGain;
+    if (momentumSpent > 0)
+      finalUpdates["system.campaignMomentum"] = Math.max(
+        0,
+        (sys6.campaignMomentum || 0) - momentumSpent,
+      );
     // Increment the campaign turn counter (used for AE expiry checks)
     finalUpdates["system.campaignTurnNumber"] =
       (sys6.campaignTurnNumber || 0) + 1;
@@ -1967,6 +1973,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       "system.turnThreatIncrease": 0,
       "system.turnExtraPoisNextTurn": 0,
       "system.turnRoleplayBonus": 0,
+      "system.turnMomentumSpent": 0,
       "system.turnReinforcementsReceived": 0,
       "system.turnExtraTacticalPoisNextTurn": 0,
       "system.turnExtraUnknownPoisNextTurn": 0,

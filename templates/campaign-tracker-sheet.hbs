@@ -22,10 +22,6 @@
       <input type="number" name="system.campaignMomentum" value="{{system.campaignMomentum}}" min="0" />
     </div>
     <div class="stat-group">
-      <label>{{localize "STA_TC.CampaignTracker.Threat"}}</label>
-      <input type="number" name="system.campaignThreat" value="{{system.campaignThreat}}" min="0" />
-    </div>
-    <div class="stat-group">
       <label>{{localize "STA_TC.CampaignTracker.Progression"}}</label>
       <input type="number" name="system.progression" value="{{system.progression}}" min="0" />
     </div>
@@ -356,16 +352,14 @@
             <div class="phase3-breakdown">
               {{#if phase3data.progressionBreakdown.fromExploration}}
               <div class="breakdown-row">
-                <span>{{localize "STA_TC.Wizard.ProgressionFromExploration"}}</span>
+                <span>{{localize "STA_TC.Wizard.ProgressionFromExploration"}} <small class="breakdown-hint">{{localize "STA_TC.Wizard.ProgressionFromExplorationHint"}}</small></span>
                 <span class="breakdown-value positive">+{{phase3data.progressionBreakdown.fromExploration}}</span>
               </div>
               {{/if}}
-              {{#if phase3data.progressionBreakdown.fromMomentum}}
-              <div class="breakdown-row">
-                <span>{{localize "STA_TC.Wizard.ProgressionFromMomentum"}}</span>
-                <span class="breakdown-value positive">+{{phase3data.progressionBreakdown.fromMomentum}}</span>
+              <div class="breakdown-row breakdown-momentum-spend">
+                <label>{{localize "STA_TC.Wizard.ProgressionFromMomentum"}} <small>({{localize "STA_TC.CampaignTracker.Momentum"}}: {{system.campaignMomentum}})</small></label>
+                <input type="number" name="system.turnMomentumSpent" value="{{system.turnMomentumSpent}}" min="0" max="{{system.campaignMomentum}}" class="breakdown-input" />
               </div>
-              {{/if}}
               <div class="breakdown-row breakdown-roleplay">
                 <label>{{localize "STA_TC.Wizard.RoleplayBonus"}}</label>
                 <input type="number" name="system.turnRoleplayBonus" value="{{system.turnRoleplayBonus}}" min="0" class="breakdown-input" />

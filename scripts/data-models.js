@@ -340,12 +340,6 @@ export class CampaignTrackerData extends foundry.abstract.TypeDataModel {
         initial: 0,
         min: 0,
       }),
-      campaignThreat: new NumberField({
-        required: true,
-        integer: true,
-        initial: 0,
-        min: 0,
-      }),
       progression: new NumberField({
         required: true,
         integer: true,
@@ -396,6 +390,12 @@ export class CampaignTrackerData extends foundry.abstract.TypeDataModel {
       }),
       // Phase 3 aggregate turn state
       turnRoleplayBonus: new NumberField({
+        required: false,
+        integer: true,
+        initial: 0,
+        min: 0,
+      }),
+      turnMomentumSpent: new NumberField({
         required: false,
         integer: true,
         initial: 0,

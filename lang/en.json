@@ -208,6 +208,21 @@
           "Routine": "Routine",
           "Unknown": "Unknown"
         }
+      },
+      "Importer": {
+        "FolderName": "Imported POIs",
+        "ChatTitle": "Imported POIs — {folder}",
+        "ChatCount": "{count} Point(s) of Interest created.",
+        "SpeakerAlias": "POI Importer",
+        "Complete": "Imported {count} POI(s) into folder: {folder}",
+        "NoEntries": "No entries provided to import.",
+        "NoneValid": "No valid entries found — check the input format.",
+        "NoName": "Entry {index} is missing a \"name\" key and was skipped."
+      },
+      "Exporter": {
+        "FolderNotFound": "Folder not found. Provide a valid folder name, ID, or Folder instance.",
+        "NoPois": "No Point of Interest actors found in folder: {folder}",
+        "Complete": "Exported {count} POI(s) from folder: {folder}"
       }
     },
     "Asset": {

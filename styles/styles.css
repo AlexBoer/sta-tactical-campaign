@@ -728,12 +728,19 @@
 /* ===== Stats Row - Always Visible ===== */
 .campaign-tracker-sheet .tracker-stats {
   display: flex;
-  gap: 12px;
+  align-items: center;
   padding: 5px 0;
-  justify-content: center;
-  flex-wrap: wrap;
   border-bottom: 1px solid var(--sta-tc-border);
   margin-bottom: 4px;
+}
+
+.campaign-tracker-sheet .tracker-stats-groups {
+  flex: 1;
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .campaign-tracker-sheet .stat-group {
@@ -1443,6 +1450,29 @@
 }
 
 /* ===== Points of Interest Section ===== */
+.campaign-tracker-sheet .poi-table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.campaign-tracker-sheet .poi-table-toolbar .poi-table-btn {
+  font-size: 0.78em;
+  padding: 3px 8px;
+  background: rgba(0, 39, 63, 0.5);
+  border: 1px solid var(--sta-tc-border);
+  color: var(--sta-tc-text-muted);
+  border-radius: 4px;
+  cursor: pointer;
+  flex: 1 1 auto;
+}
+
+.campaign-tracker-sheet .poi-table-toolbar .poi-table-btn:hover {
+  border-color: var(--sta-tc-accent);
+  color: var(--sta-tc-accent);
+}
+
 .campaign-tracker-sheet .tracker-pois {
   display: grid;
   grid-template-columns: 1fr;
@@ -2863,15 +2893,8 @@
 }
 
 /* ===== Progression Log button in stats bar ===== */
-.campaign-tracker-sheet .tracker-stats {
-  position: relative;
-}
-
 .campaign-tracker-sheet .progression-log-btn {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  flex-shrink: 0;
   background: none;
   border: 1px solid transparent;
   cursor: pointer;
@@ -2880,6 +2903,7 @@
   border-radius: 4px;
   font-size: 1em;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .campaign-tracker-sheet .progression-log-btn:hover,
@@ -2899,6 +2923,17 @@
   width: 100%;
   font-size: 1.1em;
   font-weight: bold;
+}
+
+.progression-sheet .progression-desc-preview {
+  margin: 4px 0 0;
+  font-size: 0.85em;
+  color: var(--sta-tc-text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
 }
 
 .progression-sheet .progression-saved-section {

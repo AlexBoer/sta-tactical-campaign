@@ -17,24 +17,26 @@
 
   {{!-- Stats Bar - Always Visible --}}
   <div class="tracker-stats">
-    <div class="stat-group">
-      <label>{{localize "STA_TC.CampaignTracker.Momentum"}}</label>
-      <input type="number" name="system.campaignMomentum" value="{{system.campaignMomentum}}" min="0" />
-    </div>
-    <div class="stat-group">
-      <label>{{localize "STA_TC.CampaignTracker.Progression"}}</label>
-      <input type="number" name="system.progression" value="{{system.progression}}" min="0" />
-    </div>
-    <div class="stat-group">
-      <label>{{localize "STA_TC.CampaignTracker.Pace"}}</label>
-      <input type="number" name="system.pace" value="{{system.pace}}" min="0" />
-    </div>
-    <div class="stat-group">
-      <label>{{localize "STA_TC.CampaignTracker.PrioritySupply"}}</label>
-      <input type="number" name="system.prioritySupply" value="{{system.prioritySupply}}" min="0" />
+    <div class="tracker-stats-groups">
+      <div class="stat-group">
+        <label>{{localize "STA_TC.CampaignTracker.Momentum"}}</label>
+        <input type="number" name="system.campaignMomentum" value="{{system.campaignMomentum}}" min="0" />
+      </div>
+      <div class="stat-group">
+        <label>{{localize "STA_TC.CampaignTracker.Progression"}}</label>
+        <input type="number" name="system.progression" value="{{system.progression}}" min="0" />
+      </div>
+      <div class="stat-group">
+        <label>{{localize "STA_TC.CampaignTracker.Pace"}}</label>
+        <input type="number" name="system.pace" value="{{system.pace}}" min="0" />
+      </div>
+      <div class="stat-group">
+        <label>{{localize "STA_TC.CampaignTracker.PrioritySupply"}}</label>
+        <input type="number" name="system.prioritySupply" value="{{system.prioritySupply}}" min="0" />
+      </div>
     </div>
     <button type="button" class="btn progression-log-btn" data-action="openProgressionLog" aria-label="{{localize 'STA_TC.CampaignTracker.OpenProgressionLog'}}" title="{{localize 'STA_TC.CampaignTracker.OpenProgressionLog'}}">
-      <i class="fas fa-list-check" aria-hidden="true"></i>
+      <i class="fas fa-list-check" aria-hidden="true"></i> {{localize "STA_TC.CampaignTracker.OpenProgressionLog"}}
     </button>
   </div>
 
@@ -451,17 +453,23 @@
         {{/if}}
 
         {{!-- Campaign Turn Notes --}}
-        {{#if turnNotes}}
         <details class="turn-notes-panel">
           <summary><i class="fas fa-clipboard-list"></i> {{localize "STA_TC.Wizard.NextTurnNotes"}}</summary>
           <div class="turn-notes-body">
             <textarea name="system.turnNotes" rows="4" style="width:100%;box-sizing:border-box;" placeholder="{{localize 'STA_TC.Wizard.NextTurnNotesPlaceholder'}}">{{turnNotes}}</textarea>
           </div>
         </details>
-        {{/if}}
 
         {{!-- POI Columns --}}
         <div class="section-header">{{localize "STA_TC.CampaignTracker.PointsOfInterest"}}</div>
+        {{#if isGM}}
+        <div class="poi-table-toolbar">
+          <button type="button" class="btn poi-table-btn" data-action="openPoiTable" data-table-key="tableTacticalThreat"><i class="fas fa-table-list"></i> {{localize "STA_TC.CampaignTracker.PoiThreat"}}</button>
+          <button type="button" class="btn poi-table-btn" data-action="openPoiTable" data-table-key="tableExploration"><i class="fas fa-table-list"></i> {{localize "STA_TC.CampaignTracker.PoiExploration"}}</button>
+          <button type="button" class="btn poi-table-btn" data-action="openPoiTable" data-table-key="tableRoutine"><i class="fas fa-table-list"></i> {{localize "STA_TC.CampaignTracker.PoiRoutine"}}</button>
+          <button type="button" class="btn poi-table-btn" data-action="openPoiTable" data-table-key="tableUnknown"><i class="fas fa-table-list"></i> {{localize "STA_TC.CampaignTracker.PoiUnknown"}}</button>
+        </div>
+        {{/if}}
         <div class="tracker-pois">
           {{#each poiColumns}}
           <div class="poi-column {{this.key}}">

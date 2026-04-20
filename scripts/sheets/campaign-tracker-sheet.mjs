@@ -158,6 +158,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
 
       clearUnavailable: CampaignTrackerSheet._onClearUnavailable,
       openProgressionLog: CampaignTrackerSheet._onOpenProgressionLog,
+      openPoiTable: CampaignTrackerSheet._onOpenPoiTable,
       setPoiVisibility: CampaignTrackerSheet._onSetPoiVisibility,
       setAllPoiVisibility: CampaignTrackerSheet._onSetAllPoiVisibility,
     },
@@ -2874,8 +2875,38 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
         let finalResult;
         let finalMomentum = 0;
         if (intent === "success") {
-          finalResult = advisoryNat20 ? "flawedSuccess" : "success";
           finalMomentum = Math.max(0, advisorySuccesses - difficulty);
+          if (advisoryNat20) {
+            // Advisory roll already recorded a nat20 complication — auto flawed success.
+            finalResult = "flawedSuccess";
+          } else {
+            // Ask the GM whether a complication was rolled.
+            const isFlawed = await foundry.applications.api.DialogV2.wait({
+              window: {
+                title: game.i18n.localize("STA_TC.Wizard.RollConflict"),
+              },
+              content: `<p>${game.i18n.localize("STA_TC.Dialog.SuccessTypePrompt")}</p>`,
+              buttons: [
+                {
+                  action: "flawed",
+                  label: game.i18n.localize("STA_TC.Wizard.ResultFlawedSuccess"),
+                  icon: "fas fa-exclamation-triangle",
+                  default: false,
+                  callback: () => true,
+                },
+                {
+                  action: "success",
+                  label: game.i18n.localize("STA_TC.Wizard.ResultSuccess"),
+                  icon: "fas fa-check",
+                  default: true,
+                  callback: () => false,
+                },
+              ],
+              rejectClose: false,
+            });
+            if (isFlawed === null) return;
+            finalResult = isFlawed ? "flawedSuccess" : "success";
+          }
         } else if (advisoryNat20) {
           // Built-in roll recorded a nat20 complication — auto serious setback.
           finalResult = "seriousSetback";
@@ -3756,6 +3787,28 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
    */
   static _onOpenProgressionLog(event, target) {
     ProgressionLog.open(this.actor);
+  }
+
+  /**
+   * Open the roll table sheet for a PoI type, using the UUID from game settings.
+   */
+  static async _onOpenPoiTable(event, target) {
+    const tableKey = target.dataset.tableKey;
+    const uuid = game.settings.get(MODULE_ID, tableKey);
+    if (!uuid) {
+      ui.notifications.warn(
+        game.i18n.localize("STA_TC.CampaignTracker.NoPoiTableConfigured"),
+      );
+      return;
+    }
+    const table = await fromUuid(uuid);
+    if (!table) {
+      ui.notifications.warn(
+        game.i18n.localize("STA_TC.CampaignTracker.PoiTableNotFound"),
+      );
+      return;
+    }
+    table.sheet.render(true);
   }
 
   /**

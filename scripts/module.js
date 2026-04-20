@@ -115,8 +115,15 @@ function registerSheets() {
  * When ready, expose the public API and log module status
  */
 Hooks.once("ready", () => {
-  const module = game.modules.get(MODULE_ID);
-  module.api = {
+  const moduleInstance = game.modules.get(MODULE_ID);
+  if (!moduleInstance) {
+    console.error(
+      `${MODULE_ID} | Failed to register API: module not found in game.modules.`,
+    );
+    return;
+  }
+
+  const api = {
     /**
      * Generate a Point of Interest by rolling on the configured tables.
      * Posts the result to chat with drag-to-canvas buttons.
@@ -155,20 +162,38 @@ Hooks.once("ready", () => {
     ActorConverter,
 
     /**
-     * Import an array of key-value strings as POI actors into a new folder.
-     * @param {string[]} strings  Key-value formatted strings (e.g. "name: Fleet, type: threat, power: military, difficulty: 3")
-     * @param {object}   [options]
-     * @param {string}   [options.folderName]  Folder name (defaults to "Imported POIs")
+     * Import POIs into a new folder.
+     *
+     * Usage:
+     * - importPois() opens a paste dialog
+     * - importPois(text) imports newline-delimited entries or JSON array text
+     * - importPois(strings) imports an array of key-value entries
+     *
+     * @param {string[]|string} [input]
+     * @param {object}          [options]
+     * @param {string}          [options.folderName]  Folder name (defaults to "Imported POIs")
      * @returns {Promise<Folder|null>}
      */
-    importPois: (strings, options) => PoiImporter.import(strings, options),
+    importPois: (input, options) => {
+      if (input == null) return PoiImporter.promptAndImport(options);
+      if (Array.isArray(input)) return PoiImporter.import(input, options);
+      return PoiImporter.importFromText(String(input), options);
+    },
 
     /**
-     * Export all POI actors in a folder to key-value strings.
-     * @param {string|Folder} folderOrId  Folder instance, ID, or name
-     * @returns {string[]}
+     * Export POIs to an array of JSON objects.
+     *
+     * Usage:
+     * - exportPois() opens a folder picker dialog, then shows a copy dialog
+     * - exportPois(folderOrId) exports directly from a folder instance, ID, or name
+     *
+     * @param {string|Folder} [folderOrId]
+     * @returns {Promise<object[]>|object[]}
      */
-    exportPois: (folderOrId) => PoiExporter.export(folderOrId),
+    exportPois: (folderOrId) => {
+      if (folderOrId == null) return PoiExporter.promptAndExport();
+      return PoiExporter.export(folderOrId);
+    },
 
     /** Direct access to the PoiImporter class for advanced usage. */
     PoiImporter,
@@ -176,6 +201,12 @@ Hooks.once("ready", () => {
     /** Direct access to the PoiExporter class for advanced usage. */
     PoiExporter,
   };
+
+  moduleInstance.api = api;
+
+  // Macro-friendly global alias in addition to game.modules.get(MODULE_ID).api.
+  // Example macro usage: globalThis.STATacticalCampaign.exportPois("My POIs")
+  globalThis.STATacticalCampaign = api;
 
   console.log(
     `${MODULE_ID} | Module ready – API available at game.modules.get("${MODULE_ID}").api`,

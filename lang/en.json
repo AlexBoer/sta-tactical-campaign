@@ -211,6 +211,15 @@
       },
       "Importer": {
         "FolderName": "Imported POIs",
+        "DialogTitle": "Import Points of Interest",
+        "DialogHint": "Paste a JSON array of POI objects below (exported from this module, or hand-authored).",
+        "FolderLabel": "Destination Folder",
+        "DialogInputLabel": "POI JSON",
+        "DialogPlaceholder": "[\n  {\n    \"name\": \"Klingon Fleet\",\n    \"type\": \"tacticalThreat\",\n    \"power\": \"military\",\n    \"difficulty\": 3\n  }\n]",
+        "DialogImport": "Import",
+        "ReviewTitle": "Review Imported POIs",
+        "ReviewHint": "{count} POI(s) ready to import. Edit inline, then click Create Actors. Uncheck or click 🗑 to skip a row.",
+        "ReviewImport": "Create Actors",
         "ChatTitle": "Imported POIs — {folder}",
         "ChatCount": "{count} Point(s) of Interest created.",
         "SpeakerAlias": "POI Importer",
@@ -220,9 +229,17 @@
         "NoName": "Entry {index} is missing a \"name\" key and was skipped."
       },
       "Exporter": {
+        "DialogTitle": "Export Points of Interest",
+        "DialogFolderLabel": "Source Folder",
+        "DialogExport": "Export",
+        "NoPoiFolders": "No Actor folders with POIs were found.",
         "FolderNotFound": "Folder not found. Provide a valid folder name, ID, or Folder instance.",
         "NoPois": "No Point of Interest actors found in folder: {folder}",
-        "Complete": "Exported {count} POI(s) from folder: {folder}"
+        "Complete": "Exported {count} POI(s) from folder: {folder}",
+        "ResultTitle": "Exported POIs",
+        "ResultHint": "Copy the JSON below to share or re-import.",
+        "CopyToClipboard": "Copy to Clipboard",
+        "Copied": "POI export copied to clipboard."
       }
     },
     "Asset": {
@@ -423,10 +440,13 @@
       "AddAsset": "Add {type} Asset",
       "RandomAsset": "Random",
       "CustomAsset": "Custom",
-      "OpenProgressionLog": "Progression Log"
+      "OpenProgressionLog": "Progression Log",
+      "NoPoiTableConfigured": "No roll table configured for this PoI type.",
+      "PoiTableNotFound": "Could not find the configured roll table."
     },
     "Dialog": {
       "FailureTypePrompt": "Was a complication rolled? Choose the failure type:",
+      "SuccessTypePrompt": "Was a complication rolled? Choose the success type:",
       "UsingFocus": "Using Focus",
       "DedicatedFocus": "Double Focus Range",
       "UsingDetermination": "Using Determination",

@@ -3,6 +3,7 @@
   <header class="sheet-header progression-sheet-header">
     <div class="header-fields">
       <input name="name" type="text" value="{{item.name}}" placeholder="{{localize 'STA_TC.Progression.NamePlaceholder'}}" />
+      {{#if description}}<p class="progression-desc-preview">{{description}}</p>{{/if}}
     </div>
   </header>
 

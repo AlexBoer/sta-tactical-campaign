@@ -48,6 +48,36 @@ export class ProgressionLog extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /** @override */
+  async _onRender(context, options) {
+    await super._onRender(context, options);
+    // Register item hooks once so the log re-renders when items change externally
+    if (!this._progressionHooks) {
+      const handler = (item) => {
+        if (
+          item.parent?.id === this.actor.id &&
+          item.type === PROGRESSION_TYPE
+        ) {
+          this.render();
+        }
+      };
+      this._progressionHooks = [
+        ["updateItem", Hooks.on("updateItem", handler)],
+        ["createItem", Hooks.on("createItem", handler)],
+        ["deleteItem", Hooks.on("deleteItem", handler)],
+      ];
+    }
+  }
+
+  /** @override */
+  async _onClose(options) {
+    for (const [name, id] of this._progressionHooks ?? []) {
+      Hooks.off(name, id);
+    }
+    this._progressionHooks = null;
+    return super._onClose(options);
+  }
+
+  /** @override */
   async _prepareContext(options) {
     const entries = this.actor.items
       .filter((i) => i.type === PROGRESSION_TYPE)
@@ -55,9 +85,12 @@ export class ProgressionLog extends HandlebarsApplicationMixin(ApplicationV2) {
       .map((i) => {
         const type = i.system.type || "custom";
         const descKey = `STA_TC.Progression.Desc.${type}`;
-        const description = game.i18n.has(descKey)
-          ? game.i18n.localize(descKey)
-          : i.system.notes || "";
+        const description =
+          type === "custom"
+            ? i.system.notes || ""
+            : game.i18n.has(descKey)
+              ? game.i18n.localize(descKey)
+              : i.system.notes || "";
         return {
           id: i.id,
           name: i.name,

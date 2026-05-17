@@ -395,6 +395,12 @@ export class CampaignTrackerData extends foundry.abstract.TypeDataModel {
         initial: 0,
         min: 0,
       }),
+      turnMomentumGained: new NumberField({
+        required: false,
+        integer: true,
+        initial: 0,
+        min: 0,
+      }),
       turnMomentumSpent: new NumberField({
         required: false,
         integer: true,
@@ -454,6 +460,11 @@ export class CampaignTrackerData extends foundry.abstract.TypeDataModel {
         integer: true,
         initial: 0,
         min: 0,
+      }),
+      // Whether progression gain for this turn has been confirmed (applied to system.progression)
+      turnProgressionConfirmed: new BooleanField({
+        required: false,
+        initial: false,
       }),
     };
   }

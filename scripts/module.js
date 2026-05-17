@@ -67,6 +67,11 @@ Hooks.once("init", () => {
   );
 
   console.log(`${MODULE_ID} | Initialization complete`);
+
+  // Register custom Handlebars helpers
+  Handlebars.registerHelper("strlen", (str) =>
+    typeof str === "string" ? str.length : 0,
+  );
 });
 
 /**

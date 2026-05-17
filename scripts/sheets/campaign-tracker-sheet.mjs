@@ -145,6 +145,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       rollCommandeer: CampaignTrackerSheet._onRollCommandeer,
       rollProgression: CampaignTrackerSheet._onRollProgression,
       chooseProgression: CampaignTrackerSheet._onChooseProgression,
+      confirmProgression: CampaignTrackerSheet._onConfirmProgression,
       confirmOutcomeResolved: CampaignTrackerSheet._onConfirmOutcomeResolved,
       confirmOutcomeIntensify: CampaignTrackerSheet._onConfirmOutcomeIntensify,
       confirmOutcomeCatastrophe:
@@ -168,7 +169,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     },
     position: {
       height: 900,
-      width: 730,
+      width: 820,
     },
     window: {
       resizable: true,
@@ -262,13 +263,8 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       isLastPhase = turnPhase === "3" && turnStep === 4;
     }
 
-    const isMomentumStep = turnActive && turnPhase === "2" && turnStep === 2;
-    const phase2stats =
-      canRollConflicts || isMomentumStep
-        ? this._computePhase2Stats(system)
-        : null;
-    const phase2MomentumRows = isMomentumStep
-      ? await this._computePhase2MomentumRows(system)
+    const phase2stats = canRollConflicts
+      ? this._computePhase2Stats(system)
       : null;
     const phase3data = isPhase3 ? this._computePhase3Data(system) : null;
 
@@ -335,20 +331,20 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
         pace:
           (system.pace || 0) +
           (system.turnExtraTacticalPoisNextTurn || 0) +
-          (system.turnExtraUnknownPoisNextTurn || 0),
+          (system.turnExtraUnknownPoisNextTurn || 0) +
+          (system.turnExtraPoisNextTurn || 0),
       }),
       countLabel: game.i18n.format("STA_TC.Wizard.GeneratedCount", {
         current: generatedPois.length,
         pace:
           (system.pace || 0) +
           (system.turnExtraTacticalPoisNextTurn || 0) +
-          (system.turnExtraUnknownPoisNextTurn || 0),
+          (system.turnExtraUnknownPoisNextTurn || 0) +
+          (system.turnExtraPoisNextTurn || 0),
       }),
       isGM,
       hasEventTable,
       phase2stats,
-      isMomentumStep,
-      phase2MomentumRows,
       phase3data,
       phase3Step,
       commandeeredAssets: system.commandeeredAssets || [],
@@ -644,8 +640,32 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
           entry.isSeriousSetback = cr === "seriousSetback";
           entry.isConflictFailure =
             cr === "failure" && !entry.entryData.failureChoice;
-          entry.consequenceChosen = entry.entryData.consequenceChosen || "";
-          entry.failureChoice = entry.entryData.failureChoice || "";
+          const consequenceLabels = {
+            extraPoi: "STA_TC.Wizard.ConsequenceExtraPoiChosen",
+            rollLoss: "STA_TC.Wizard.ConsequenceRollLossChosen",
+            increaseThreat: "STA_TC.Wizard.ConsequenceIncreaseThreatChosen",
+          };
+          const failureLabels = {
+            withdraw: "STA_TC.Wizard.FailureWithdrawChosen",
+            succeedAtCost: "STA_TC.Wizard.FailureSucceedAtCostChosen",
+          };
+          const rawConsequence = entry.entryData.consequenceChosen || "";
+          entry.consequenceChosen = rawConsequence
+            ? rawConsequence === "increaseThreat"
+              ? game.i18n.format(
+                  "STA_TC.Wizard.ConsequenceIncreaseThreatChosen",
+                  {
+                    amount: (entry.poi.difficulty || 1) * 2,
+                  },
+                )
+              : game.i18n.localize(
+                  consequenceLabels[rawConsequence] || rawConsequence,
+                )
+            : "";
+          const rawFailure = entry.entryData.failureChoice || "";
+          entry.failureChoice = rawFailure
+            ? game.i18n.localize(failureLabels[rawFailure] || rawFailure)
+            : "";
           entry.lossResult = entry.entryData.lossResult || "";
           entry.threatConsequenceLabel = game.i18n.format(
             "STA_TC.Wizard.ConsequenceIncreaseThreat",
@@ -941,17 +961,13 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       "poiListUnknown",
     ];
     let total = 0,
-      resolved = 0,
-      totalMomentum = 0;
+      resolved = 0;
     for (const key of poiLists) {
       for (const entry of system[key] || []) {
         if (!entry.asset1Uuid && !entry.asset2Uuid) continue;
         if (entry.actorUuid === system.scenarioPoi) continue;
         total++;
-        if (entry.conflictResult) {
-          resolved++;
-          totalMomentum += entry.conflictMomentum || 0;
-        }
+        if (entry.conflictResult) resolved++;
       }
     }
     return {
@@ -960,22 +976,13 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       pending: total - resolved,
       allResolved: total > 0 && resolved === total,
       hasConflicts: total > 0,
-      totalMomentum,
+      totalMomentum: system.turnMomentumGained || 0,
       threatIncrease: system.turnThreatIncrease || 0,
     };
   }
 
   _computePhase3Data(system) {
-    const allEntries = [
-      "poiListThreat",
-      "poiListExploration",
-      "poiListRoutine",
-      "poiListUnknown",
-    ].flatMap((k) => system[k] || []);
-    const totalMomentum = allEntries.reduce(
-      (s, e) => s + (e.conflictMomentum || 0),
-      0,
-    );
+    const totalMomentum = system.turnMomentumGained || 0;
     const resolvedExplorationCount = (system.poiListExploration || []).filter(
       (e) =>
         e.conflictResult === "success" || e.conflictResult === "flawedSuccess",
@@ -984,11 +991,17 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     const fromMomentum = system.turnMomentumSpent || 0;
     const roleplayBonus = system.turnRoleplayBonus || 0;
     const progressionGain = fromExploration + fromMomentum + roleplayBonus;
-    const newProgressionTotal = (system.progression || 0) + progressionGain;
+    const turnProgressionConfirmed = system.turnProgressionConfirmed || false;
+    // When confirmed, the gain has already been written to system.progression —
+    // use that value directly to avoid double-counting.
+    const newProgressionTotal = turnProgressionConfirmed
+      ? system.progression || 0
+      : (system.progression || 0) + progressionGain;
     return {
       totalMomentum,
       threatIncrease: system.turnThreatIncrease || 0,
       extraPoisNextTurn: system.turnExtraPoisNextTurn || 0,
+      progressionConfirmed: turnProgressionConfirmed,
       progressionBreakdown: {
         fromExploration,
         fromMomentum,
@@ -1157,34 +1170,8 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       }
     }
 
-    // POI column collapse: restore saved state then attach toggle listener
-    const collapseKey = `sta-tc.poi-col-collapsed.${this.actor.id}`;
-    let collapsed;
-    try {
-      collapsed = JSON.parse(localStorage.getItem(collapseKey) ?? "{}");
-    } catch {
-      collapsed = {};
-    }
-    for (const col of this.element.querySelectorAll(".poi-column")) {
-      const key = col.querySelector(".poi-column-toggle")?.dataset.colKey ?? "";
-      if (collapsed[key]) col.classList.add("collapsed");
-    }
-    this.element.addEventListener("click", (e) => {
-      const toggle = e.target.closest(".poi-column-toggle");
-      if (!toggle) return;
-      const col = toggle.closest(".poi-column");
-      if (!col) return;
-      const key = toggle.dataset.colKey ?? "";
-      col.classList.toggle("collapsed");
-      let state;
-      try {
-        state = JSON.parse(localStorage.getItem(collapseKey) ?? "{}");
-      } catch {
-        state = {};
-      }
-      state[key] = col.classList.contains("collapsed");
-      localStorage.setItem(collapseKey, JSON.stringify(state));
-    });
+    // Attach POI column collapse/expand listeners (helper for re-attach after render)
+    this._attachPoiColumnCollapseListeners();
 
     // Sidebar overflow indicator
     const sidebar = this.element.querySelector(".tracker-sidebar");
@@ -1203,6 +1190,44 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       // Run once after layout has settled
       requestAnimationFrame(updateOverflow);
     }
+  }
+
+  /**
+   * Attach POI column collapse/expand listeners and restore state.
+   * Call after every render to ensure toggling works after UI updates.
+   */
+  _attachPoiColumnCollapseListeners() {
+    const collapseKey = `sta-tc.poi-col-collapsed.${this.actor.id}`;
+    let collapsed;
+    try {
+      collapsed = JSON.parse(localStorage.getItem(collapseKey) ?? "{}");
+    } catch {
+      collapsed = {};
+    }
+    for (const col of this.element.querySelectorAll(".poi-column")) {
+      const key = col.querySelector(".poi-column-toggle")?.dataset.colKey ?? "";
+      if (collapsed[key]) col.classList.add("collapsed");
+      else col.classList.remove("collapsed");
+    }
+    // Remove previous listeners to avoid stacking
+    this.element.querySelectorAll(".poi-column-toggle").forEach((toggle) => {
+      toggle.removeEventListener("click", toggle._collapseHandler);
+      toggle._collapseHandler = (e) => {
+        const col = toggle.closest(".poi-column");
+        if (!col) return;
+        const key = toggle.dataset.colKey ?? "";
+        col.classList.toggle("collapsed");
+        let state;
+        try {
+          state = JSON.parse(localStorage.getItem(collapseKey) ?? "{}");
+        } catch {
+          state = {};
+        }
+        state[key] = col.classList.contains("collapsed");
+        localStorage.setItem(collapseKey, JSON.stringify(state));
+      };
+      toggle.addEventListener("click", toggle._collapseHandler);
+    });
   }
 
   /** @override */
@@ -1371,7 +1396,6 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     )
       return;
     if (!fromPoiSlot && this._isAssetAssignedToAnyPoi(uuid)) {
-      // For resource assets, Flexible Deployments may allow a second assignment
       const assetType = actor.system?.assetType;
       if (assetType === "resource") {
         const limit = this.actor.system.turnFlexibleDeployments ? 2 : 1;
@@ -1383,7 +1407,6 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
           );
           return;
         }
-        // Under the limit — allow the drop to proceed (skip normal block)
       } else {
         ui.notifications.warn(
           game.i18n.localize("STA_TC.CampaignTracker.AssetAlreadyAssigned"),
@@ -1486,20 +1509,6 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       }
       return;
     }
-    // Expire unavailability Active Effects whose expireAfterTurn has been reached
-    const currentTurn = this.actor.system.campaignTurnNumber || 0;
-    for (const listKey of ["characterAssets", "shipAssets", "resourceAssets"]) {
-      for (const uuid of this.actor.system[listKey] || []) {
-        const asset = await fromUuid(uuid);
-        if (!asset) continue;
-        for (const effect of [...asset.effects]) {
-          const expiry = effect.flags?.[MODULE_ID]?.expireAfterTurn;
-          if (expiry !== undefined && currentTurn >= expiry)
-            await effect.delete();
-        }
-      }
-    }
-
     // Apply any supply bonus from the previous turn's progression results
     const supplyBonus = this.actor.system.nextTurnSupplyBonus || 0;
     const currentSupply = this.actor.system.prioritySupply || 0;
@@ -1510,12 +1519,12 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       "system.scenarioPoi": "",
       "system.turnGeneratedPois": [],
       "system.turnThreatIncrease": 0,
-      "system.turnExtraPoisNextTurn": 0,
       "system.turnRoleplayBonus": 0,
       "system.turnMomentumSpent": 0,
       "system.turnReinforcementsReceived": 0,
       "system.turnStep": 1,
       "system.turnFlexibleDeployments": false,
+      "system.turnProgressionConfirmed": false,
       // Apply and clear the deferred supply bonus
       ...(supplyBonus > 0 && {
         "system.prioritySupply": currentSupply + supplyBonus,
@@ -1580,6 +1589,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       if (turnPhase === "1" && turnStep === 1) {
         updates["system.turnExtraTacticalPoisNextTurn"] = 0;
         updates["system.turnExtraUnknownPoisNextTurn"] = 0;
+        updates["system.turnExtraPoisNextTurn"] = 0;
       }
       await this.actor.update(updates);
     } else {
@@ -1624,6 +1634,10 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     // resolvedExploration count (before we remove them from the list).
     const system = this.actor.system;
     const chatLines = [];
+
+    // Capture within-turn extra-PoI consequences (flawed success → extra PoI) before
+    // _clearTurnState() resets turnExtraPoisNextTurn.
+    const extraPoisFromConsequences = system.turnExtraPoisNextTurn || 0;
 
     const scenarioPoi = system.scenarioPoi || "";
     const isResolved = (e) =>
@@ -1892,8 +1906,10 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     const finalUnknownEntries = [];
     for (const entry of sys5.poiListUnknown || []) {
       if (entry.outcomeIgnored) {
-        // Ignored — keep in list
+        // Ignored — keep in list; counts as an extra PoI next turn since the
+        // threat is still unresolved.
         finalUnknownEntries.push(entry);
+        extraUnknownPois++;
         continue;
       }
       if (entry.outcomeConfirmed) {
@@ -1922,28 +1938,40 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     // ---- G: Apply progression gain -----------------------------------------
     const sys6 = this.actor.system;
     const finalUpdates = {};
-    if (progressionGain > 0)
+    // Skip if progression was already confirmed and applied in Phase 3 Step 2
+    const progressionAlreadyConfirmed =
+      system.turnProgressionConfirmed || false;
+    if (progressionGain > 0 && !progressionAlreadyConfirmed)
       finalUpdates["system.progression"] =
         (sys6.progression || 0) + progressionGain;
-    if (momentumSpent > 0)
+    if (momentumSpent > 0 && !progressionAlreadyConfirmed)
       finalUpdates["system.campaignMomentum"] = Math.max(
         0,
         (sys6.campaignMomentum || 0) - momentumSpent,
       );
+    // Expire unavailability Active Effects whose expireAfterTurn has been reached.
+    // Run BEFORE incrementing the turn counter so effects set to expire at turn N
+    // are removed at the end of turn N (i.e. they lasted the full turn).
+    const currentTurnForExpiry = sys6.campaignTurnNumber || 0;
+    for (const listKey of ["characterAssets", "shipAssets", "resourceAssets"]) {
+      for (const uuid of this.actor.system[listKey] || []) {
+        const asset = await fromUuid(uuid);
+        if (!asset) continue;
+        for (const effect of [...asset.effects]) {
+          const expiry = effect.flags?.[MODULE_ID]?.expireAfterTurn;
+          if (expiry !== undefined && currentTurnForExpiry >= expiry)
+            await effect.delete();
+        }
+      }
+    }
+
     // Increment the campaign turn counter (used for AE expiry checks)
     finalUpdates["system.campaignTurnNumber"] =
       (sys6.campaignTurnNumber || 0) + 1;
     await this.actor.update(finalUpdates);
 
     // ---- Chat summary ------------------------------------------------------
-    const totalMomentum = [
-      "poiListThreat",
-      "poiListExploration",
-      "poiListRoutine",
-      "poiListUnknown",
-    ]
-      .flatMap((k) => system[k] || [])
-      .reduce((s, e) => s + (e.conflictMomentum || 0), 0);
+    const totalMomentum = system.turnMomentumGained || 0;
     const extraPoisTotal =
       (system.turnExtraPoisNextTurn || 0) +
       extraTacticalPois +
@@ -1962,6 +1990,16 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       whisper: [game.user.id],
     });
     await this._clearTurnState();
+
+    // Persist carry-over extra PoI counts for the next turn's Phase 1 Step 1.
+    // These survive until _onNextPhase consumes them when leaving that step.
+    const carryOver = {
+      "system.turnExtraTacticalPoisNextTurn": extraTacticalPois,
+      "system.turnExtraUnknownPoisNextTurn": extraUnknownPois,
+      "system.turnExtraPoisNextTurn": extraPoisFromConsequences,
+    };
+    if (extraTacticalPois || extraUnknownPois || extraPoisFromConsequences)
+      await this.actor.update(carryOver);
   }
 
   async _clearTurnState() {
@@ -1973,6 +2011,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       "system.turnGeneratedPois": [],
       "system.turnThreatIncrease": 0,
       "system.turnExtraPoisNextTurn": 0,
+      "system.turnMomentumGained": 0,
       "system.turnRoleplayBonus": 0,
       "system.turnMomentumSpent": 0,
       "system.turnReinforcementsReceived": 0,
@@ -1981,6 +2020,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       "system.turnStep": 1,
       "system.turnFlexibleDeployments": false,
       "system.nextTurnSupplyBonus": 0,
+      "system.turnProgressionConfirmed": false,
       // commandeeredAssets intentionally NOT cleared here — they persist until
       // the next turn starts so the badge remains visible between turns.
       "system.turnPendingNotes": "",
@@ -2429,7 +2469,8 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     const pace =
       (system.pace || 0) +
       (system.turnExtraTacticalPoisNextTurn || 0) +
-      (system.turnExtraUnknownPoisNextTurn || 0);
+      (system.turnExtraUnknownPoisNextTurn || 0) +
+      (system.turnExtraPoisNextTurn || 0);
     if (pace <= 0) {
       ui.notifications.warn(game.i18n.localize("STA_TC.Wizard.PaceIsZero"));
       return;
@@ -2889,7 +2930,9 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
               buttons: [
                 {
                   action: "flawed",
-                  label: game.i18n.localize("STA_TC.Wizard.ResultFlawedSuccess"),
+                  label: game.i18n.localize(
+                    "STA_TC.Wizard.ResultFlawedSuccess",
+                  ),
                   icon: "fas fa-exclamation-triangle",
                   default: false,
                   callback: () => true,
@@ -3297,6 +3340,39 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     entry.outcomeIgnored = true;
     await this.actor.update({ [`system.${listKey}`]: entries });
     ui.notifications.info(game.i18n.localize("STA_TC.Wizard.OutcomeIgnored"));
+  }
+
+  static async _onConfirmProgression(event, target) {
+    const system = this.actor.system;
+    if (system.turnProgressionConfirmed) return;
+
+    const resolvedExplorationCount = (system.poiListExploration || []).filter(
+      (e) =>
+        e.conflictResult === "success" || e.conflictResult === "flawedSuccess",
+    ).length;
+    const fromExploration = resolvedExplorationCount * 3;
+    const fromMomentum = system.turnMomentumSpent || 0;
+    const roleplayBonus = system.turnRoleplayBonus || 0;
+    const progressionGain = fromExploration + fromMomentum + roleplayBonus;
+    const newTotal = (system.progression || 0) + progressionGain;
+
+    const updates = {
+      "system.progression": newTotal,
+      "system.turnProgressionConfirmed": true,
+    };
+    if (fromMomentum > 0) {
+      updates["system.campaignMomentum"] = Math.max(
+        0,
+        (system.campaignMomentum || 0) - fromMomentum,
+      );
+    }
+    await this.actor.update(updates);
+    ui.notifications.info(
+      game.i18n.format("STA_TC.Wizard.ProgressionConfirmed", {
+        gain: progressionGain,
+        total: newTotal,
+      }),
+    );
   }
 
   static async _onRollProgression(event, target) {

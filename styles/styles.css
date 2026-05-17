@@ -711,6 +711,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 15px;
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: none;
 }
 
 .campaign-tracker-sheet .tracker-header .actor-name {
@@ -729,7 +732,7 @@
 .campaign-tracker-sheet .tracker-stats {
   display: flex;
   align-items: center;
-  padding: 5px 0;
+  padding: 2px 0;
   border-bottom: 1px solid var(--sta-tc-border);
   margin-bottom: 4px;
 }
@@ -737,44 +740,41 @@
 .campaign-tracker-sheet .tracker-stats-groups {
   flex: 1;
   display: flex;
-  gap: 32px;
+  gap: 20px;
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
+  padding: 0 8px;
 }
 
 .campaign-tracker-sheet .stat-group {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .campaign-tracker-sheet .stat-group label {
-  font-size: 0.9em;
+  font-size: 0.65em;
   font-weight: bold;
   color: var(--sta-tc-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  max-width: 70px;
-  text-align: center;
+  max-width: 80px;
+  text-align: right;
   line-height: 1.2;
   white-space: normal;
-  min-height: 2.4em;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
 }
 
 .campaign-tracker-sheet .stat-group input[type="number"] {
-  width: 48px;
+  width: 44px;
   text-align: center;
-  font-size: 1.1em;
+  font-size: 1em;
   font-weight: bold;
   color: var(--sta-tc-accent);
   border: 1px solid var(--sta-tc-border);
   background: rgba(0, 39, 63, 0.4);
-  padding: 3px;
+  padding: 1px 3px;
   border-radius: 4px;
 }
 
@@ -2346,6 +2346,18 @@
   font-size: 0.83em;
 }
 
+.campaign-tracker-sheet .phase3-confirm-btn {
+  width: 100%;
+  font-size: 0.83em;
+  background: rgba(0, 180, 100, 0.15);
+  border-color: rgba(0, 180, 100, 0.5);
+}
+
+.campaign-tracker-sheet .phase3-confirm-btn .roll-count {
+  font-weight: bold;
+  opacity: 0.8;
+}
+
 /* ===== Phase 3: POI card outcome badge ===== */
 .campaign-tracker-sheet .poi-phase3-outcome {
   margin-top: 5px;
@@ -2415,24 +2427,32 @@
 .campaign-tracker-sheet .asset-strip-entry.is-commandeered { opacity: 0.55; }
 
 /* ===== Unavailable asset badge (loss AE) in sidebar ===== */
+
+/* Unavailable badge: yellow, same shape as lost */
 .campaign-tracker-sheet .unavail-badge {
   position: absolute;
-  top: -2px;
-  right: -2px;
-  background: rgba(230, 126, 34, 0.9);
-  color: #fff;
-  border-radius: 50%;
-  width: 16px;
-  height: 16px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(242, 204, 13, 0.92); /* yellow */
+  color: #665c00;
+  border-radius: 0 0 3px 3px;
+  height: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.6em;
+  font-size: 0.55em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
 }
 
-.campaign-tracker-sheet .asset-strip-entry.is-unavailable { opacity: 0.6; filter: sepia(0.3) hue-rotate(-10deg); }
+.campaign-tracker-sheet .asset-strip-entry.is-unavailable {
+  opacity: 0.6;
+  filter: grayscale(30%) sepia(0.5) hue-rotate(-30deg);
+}
 
 /* ===== Lost asset badge in sidebar ===== */
 .campaign-tracker-sheet .lost-badge {

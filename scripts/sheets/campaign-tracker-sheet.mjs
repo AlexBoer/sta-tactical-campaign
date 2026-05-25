@@ -198,8 +198,6 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
   /** @override */
   async _prepareContext(options) {
     const actor = this.actor;
-    // Purge any stale UUIDs left by actors deleted outside the tracker UI.
-    await this._purgeStaleUuids();
     const system = actor.system;
 
     const turnPhase = system.turnPhase || "";
@@ -290,18 +288,19 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
 
     // Annotate assets with commandeered state for template display
     const commandeeredSet = new Set(system.commandeeredAssets || []);
-    for (const list of [characterAssets, shipAssets, resourceAssets]) {
-      for (const asset of list) {
-        asset.isCommandeered = commandeeredSet.has(asset.uuid);
-        // Read status directly from AE flags — more reliable than derived system fields
-        const doc = await fromUuid(asset.uuid);
-        asset.isUnavailable = !!doc?.effects?.some(
-          (e) => !e.disabled && e.flags?.[MODULE_ID]?.unavailable,
-        );
-        asset.isLost = !!doc?.effects?.some(
-          (e) => !e.disabled && e.flags?.[MODULE_ID]?.lost,
-        );
-      }
+    const allAssets = [...characterAssets, ...shipAssets, ...resourceAssets];
+    const assetDocs = await Promise.all(allAssets.map((a) => fromUuid(a.uuid)));
+    for (let i = 0; i < allAssets.length; i++) {
+      const asset = allAssets[i];
+      const doc = assetDocs[i];
+      asset.isCommandeered = commandeeredSet.has(asset.uuid);
+      // Read status directly from AE flags — more reliable than derived system fields
+      asset.isUnavailable = !!doc?.effects?.some(
+        (e) => !e.disabled && e.flags?.[MODULE_ID]?.unavailable,
+      );
+      asset.isLost = !!doc?.effects?.some(
+        (e) => !e.disabled && e.flags?.[MODULE_ID]?.lost,
+      );
     }
 
     return {
@@ -501,7 +500,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
   }
 
   async _buildAssetPoiMap(system) {
-    const map = {};
+    const entries = [];
     for (const list of [
       system.poiListThreat,
       system.poiListExploration,
@@ -509,13 +508,16 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       system.poiListUnknown,
     ]) {
       for (const entry of list || []) {
-        if (entry.asset1Uuid || entry.asset2Uuid) {
-          const poi = await fromUuid(entry.actorUuid);
-          const poiName = poi?.name || "???";
-          if (entry.asset1Uuid) map[entry.asset1Uuid] = poiName;
-          if (entry.asset2Uuid) map[entry.asset2Uuid] = poiName;
-        }
+        if (entry.asset1Uuid || entry.asset2Uuid) entries.push(entry);
       }
+    }
+    const pois = await Promise.all(entries.map((e) => fromUuid(e.actorUuid)));
+    const map = {};
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      const poiName = pois[i]?.name || "???";
+      if (entry.asset1Uuid) map[entry.asset1Uuid] = poiName;
+      if (entry.asset2Uuid) map[entry.asset2Uuid] = poiName;
     }
     return map;
   }
@@ -602,128 +604,132 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       failure: "STA_TC.Wizard.ResultFailure",
       seriousSetback: "STA_TC.Wizard.ResultSeriousSetback",
     };
-    for (const col of cols) {
-      const entries = await this._resolvePoiList(system[col.key], col.key);
-      for (const entry of entries) {
-        const isScenario = entry.poi.uuid === scenarioPoi;
-        entry.isScenario = isScenario;
-        entry.canSelectScenario = canSelectScenario;
-        entry.canRollEvent = canRollEvent;
-        entry.canRollConflicts =
-          canRollConflicts && !isScenario && !!(entry.asset1 || entry.asset2);
-        entry.showConflictResult =
-          entry.canRollConflicts ||
-          (isPhase3 && !!entry.entryData.conflictResult);
-        entry.hasEvent = !!entry.entryData.eventResult;
-        entry.canResetEvent =
-          entry.hasEvent && canRollEvent && (game.user?.isGM ?? false);
-        entry.isConflictResolved = !!entry.entryData.conflictResult;
-        // Advisory roll data: successes rolled but GM hasn't confirmed pass/fail yet
-        if (
-          !entry.isConflictResolved &&
-          entry.entryData.conflictSuccesses > 0
-        ) {
-          entry.hasAdvisoryRoll = true;
-          entry.advisorySuccesses = entry.entryData.conflictSuccesses;
-          entry.advisoryHadNat20 = entry.entryData.conflictHadNat20 || false;
-        }
-        if (entry.isConflictResolved) {
-          const cr = entry.entryData.conflictResult;
-          entry.conflictResultLabel = game.i18n.localize(
-            resultLabels[cr] || "",
-          );
-          entry.conflictMomentum = entry.entryData.conflictMomentum || 0;
-          entry.conflictHadNat20 = entry.entryData.conflictHadNat20 || false;
-          entry.needsConsequence =
-            (cr === "flawedSuccess" || cr === "seriousSetback") &&
-            !entry.entryData.consequenceChosen;
-          entry.isSeriousSetback = cr === "seriousSetback";
-          entry.isConflictFailure =
-            cr === "failure" && !entry.entryData.failureChoice;
-          const consequenceLabels = {
-            extraPoi: "STA_TC.Wizard.ConsequenceExtraPoiChosen",
-            rollLoss: "STA_TC.Wizard.ConsequenceRollLossChosen",
-            increaseThreat: "STA_TC.Wizard.ConsequenceIncreaseThreatChosen",
-          };
-          const failureLabels = {
-            withdraw: "STA_TC.Wizard.FailureWithdrawChosen",
-            succeedAtCost: "STA_TC.Wizard.FailureSucceedAtCostChosen",
-          };
-          const rawConsequence = entry.entryData.consequenceChosen || "";
-          entry.consequenceChosen = rawConsequence
-            ? rawConsequence === "increaseThreat"
-              ? game.i18n.format(
-                  "STA_TC.Wizard.ConsequenceIncreaseThreatChosen",
-                  {
-                    amount: (entry.poi.difficulty || 1) * 2,
-                  },
-                )
-              : game.i18n.localize(
-                  consequenceLabels[rawConsequence] || rawConsequence,
-                )
-            : "";
-          const rawFailure = entry.entryData.failureChoice || "";
-          entry.failureChoice = rawFailure
-            ? game.i18n.localize(failureLabels[rawFailure] || rawFailure)
-            : "";
-          entry.lossResult = entry.entryData.lossResult || "";
-          entry.threatConsequenceLabel = game.i18n.format(
-            "STA_TC.Wizard.ConsequenceIncreaseThreat",
-            { amount: (entry.poi.difficulty || 1) * 2 },
-          );
-        }
-        // Phase 3: per-entry outcome descriptor for the POI card Phase 3 slot
-        if (isPhase3) {
-          entry.outcomeConfirmed = entry.entryData.outcomeConfirmed || false;
-          entry.outcomeIgnored = entry.entryData.outcomeIgnored || false;
-          const isResolved =
-            isScenario ||
-            entry.entryData.conflictResult === "success" ||
-            entry.entryData.conflictResult === "flawedSuccess";
-          if (isResolved) {
-            entry.phase3outcome = { type: "resolved" };
-          } else {
-            const { poiType, urgency = 1 } = entry.poi;
-            if (poiType === "tacticalThreat") {
-              const consequence =
-                urgency >= 3
-                  ? "catastrophe"
-                  : urgency === 2
-                    ? "escalate"
-                    : "intensify";
-              entry.phase3outcome = {
-                type: "unresolvedThreat",
-                consequence,
-                showEscalationRoll: urgency >= 2,
-                escalationRolled: entry.entryData.escalationRolled || false,
-              };
-            } else if (poiType === "routine") {
-              let commandeeredAssetName = "";
-              const commandeeredUuid =
-                entry.entryData.commandeeredAssetUuid || "";
-              if (commandeeredUuid) {
-                const asset = await fromUuid(commandeeredUuid);
-                commandeeredAssetName = asset?.name || "";
-              }
-              entry.phase3outcome = {
-                type: "unresolvedRoutine",
-                commandeeredAssetUuid: commandeeredUuid,
-                commandeeredAssetName,
-              };
-            } else if (poiType === "exploration") {
-              entry.phase3outcome = {
-                type: "unresolvedExploration",
-                consequence:
-                  entry.poi.missedCount >= 1 ? "remove" : "difficultyIncrease",
-              };
+    await Promise.all(
+      cols.map(async (col) => {
+        const entries = await this._resolvePoiList(system[col.key], col.key);
+        for (const entry of entries) {
+          const isScenario = entry.poi.uuid === scenarioPoi;
+          entry.isScenario = isScenario;
+          entry.canSelectScenario = canSelectScenario;
+          entry.canRollEvent = canRollEvent;
+          entry.canRollConflicts =
+            canRollConflicts && !isScenario && !!(entry.asset1 || entry.asset2);
+          entry.showConflictResult =
+            entry.canRollConflicts ||
+            (isPhase3 && !!entry.entryData.conflictResult);
+          entry.hasEvent = !!entry.entryData.eventResult;
+          entry.canResetEvent =
+            entry.hasEvent && canRollEvent && (game.user?.isGM ?? false);
+          entry.isConflictResolved = !!entry.entryData.conflictResult;
+          // Advisory roll data: successes rolled but GM hasn't confirmed pass/fail yet
+          if (
+            !entry.isConflictResolved &&
+            entry.entryData.conflictSuccesses > 0
+          ) {
+            entry.hasAdvisoryRoll = true;
+            entry.advisorySuccesses = entry.entryData.conflictSuccesses;
+            entry.advisoryHadNat20 = entry.entryData.conflictHadNat20 || false;
+          }
+          if (entry.isConflictResolved) {
+            const cr = entry.entryData.conflictResult;
+            entry.conflictResultLabel = game.i18n.localize(
+              resultLabels[cr] || "",
+            );
+            entry.conflictMomentum = entry.entryData.conflictMomentum || 0;
+            entry.conflictHadNat20 = entry.entryData.conflictHadNat20 || false;
+            entry.needsConsequence =
+              (cr === "flawedSuccess" || cr === "seriousSetback") &&
+              !entry.entryData.consequenceChosen;
+            entry.isSeriousSetback = cr === "seriousSetback";
+            entry.isConflictFailure =
+              cr === "failure" && !entry.entryData.failureChoice;
+            const consequenceLabels = {
+              extraPoi: "STA_TC.Wizard.ConsequenceExtraPoiChosen",
+              rollLoss: "STA_TC.Wizard.ConsequenceRollLossChosen",
+              increaseThreat: "STA_TC.Wizard.ConsequenceIncreaseThreatChosen",
+            };
+            const failureLabels = {
+              withdraw: "STA_TC.Wizard.FailureWithdrawChosen",
+              succeedAtCost: "STA_TC.Wizard.FailureSucceedAtCostChosen",
+            };
+            const rawConsequence = entry.entryData.consequenceChosen || "";
+            entry.consequenceChosen = rawConsequence
+              ? rawConsequence === "increaseThreat"
+                ? game.i18n.format(
+                    "STA_TC.Wizard.ConsequenceIncreaseThreatChosen",
+                    {
+                      amount: (entry.poi.difficulty || 1) * 2,
+                    },
+                  )
+                : game.i18n.localize(
+                    consequenceLabels[rawConsequence] || rawConsequence,
+                  )
+              : "";
+            const rawFailure = entry.entryData.failureChoice || "";
+            entry.failureChoice = rawFailure
+              ? game.i18n.localize(failureLabels[rawFailure] || rawFailure)
+              : "";
+            entry.lossResult = entry.entryData.lossResult || "";
+            entry.threatConsequenceLabel = game.i18n.format(
+              "STA_TC.Wizard.ConsequenceIncreaseThreat",
+              { amount: (entry.poi.difficulty || 1) * 2 },
+            );
+          }
+          // Phase 3: per-entry outcome descriptor for the POI card Phase 3 slot
+          if (isPhase3) {
+            entry.outcomeConfirmed = entry.entryData.outcomeConfirmed || false;
+            entry.outcomeIgnored = entry.entryData.outcomeIgnored || false;
+            const isResolved =
+              isScenario ||
+              entry.entryData.conflictResult === "success" ||
+              entry.entryData.conflictResult === "flawedSuccess";
+            if (isResolved) {
+              entry.phase3outcome = { type: "resolved" };
             } else {
-              entry.phase3outcome = { type: "unresolvedUnknown" };
+              const { poiType, urgency = 1 } = entry.poi;
+              if (poiType === "tacticalThreat") {
+                const consequence =
+                  urgency >= 3
+                    ? "catastrophe"
+                    : urgency === 2
+                      ? "escalate"
+                      : "intensify";
+                entry.phase3outcome = {
+                  type: "unresolvedThreat",
+                  consequence,
+                  showEscalationRoll: urgency >= 2,
+                  escalationRolled: entry.entryData.escalationRolled || false,
+                };
+              } else if (poiType === "routine") {
+                let commandeeredAssetName = "";
+                const commandeeredUuid =
+                  entry.entryData.commandeeredAssetUuid || "";
+                if (commandeeredUuid) {
+                  const asset = await fromUuid(commandeeredUuid);
+                  commandeeredAssetName = asset?.name || "";
+                }
+                entry.phase3outcome = {
+                  type: "unresolvedRoutine",
+                  commandeeredAssetUuid: commandeeredUuid,
+                  commandeeredAssetName,
+                };
+              } else if (poiType === "exploration") {
+                entry.phase3outcome = {
+                  type: "unresolvedExploration",
+                  consequence:
+                    entry.poi.missedCount >= 1
+                      ? "remove"
+                      : "difficultyIncrease",
+                };
+              } else {
+                entry.phase3outcome = { type: "unresolvedUnknown" };
+              }
             }
           }
         }
-      }
-      col.entries = entries;
-    }
+        col.entries = entries;
+      }),
+    );
     return cols;
   }
 
@@ -923,7 +929,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       failure: "STA_TC.Wizard.ResultFailure",
       seriousSetback: "STA_TC.Wizard.ResultSeriousSetback",
     };
-    const rows = [];
+    const relevant = [];
     for (const listKey of [
       "poiListThreat",
       "poiListExploration",
@@ -933,24 +939,26 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       for (const entry of system[listKey] || []) {
         if (!entry.asset1Uuid && !entry.asset2Uuid) continue;
         if (entry.actorUuid === system.scenarioPoi) continue;
-        const poi = await fromUuid(entry.actorUuid);
-        const name = poi?.name ?? entry.actorUuid;
-        const result = entry.conflictResult || "";
-        rows.push({
-          name,
-          result,
-          resultLabel: result
-            ? game.i18n.localize(resultLabels[result] || result)
-            : "",
-          successes: entry.conflictSuccesses || 0,
-          momentum: entry.conflictMomentum || 0,
-          resolved: !!result,
-          isSuccess: result === "success" || result === "flawedSuccess",
-          isFailure: result === "failure" || result === "seriousSetback",
-        });
+        relevant.push(entry);
       }
     }
-    return rows;
+    const pois = await Promise.all(relevant.map((e) => fromUuid(e.actorUuid)));
+    return relevant.map((entry, i) => {
+      const name = pois[i]?.name ?? entry.actorUuid;
+      const result = entry.conflictResult || "";
+      return {
+        name,
+        result,
+        resultLabel: result
+          ? game.i18n.localize(resultLabels[result] || result)
+          : "",
+        successes: entry.conflictSuccesses || 0,
+        momentum: entry.conflictMomentum || 0,
+        resolved: !!result,
+        isSuccess: result === "success" || result === "flawedSuccess",
+        isFailure: result === "failure" || result === "seriousSetback",
+      };
+    });
   }
 
   _computePhase2Stats(system) {

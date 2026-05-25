@@ -24,6 +24,11 @@ import { PoiExporter } from "./poi-exporter.mjs";
 
 const MODULE_ID = "sta-tactical-campaign";
 
+/** Return all CampaignTracker actors in the world. */
+function _getTrackers() {
+  return game.actors.filter((a) => a.type === `${MODULE_ID}.campaignTracker`);
+}
+
 /**
  * Initialize the module
  */
@@ -224,7 +229,6 @@ Hooks.once("ready", () => {
  */
 Hooks.on("deleteActor", async (deletedActor) => {
   const uuid = deletedActor.uuid;
-  const trackerType = `${MODULE_ID}.campaignTracker`;
   const poiLists = [
     "poiListThreat",
     "poiListExploration",
@@ -232,10 +236,8 @@ Hooks.on("deleteActor", async (deletedActor) => {
     "poiListUnknown",
   ];
 
-  for (const tracker of game.actors.filter((a) => a.type === trackerType)) {
+  for (const tracker of _getTrackers()) {
     const updates = {};
-
-    // Remove from asset strip lists
     for (const key of ["characterAssets", "shipAssets", "resourceAssets"]) {
       const list = tracker.system[key] || [];
       if (list.includes(uuid)) {
@@ -285,7 +287,6 @@ Hooks.on("deleteActor", async (deletedActor) => {
  * are reflected immediately without requiring a manual refresh.
  */
 Hooks.on("updateActor", (updatedActor) => {
-  const trackerType = `${MODULE_ID}.campaignTracker`;
   const relevantTypes = [`${MODULE_ID}.asset`, `${MODULE_ID}.poi`];
   if (!relevantTypes.includes(updatedActor.type)) return;
 
@@ -297,7 +298,7 @@ Hooks.on("updateActor", (updatedActor) => {
     "poiListUnknown",
   ];
 
-  for (const tracker of game.actors.filter((a) => a.type === trackerType)) {
+  for (const tracker of _getTrackers()) {
     const sys = tracker.system;
 
     // Check asset strip lists
@@ -331,8 +332,7 @@ Hooks.on("updateActor", (updatedActor) => {
 function _rerenderTrackersForAsset(actor) {
   if (actor.type !== `${MODULE_ID}.asset`) return;
   const uuid = actor.uuid;
-  const trackerType = `${MODULE_ID}.campaignTracker`;
-  for (const tracker of game.actors.filter((a) => a.type === trackerType)) {
+  for (const tracker of _getTrackers()) {
     const sys = tracker.system;
     const inAssets =
       (sys.characterAssets || []).includes(uuid) ||
@@ -348,14 +348,13 @@ function _rerenderTrackersForAsset(actor) {
 function _rerenderTrackersForPoi(actor) {
   if (actor.type !== `${MODULE_ID}.poi`) return;
   const uuid = actor.uuid;
-  const trackerType = `${MODULE_ID}.campaignTracker`;
   const poiLists = [
     "poiListThreat",
     "poiListExploration",
     "poiListRoutine",
     "poiListUnknown",
   ];
-  for (const tracker of game.actors.filter((a) => a.type === trackerType)) {
+  for (const tracker of _getTrackers()) {
     const sys = tracker.system;
     const inPois = poiLists.some((key) =>
       (sys[key] || []).some((e) => e.actorUuid === uuid),

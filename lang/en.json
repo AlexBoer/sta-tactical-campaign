@@ -131,6 +131,7 @@
       }
     },
     "UndoLossResult": "Undo Loss",
+    "NoLossEffect": "No loss effect found on this asset.",
     "Description": "Description",
     "PerformTest": "Perform Test",
     "TotalPower": "Total Power",

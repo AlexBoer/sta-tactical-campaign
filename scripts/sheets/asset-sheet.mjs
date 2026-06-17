@@ -414,7 +414,7 @@ export class AssetSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const actor = this.actor;
     const lostEffects = actor.effects.filter((e) => e.flags?.[MODULE_ID]?.lost);
     if (!lostEffects.length) {
-      ui.notifications.info("No loss effect found on this asset.");
+      ui.notifications.info(game.i18n.localize("STA_TC.NoLossEffect"));
       return;
     }
     const confirmed = await foundry.applications.api.DialogV2.confirm({

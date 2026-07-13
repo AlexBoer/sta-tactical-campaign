@@ -1,6 +1,7 @@
-packages/** export-ignore# Auto detect text files and perform LF normalization
+# Auto detect text files and perform LF normalization
 * text=auto
 
+packages/** export-ignore
 packages/ export-ignore
 .github/ export-ignore
 .gitignore export-ignore

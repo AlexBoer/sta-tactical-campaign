@@ -1,4 +1,4 @@
-# Auto detect text files and perform LF normalization
+packages/** export-ignore# Auto detect text files and perform LF normalization
 * text=auto
 
 packages/ export-ignore

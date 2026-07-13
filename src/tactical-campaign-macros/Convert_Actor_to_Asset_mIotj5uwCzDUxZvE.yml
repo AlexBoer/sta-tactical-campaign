@@ -1,0 +1,24 @@
+name: Convert Actor to Asset
+type: script
+command: game.modules.get("sta-tactical-campaign").api.convertActor();
+img: modules/sta-tactical-campaign/assets/macro%20icons/ActorstoAssets.webp
+author: 9tilE9UXScsjcVen
+scope: global
+folder: null
+ownership:
+  default: 0
+  9tilE9UXScsjcVen: 3
+flags: {}
+_stats:
+  compendiumSource: null
+  duplicateSource: null
+  exportSource: null
+  coreVersion: '13.351'
+  systemId: sta
+  systemVersion: 2.5.1
+  createdTime: 1772371851278
+  modifiedTime: 1772371851278
+  lastModifiedBy: 9tilE9UXScsjcVen
+_id: mIotj5uwCzDUxZvE
+sort: 0
+_key: '!macros!mIotj5uwCzDUxZvE'

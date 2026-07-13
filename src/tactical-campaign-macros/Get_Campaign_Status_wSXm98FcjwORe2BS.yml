@@ -1,0 +1,52 @@
+name: Get Campaign Status
+type: script
+command: |-
+  const MODULE_ID = "sta-tactical-campaign";
+
+  const trackerUuid = game.settings.get(MODULE_ID, "worldCampaignTracker");
+  if (!trackerUuid) {
+    ui.notifications.warn("No World Campaign Tracker configured in module settings.");
+    return;
+  }
+
+  const tracker = await fromUuid(trackerUuid);
+  if (!tracker) {
+    ui.notifications.warn("World Campaign Tracker actor not found. Check the UUID in module settings.");
+    return;
+  }
+
+  const { campaignMomentum, campaignThreat, progression } = tracker.system;
+
+  const content = `
+  <h3>Campaign Status</h3>
+  <table style="width:100%; border-collapse:collapse;">
+    <tr><td><strong>Campaign Momentum</strong></td><td style="text-align:right;">${campaignMomentum}</td></tr>
+    <tr><td><strong>Campaign Threat</strong></td><td style="text-align:right;">${campaignThreat}</td></tr>
+    <tr><td><strong>Progression Points</strong></td><td style="text-align:right;">${progression}</td></tr>
+  </table>`;
+
+  ChatMessage.create({
+    content,
+    speaker: { alias: tracker.name },
+  });
+img: modules/sta-tactical-campaign/assets/macro%20icons/campaignStatus.svg
+author: 9tilE9UXScsjcVen
+scope: global
+folder: null
+ownership:
+  default: 0
+  9tilE9UXScsjcVen: 3
+flags: {}
+_stats:
+  compendiumSource: null
+  duplicateSource: null
+  exportSource: null
+  coreVersion: '13.351'
+  systemId: sta
+  systemVersion: 2.5.1
+  createdTime: 1774011571021
+  modifiedTime: 1774011763843
+  lastModifiedBy: 9tilE9UXScsjcVen
+_id: wSXm98FcjwORe2BS
+sort: 0
+_key: '!macros!wSXm98FcjwORe2BS'

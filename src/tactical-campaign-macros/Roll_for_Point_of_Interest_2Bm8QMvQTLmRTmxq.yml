@@ -1,0 +1,26 @@
+name: Roll for Point of Interest
+type: script
+command: |-
+  // STA Tactical Campaign - Generate Point of Interest
+  await game.modules.get("sta-tactical-campaign").api.generatePoi();
+img: modules/sta-tactical-campaign/assets/macro%20icons/point_of_interest.svg
+author: 9tilE9UXScsjcVen
+scope: global
+folder: null
+ownership:
+  default: 0
+  9tilE9UXScsjcVen: 3
+flags: {}
+_stats:
+  compendiumSource: null
+  duplicateSource: null
+  exportSource: null
+  coreVersion: '13.351'
+  systemId: sta
+  systemVersion: 2.5.1
+  createdTime: 1772111728598
+  modifiedTime: 1772112581392
+  lastModifiedBy: 9tilE9UXScsjcVen
+_id: 2Bm8QMvQTLmRTmxq
+sort: 100000
+_key: '!macros!2Bm8QMvQTLmRTmxq'

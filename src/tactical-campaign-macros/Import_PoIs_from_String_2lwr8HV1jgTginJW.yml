@@ -1,0 +1,24 @@
+name: Import PoIs from String
+type: script
+_id: 2lwr8HV1jgTginJW
+author: 9tilE9UXScsjcVen
+img: icons/svg/dice-target.svg
+scope: global
+command: await game.modules.get("sta-tactical-campaign").api.importPois();
+folder: null
+sort: 0
+ownership:
+  default: 0
+  9tilE9UXScsjcVen: 3
+flags: {}
+_stats:
+  coreVersion: '14.359'
+  systemId: sta
+  systemVersion: 2.5.3
+  createdTime: 1776098617842
+  modifiedTime: 1776100444123
+  lastModifiedBy: 9tilE9UXScsjcVen
+  compendiumSource: null
+  duplicateSource: null
+  exportSource: null
+_key: '!macros!2lwr8HV1jgTginJW'

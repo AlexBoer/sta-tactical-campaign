@@ -1,0 +1,51 @@
+name: Export PoIs to String
+type: script
+_id: u6wAoR2Adqplaftg
+author: 9tilE9UXScsjcVen
+img: icons/svg/dice-target.svg
+scope: global
+command: >-
+  const api = game.modules.get("sta-tactical-campaign")?.api;
+
+  if (!api) return ui.notifications.error("STA Tactical Campaign API not
+  available.");
+
+
+  const strings = await api.exportPois(); // opens folder picker
+
+  if (!Array.isArray(strings) || strings.length === 0) return;
+
+
+  const text = JSON.stringify(strings, null, 2);
+
+  await foundry.applications.api.DialogV2.prompt({
+    window: { title: "Exported POIs" },
+    content: `
+      <p>Copy the exported POI text below:</p>
+      <textarea style="width:100%; min-height:320px;" readonly>${foundry.utils.escapeHTML(text)}</textarea>
+    `,
+    ok: {
+      label: "Copy to Clipboard",
+      callback: async () => {
+        await navigator.clipboard.writeText(text);
+        ui.notifications.info("POI export copied to clipboard.");
+      }
+    }
+  });
+folder: null
+sort: 0
+ownership:
+  default: 0
+  9tilE9UXScsjcVen: 3
+flags: {}
+_stats:
+  coreVersion: '14.359'
+  systemId: sta
+  systemVersion: 2.5.3
+  createdTime: 1776100641336
+  modifiedTime: 1776100772463
+  lastModifiedBy: 9tilE9UXScsjcVen
+  compendiumSource: null
+  duplicateSource: null
+  exportSource: null
+_key: '!macros!u6wAoR2Adqplaftg'

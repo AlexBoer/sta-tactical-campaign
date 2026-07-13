@@ -12,35 +12,9 @@ import { PoiGenerator } from "../poi-generator.mjs";
 import { AssetGenerator } from "../asset-generator.mjs";
 import { EventEffectResolver } from "../apps/event-effect-resolver.mjs";
 import { ProgressionLog } from "../apps/progression-log.mjs";
-import { ProgressionPowerDialog } from "../apps/progression-power-dialog.mjs";
-
-/**
- * Hardcoded d20 progression table.  Index 0 = roll of 1, index 19 = roll of 20.
- * `saved: true` → create a Progression Log item for later activation.
- * `saved: false` → apply automation immediately and/or post a chat reminder.
- */
-const PROGRESSION_TABLE = [
-  { type: "shipRefit", saved: false },
-  { type: "newAsset", saved: false },
-  { type: "favorOwed", saved: true },
-  { type: "allyGained", saved: true },
-  { type: "lullFighting", saved: true },
-  { type: "shipUpgrades", saved: false },
-  { type: "trainingCourse", saved: false },
-  { type: "federationResources", saved: false },
-  { type: "carefulPlanning", saved: true },
-  { type: "reconfiguration", saved: false },
-  { type: "characterJoins", saved: false },
-  { type: "emergencyAid", saved: true },
-  { type: "newShip", saved: false },
-  { type: "damageControl", saved: true },
-  { type: "adaptingCircumstances", saved: false },
-  { type: "flexibleDeployments", saved: true },
-  { type: "miraculousEscape", saved: true },
-  { type: "focusedResources", saved: false },
-  { type: "priorityAssignments", saved: false },
-  { type: "reviewingForces", saved: false },
-];
+import { RollTableManager } from "../apps/roll-table-manager.mjs";
+import { RollTableManagerService } from "../apps/roll-table-manager-service.mjs";
+import { aeMode } from "../utils.mjs";
 
 const MODULE_ID = "sta-tactical-campaign";
 
@@ -159,6 +133,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
 
       clearUnavailable: CampaignTrackerSheet._onClearUnavailable,
       openProgressionLog: CampaignTrackerSheet._onOpenProgressionLog,
+      openRollTableManager: CampaignTrackerSheet._onOpenRollTableManager,
       openPoiTable: CampaignTrackerSheet._onOpenPoiTable,
       setPoiVisibility: CampaignTrackerSheet._onSetPoiVisibility,
       setAllPoiVisibility: CampaignTrackerSheet._onSetAllPoiVisibility,
@@ -1246,6 +1221,12 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     } catch {
       return;
     }
+
+    // Progression / Escalation items: save a copy into this tracker's log.
+    if (data.type === "Item") {
+      return this._handleDropProgressionItem(data);
+    }
+
     if (data.type !== "Actor") return;
     let uuid = data.uuid;
     const target = event.target;
@@ -1275,6 +1256,24 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       const poiList = target.closest("[data-drop-target='poi']");
       return this._handleDropPoi(uuid, target, poiList, data);
     }
+  }
+
+  /**
+   * Save a dropped Progression/Escalation item into this tracker's
+   * Progression Log by creating an embedded copy (marked saved).
+   * @param {{uuid: string}} data - Drag data for the dropped Item.
+   */
+  async _handleDropProgressionItem(data) {
+    const item = await fromUuid(data.uuid);
+    if (!item || item.type !== `${MODULE_ID}.progression`) return;
+    const itemData = item.toObject();
+    delete itemData._id;
+    itemData.system = itemData.system || {};
+    itemData.system.saved = true;
+    await this.actor.createEmbeddedDocuments("Item", [itemData]);
+    ui.notifications.info(
+      game.i18n.format("STA_TC.Progression.SavedToLog", { name: item.name }),
+    );
   }
 
   async _handleDropAssetToSidebar(uuid, actor) {
@@ -2423,6 +2422,9 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
   static async _onGeneratePoi(event, target) {
     const result = await PoiGenerator.generate();
     if (!result?.actor) return;
+
+    await RollTableManagerService.ensureTrackerQueues(this.actor);
+
     const actor = result.actor;
     const folder = await this._getOrCreatePoiFolder(
       actor.system?.poiType || "unknown",
@@ -2445,6 +2447,22 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       [`system.${listKey}`]: entries,
       "system.turnGeneratedPois": generated,
     });
+
+    const sourceActorUuid = result?.subResult?.documentUuid || "";
+    if (sourceActorUuid && result?.subTableKey) {
+      try {
+        await RollTableManagerService.drawTimeMoveResultToUsed({
+          tracker: this.actor,
+          subKey: result.subTableKey,
+          sourceActorUuid,
+        });
+      } catch (error) {
+        console.warn(
+          `${MODULE_ID} | Could not move generated POI result to used queue`,
+          error,
+        );
+      }
+    }
   }
 
   static async _onCreateCustomPoi(event, target) {
@@ -2473,6 +2491,8 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
   }
 
   static async _onGenerateAllPois(event, target) {
+    await RollTableManagerService.ensureTrackerQueues(this.actor);
+
     const system = this.actor.system;
     const pace =
       (system.pace || 0) +
@@ -2510,7 +2530,33 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
         [`system.${listKey}`]: entries,
         "system.turnGeneratedPois": generated,
       });
+
+      const sourceActorUuid = result?.subResult?.documentUuid || "";
+      if (sourceActorUuid && result?.subTableKey) {
+        try {
+          await RollTableManagerService.drawTimeMoveResultToUsed({
+            tracker: this.actor,
+            subKey: result.subTableKey,
+            sourceActorUuid,
+          });
+        } catch (error) {
+          console.warn(
+            `${MODULE_ID} | Could not move generated POI result to used queue`,
+            error,
+          );
+        }
+      }
     }
+  }
+
+  static async _onOpenRollTableManager(event, target) {
+    if (!game.user.isGM) {
+      ui.notifications.warn(
+        game.i18n.localize("STA_TC.RollTableManager.Errors.GmOnly"),
+      );
+      return;
+    }
+    RollTableManager.open(this.actor);
   }
 
   static async _onRemoveGeneratedPoi(event, target) {
@@ -3142,16 +3188,20 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     const entries = foundry.utils.deepClone(this.actor.system[listKey] || []);
     if (!entries[entryIndex]) return;
     const roll = await table.roll();
-    const resultText =
-      roll.results?.[0]?.text || roll.results?.[0]?.name || "No result";
+    const result = roll.results?.[0];
     entries[entryIndex].escalationRolled = true;
     await this.actor.update({ [`system.${listKey}`]: entries });
     const poi = await fromUuid(entries[entryIndex].actorUuid);
+    const headerLabel = poi?.name
+      ? `${game.i18n.localize("STA_TC.Wizard.EscalationResult")} — ${poi.name}`
+      : game.i18n.localize("STA_TC.Wizard.EscalationResult");
+    const content = await CampaignTrackerSheet._buildResultCard({
+      result,
+      headerLabel,
+      accent: "#e67e22",
+    });
     await ChatMessage.create({
-      content: `<div style="background:#333;border-radius:8px;padding:10px;color:#eee;border-left:4px solid #e67e22;">
-        <h3 style="margin:0 0 6px;color:#e67e22;">\u26a0\ufe0f ${game.i18n.localize("STA_TC.Wizard.EscalationResult")}</h3>
-        <p><strong>${poi?.name || "POI"}:</strong> ${resultText}</p>
-      </div>`,
+      content,
       speaker: { alias: game.i18n.localize("STA_TC.Wizard.SpeakerAlias") },
       whisper: [game.user.id],
     });
@@ -3392,17 +3442,34 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       );
       return;
     }
-    const roll = await new Roll("1d20").evaluate();
-    await roll.toMessage({
-      flavor: game.i18n.localize("STA_TC.Wizard.RollProgression"),
-      speaker: { alias: game.i18n.localize("STA_TC.Wizard.SpeakerAlias") },
-      whisper: [game.user.id],
-    });
-    const entry = PROGRESSION_TABLE[roll.total - 1];
+    const tableUuid = game.settings.get(MODULE_ID, "tableProgression");
+    if (!tableUuid) {
+      ui.notifications.warn(
+        game.i18n.localize("STA_TC.Wizard.ProgressionTableNotConfigured"),
+      );
+      return;
+    }
+    const table = await fromUuid(tableUuid);
+    if (!table) {
+      ui.notifications.error(
+        game.i18n.format("STA_TC.Poi.Generator.TableNotFound", {
+          name: "Progression",
+        }),
+      );
+      return;
+    }
+    const roll = await table.roll();
+    const result = roll.results?.[0];
+    if (!result) {
+      ui.notifications.warn(
+        game.i18n.localize("STA_TC.Wizard.NoProgressionResults"),
+      );
+      return;
+    }
     await this.actor.update({
       "system.progression": currentProgression - 5,
     });
-    await CampaignTrackerSheet._applyProgressionResult(entry, this);
+    await CampaignTrackerSheet._applyProgressionResult(result, this);
   }
 
   static async _onChooseProgression(event, target) {
@@ -3415,13 +3482,41 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       return;
     }
 
-    const rows = PROGRESSION_TABLE.map(
-      (e, i) =>
-        `<label class="asset-picker-row">
+    const tableUuid = game.settings.get(MODULE_ID, "tableProgression");
+    if (!tableUuid) {
+      ui.notifications.warn(
+        game.i18n.localize("STA_TC.Wizard.ProgressionTableNotConfigured"),
+      );
+      return;
+    }
+    const table = await fromUuid(tableUuid);
+    if (!table) {
+      ui.notifications.error(
+        game.i18n.format("STA_TC.Poi.Generator.TableNotFound", {
+          name: "Progression",
+        }),
+      );
+      return;
+    }
+    const results = Array.from(table.results?.contents ?? table.results ?? []);
+    if (!results.length) {
+      ui.notifications.warn(
+        game.i18n.localize("STA_TC.Wizard.NoProgressionResults"),
+      );
+      return;
+    }
+
+    const rows = results
+      .map((r, i) => {
+        const label = foundry.utils.escapeHTML(
+          r.text || r.name || `Result ${i + 1}`,
+        );
+        return `<label class="asset-picker-row">
           <input type="radio" name="progressionIdx" value="${i}" ${i === 0 ? "checked" : ""} />
-          <span class="asset-picker-name">${game.i18n.localize(`STA_TC.Progression.Type.${e.type}`)}</span>
-        </label>`,
-    ).join("");
+          <span class="asset-picker-name">${label}</span>
+        </label>`;
+      })
+      .join("");
 
     const idx = await foundry.applications.api.DialogV2.prompt({
       window: {
@@ -3436,175 +3531,91 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     });
 
     if (idx === null || idx === undefined) return;
-    const entry = PROGRESSION_TABLE[parseInt(idx)];
+    const result = results[parseInt(idx)];
+    if (!result) return;
     await this.actor.update({
       "system.progression": currentProgression - 5,
     });
-    await CampaignTrackerSheet._applyProgressionResult(entry, this);
+    await CampaignTrackerSheet._applyProgressionResult(result, this);
   }
 
   /**
-   * Dispatch a progression result:
-   *  - If `entry.saved`, create a saved ProgressionLog item and post a chat card.
-   *  - Otherwise apply automation (power AE, supply boost) or post a chat reminder.
+   * Build a rich chat-card body for a rolled/selected roll table result.
+   * Resolves the linked item (if any) to show its name, effect text, image,
+   * and a draggable Foundry content link.
    *
-   * @param {{type: string, saved: boolean}} entry
+   * @param {object} opts
+   * @param {TableResult} opts.result - The roll table result.
+   * @param {string} opts.headerLabel - Card header text.
+   * @param {string} opts.accent - Accent colour (CSS).
+   * @returns {Promise<string>} HTML string.
+   */
+  static async _buildResultCard({ result, headerLabel, accent }) {
+    let name = result?.text || result?.name || "";
+    let effect = "";
+    let img = result?.img || result?.icon || "";
+    let uuid = result?.documentUuid || "";
+
+    if (uuid) {
+      const doc = await fromUuid(uuid);
+      if (doc) {
+        name = doc.name || name;
+        effect = doc.system?.effect || "";
+        img = doc.img || img;
+        uuid = doc.uuid;
+      }
+    }
+    if (!name) name = game.i18n.localize("STA_TC.Types.Progression");
+
+    const safeName = foundry.utils.escapeHTML(name);
+    const safeHeader = foundry.utils.escapeHTML(headerLabel);
+    const imgHtml = img
+      ? `<img src="${img}" alt="" style="width:44px;height:44px;object-fit:cover;border:none;border-radius:4px;flex:0 0 auto;" />`
+      : "";
+    const effectHtml = effect
+      ? `<div style="margin-top:6px;line-height:1.4;">${effect}</div>`
+      : "";
+    // @UUID[...] is auto-enriched into a draggable content link in chat.
+    const linkHtml = uuid
+      ? `<div style="margin-top:8px;font-size:0.9em;opacity:0.9;">@UUID[${uuid}]{${safeName}}</div>`
+      : "";
+
+    return `<div style="border-left:4px solid ${accent};background:rgba(0,0,0,0.25);border-radius:6px;padding:10px;">
+      <div style="font-weight:bold;color:${accent};text-transform:uppercase;font-size:0.8em;letter-spacing:0.5px;margin-bottom:6px;">${safeHeader}</div>
+      <div style="display:flex;gap:8px;align-items:flex-start;">
+        ${imgHtml}
+        <div style="flex:1;">
+          <div style="font-weight:bold;font-size:1.05em;">${safeName}</div>
+          ${effectHtml}
+          ${linkHtml}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  /**
+   * Post a rich chat card for a progression roll result. No automation is
+   * applied; the effect text comes from the linked progression item.
+   *
+   * @param {TableResult} result - The rolled/selected roll table result.
    * @param {CampaignTrackerSheet} sheet
    */
-  static async _applyProgressionResult(entry, sheet) {
-    const tracker = sheet.actor;
-    const typeName = game.i18n.localize(
-      `STA_TC.Progression.Type.${entry.type}`,
-    );
-    const typeDesc = game.i18n.localize(
-      `STA_TC.Progression.Desc.${entry.type}`,
-    );
-
-    // ---- Saved awards: log item + chat card ----
-    if (entry.saved) {
-      await Item.create(
-        {
-          name: typeName,
-          type: "sta-tactical-campaign.progression",
-          system: { type: entry.type, saved: true, notes: typeDesc },
-        },
-        { parent: tracker },
-      );
-      await ChatMessage.create({
-        content: `<div class="progression-result-card">
-          <h3><i class="fas fa-star"></i> ${game.i18n.localize("STA_TC.Progression.ChatResult")}: ${typeName}</h3>
-          <p>${typeDesc}</p>
-          <p class="progression-saved-note"><em>${game.i18n.localize("STA_TC.Progression.ChatSaved")}</em></p>
-        </div>`,
-        speaker: {
-          alias: game.i18n.localize("STA_TC.Wizard.SpeakerAlias"),
-        },
-        whisper: [game.user.id],
-      });
-      return;
-    }
-
-    // ---- Immediate awards ----
-    let chatExtra = "";
-    switch (entry.type) {
-      case "shipRefit": {
-        await ProgressionPowerDialog.prompt({
-          tracker,
-          assetTypes: ["ship"],
-          mode: "power",
-          delta: 1,
-          title: typeName,
-          description: typeDesc,
-        });
-        break;
-      }
-      case "trainingCourse": {
-        await ProgressionPowerDialog.prompt({
-          tracker,
-          assetTypes: ["character"],
-          mode: "power",
-          delta: 1,
-          title: typeName,
-          description: typeDesc,
-        });
-        break;
-      }
-      case "adaptingCircumstances": {
-        await ProgressionPowerDialog.prompt({
-          tracker,
-          assetTypes: ["ship", "character"],
-          mode: "power",
-          delta: 1,
-          title: typeName,
-          description: typeDesc,
-        });
-        break;
-      }
-      case "focusedResources": {
-        // Apply +1 to ALL power values of the chosen resource asset
-        const eligibleResources = [];
-        for (const uuid of tracker.system.resourceAssets || []) {
-          const actor = await fromUuid(uuid);
-          if (!actor) continue;
-          if (actor.effects?.some((e) => e.flags?.[MODULE_ID]?.lost)) continue;
-          eligibleResources.push({ uuid, name: actor.name });
-        }
-        if (!eligibleResources.length) {
-          chatExtra = game.i18n.localize("STA_TC.Progression.NoEligibleAssets");
-          break;
-        }
-        const frOptions = eligibleResources
-          .map(
-            (a, i) =>
-              `<option value="${a.uuid}" ${i === 0 ? "selected" : ""}>${a.name}</option>`,
-          )
-          .join("");
-        const frChosen = await foundry.applications.api.DialogV2.prompt({
-          window: { title: typeName },
-          content: `<form style="padding:8px 0;"><div style="display:flex;flex-direction:column;gap:4px;"><label style="font-weight:bold;">${game.i18n.localize("STA_TC.Progression.PickAsset")}</label><select name="assetUuid" style="width:100%;">${frOptions}</select></div></form>`,
-          ok: {
-            label: game.i18n.localize("STA_TC.Converter.Confirm"),
-            callback: (_ev, button) => button.form.elements.assetUuid.value,
-          },
-          rejectClose: false,
-        });
-        if (frChosen) {
-          const frAsset = await fromUuid(frChosen);
-          if (frAsset) {
-            await frAsset.createEmbeddedDocuments("ActiveEffect", [
-              {
-                name: "Progression: All Powers +1",
-                changes: [
-                  { key: "system.powers.medical.value", mode: 2, value: "1" },
-                  { key: "system.powers.military.value", mode: 2, value: "1" },
-                  { key: "system.powers.personal.value", mode: 2, value: "1" },
-                  { key: "system.powers.science.value", mode: 2, value: "1" },
-                  { key: "system.powers.social.value", mode: 2, value: "1" },
-                ],
-                disabled: false,
-                flags: { [MODULE_ID]: { progressionEffect: true } },
-              },
-            ]);
-            chatExtra = game.i18n.format(
-              "STA_TC.Progression.AllPowersApplied",
-              {
-                name: frAsset.name,
-              },
-            );
-          }
-        }
-        break;
-      }
-      case "priorityAssignments": {
-        const currentBonus = tracker.system.nextTurnSupplyBonus || 0;
-        await tracker.update({
-          "system.nextTurnSupplyBonus": currentBonus + 1,
-        });
-        chatExtra = game.i18n.format("STA_TC.Progression.SupplyNextTurn", {
-          amount: 1,
-        });
-        break;
-      }
-      default:
-        // Manual / chat reminder results
-        break;
-    }
-
+  static async _applyProgressionResult(result, sheet) {
+    const content = await CampaignTrackerSheet._buildResultCard({
+      result,
+      headerLabel: game.i18n.localize("STA_TC.Wizard.RollProgression"),
+      accent: "#3498db",
+    });
     await ChatMessage.create({
-      content: `<div class="progression-result-card">
-        <h3><i class="fas fa-dice-d20"></i> ${game.i18n.localize("STA_TC.Progression.ChatResult")}: ${typeName}</h3>
-        <p>${typeDesc}</p>
-        ${chatExtra ? `<p><em>${chatExtra}</em></p>` : ""}
-        <p style="font-size:0.85em;color:#aaa;">${game.i18n.localize("STA_TC.Wizard.ProgressionPointsDeducted")}</p>
-      </div>`,
+      content,
       speaker: { alias: game.i18n.localize("STA_TC.Wizard.SpeakerAlias") },
       whisper: [game.user.id],
     });
   }
 
-  // ==========================================================================
+  // =========================================================================
   // Dice & Roll Methods
-  // ==========================================================================
+  // =========================================================================
 
   async _performRoll(
     diceCount,
@@ -3838,7 +3849,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
         changes: [
           {
             key: "system.unavailable",
-            mode: CONST.ACTIVE_EFFECT_MODES.UPGRADE,
+            mode: aeMode("UPGRADE"),
             value: "1",
             priority: 20,
           },
@@ -4028,7 +4039,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
           changes: [
             {
               key: "system.lost",
-              mode: CONST.ACTIVE_EFFECT_MODES.UPGRADE,
+              mode: aeMode("UPGRADE"),
               value: "1",
               priority: 20,
             },

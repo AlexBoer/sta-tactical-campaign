@@ -40,18 +40,9 @@ export class ProgressionSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
 
   /** @override */
   async _prepareContext(options) {
-    const type = this.item.system.type || "custom";
-    const descKey = `STA_TC.Progression.Desc.${type}`;
-    const description =
-      type === "custom"
-        ? this.item.system.notes || ""
-        : game.i18n.has(descKey)
-          ? game.i18n.localize(descKey)
-          : this.item.system.notes || "";
     return {
       item: this.item,
       system: this.item.system,
-      description,
     };
   }
 }

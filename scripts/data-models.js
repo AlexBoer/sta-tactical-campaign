@@ -10,6 +10,7 @@ const {
   HTMLField,
   ArrayField,
   BooleanField,
+  ObjectField,
 } = foundry.data.fields;
 
 /**
@@ -232,36 +233,32 @@ export class EventData extends foundry.abstract.TypeDataModel {
 export class ProgressionData extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return {
-      type: new StringField({
+      /**
+       * Top-level category: "progression" (story beat rewards) or
+       * "escalation" (escalation outcomes). Determines which roll table pool
+       * this item belongs to in the Roll Table Manager.
+       */
+      progressionCategory: new StringField({
         required: false,
         blank: false,
-        initial: "custom",
-        choices: [
-          "shipRefit",
-          "newAsset",
-          "favorOwed",
-          "allyGained",
-          "lullFighting",
-          "shipUpgrades",
-          "trainingCourse",
-          "federationResources",
-          "carefulPlanning",
-          "reconfiguration",
-          "characterJoins",
-          "emergencyAid",
-          "newShip",
-          "damageControl",
-          "adaptingCircumstances",
-          "flexibleDeployments",
-          "miraculousEscape",
-          "focusedResources",
-          "priorityAssignments",
-          "reviewingForces",
-          "custom",
-        ],
+        initial: "progression",
+        choices: ["progression", "escalation"],
       }),
+      /**
+       * Effect text shown on the Campaign Tracker when this progression
+       * result is applied. The item's name serves as the label.
+       */
+      effect: new StringField({ required: false, blank: true, initial: "" }),
       saved: new BooleanField({ required: false, initial: false }),
-      notes: new StringField({ required: false, blank: true, initial: "" }),
+      /**
+       * Freeform description for additional context. Has no mechanical
+       * effect and is not shown on the tracker.
+       */
+      description: new StringField({
+        required: false,
+        blank: true,
+        initial: "",
+      }),
     };
   }
 }
@@ -324,6 +321,42 @@ function poiEntryField() {
     }),
     outcomeConfirmed: new BooleanField({ required: false, initial: false }),
     outcomeIgnored: new BooleanField({ required: false, initial: false }),
+  });
+}
+
+/**
+ * Schema for a used roll-table result entry kept on a campaign tracker.
+ * Stores enough data to restore the original TableResult to the source table.
+ */
+function usedResultField() {
+  return new SchemaField({
+    sourceActorUuid: new StringField({
+      required: false,
+      blank: true,
+      initial: "",
+    }),
+    resultName: new StringField({ required: false, blank: true, initial: "" }),
+    resultImg: new StringField({ required: false, blank: true, initial: "" }),
+    tableUuid: new StringField({ required: false, blank: true, initial: "" }),
+    subKey: new StringField({ required: false, blank: true, initial: "" }),
+    weight: new NumberField({
+      required: false,
+      integer: true,
+      min: 1,
+      initial: 1,
+    }),
+    resultSnapshot: new ObjectField({ required: false, initial: {} }),
+    movedAt: new NumberField({
+      required: false,
+      integer: true,
+      nullable: true,
+      initial: null,
+    }),
+    origin: new StringField({
+      required: false,
+      blank: true,
+      initial: "manual",
+    }),
   });
 }
 
@@ -465,6 +498,31 @@ export class CampaignTrackerData extends foundry.abstract.TypeDataModel {
       turnProgressionConfirmed: new BooleanField({
         required: false,
         initial: false,
+      }),
+      // POI table results removed from active pools and kept as follow-up reminders
+      usedPoiResults: new ArrayField(usedResultField(), {
+        required: false,
+        initial: [],
+      }),
+      // Asset table results removed from active pools (manual-only queue)
+      usedAssetResults: new ArrayField(usedResultField(), {
+        required: false,
+        initial: [],
+      }),
+      // Progression (Events) table results removed from active pool
+      usedProgressionResults: new ArrayField(usedResultField(), {
+        required: false,
+        initial: [],
+      }),
+      // Escalation table results removed from active pool
+      usedEscalationResults: new ArrayField(usedResultField(), {
+        required: false,
+        initial: [],
+      }),
+      // Event table results removed from active pool
+      usedEventResults: new ArrayField(usedResultField(), {
+        required: false,
+        initial: [],
       }),
     };
   }

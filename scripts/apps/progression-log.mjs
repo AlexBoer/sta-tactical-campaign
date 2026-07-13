@@ -26,6 +26,7 @@ export class ProgressionLog extends HandlebarsApplicationMixin(ApplicationV2) {
       toggleSaved: ProgressionLog._onToggleSaved,
       activateEntry: ProgressionLog._onActivateEntry,
     },
+    dragDrop: [{ dragSelector: null, dropSelector: ".progression-log-body" }],
     position: {
       height: 420,
       width: 420,
@@ -50,6 +51,8 @@ export class ProgressionLog extends HandlebarsApplicationMixin(ApplicationV2) {
   /** @override */
   async _onRender(context, options) {
     await super._onRender(context, options);
+    // Wire up drop target
+    this._dragDrop?.bind(this.element);
     // Register item hooks once so the log re-renders when items change externally
     if (!this._progressionHooks) {
       const handler = (item) => {
@@ -83,24 +86,45 @@ export class ProgressionLog extends HandlebarsApplicationMixin(ApplicationV2) {
       .filter((i) => i.type === PROGRESSION_TYPE)
       .sort((a, b) => a.name.localeCompare(b.name))
       .map((i) => {
-        const type = i.system.type || "custom";
-        const descKey = `STA_TC.Progression.Desc.${type}`;
-        const description =
-          type === "custom"
-            ? i.system.notes || ""
-            : game.i18n.has(descKey)
-              ? game.i18n.localize(descKey)
-              : i.system.notes || "";
         return {
           id: i.id,
           name: i.name,
           saved: i.system.saved,
-          type,
-          notes: i.system.notes,
-          description,
+          description: i.system.effect || "",
         };
       });
     return { entries };
+  }
+
+  /**
+   * Accept a dropped Progression item (from a chat link or compendium)
+   * and create an embedded copy on the tracker, marked as saved.
+   */
+  async _onDrop(event) {
+    let data;
+    try {
+      data = JSON.parse(event.dataTransfer.getData("text/plain"));
+    } catch {
+      return;
+    }
+    if (data.type !== "Item" || !data.uuid) return;
+    const item = await fromUuid(data.uuid);
+    if (!item || item.type !== PROGRESSION_TYPE) return;
+    // Don't re-import an item that already lives on this actor
+    if (item.parent?.id === this.actor.id) {
+      ui.notifications.info(
+        game.i18n.localize("STA_TC.Progression.AlreadyInLog"),
+      );
+      return;
+    }
+    const itemData = item.toObject();
+    delete itemData._id;
+    itemData.system = itemData.system || {};
+    itemData.system.saved = true;
+    await this.actor.createEmbeddedDocuments("Item", [itemData]);
+    ui.notifications.info(
+      game.i18n.format("STA_TC.Progression.SavedToLog", { name: item.name }),
+    );
   }
 
   /**
@@ -157,9 +181,9 @@ export class ProgressionLog extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /**
-   * Activate a saved progression award.  Dispatches to a type-specific helper,
-   * then marks the item as unsaved (so the Activate button disappears) and
-   * prompts whether to delete the entry.
+   * Activate a saved progression award.
+   * Posts the item's effect text to chat as a reminder, then prompts
+   * whether to delete the entry. No automation is applied.
    * @param {PointerEvent} event
    * @param {HTMLElement} target
    */
@@ -168,66 +192,35 @@ export class ProgressionLog extends HandlebarsApplicationMixin(ApplicationV2) {
     const item = this.actor.items.get(itemId);
     if (!item) return;
 
-    const type = item.system.type || "custom";
-    const tracker = this.actor;
-    let handled = false;
+    const safeName = foundry.utils.escapeHTML(item.name);
+    const effect = item.system?.effect || "";
+    const img = item.img || "";
+    const uuid = item.uuid || "";
+    const imgHtml = img
+      ? `<img src="${img}" alt="" style="width:44px;height:44px;object-fit:cover;border:none;border-radius:4px;flex:0 0 auto;" />`
+      : "";
+    const effectHtml = effect
+      ? `<div style="margin-top:6px;line-height:1.4;">${effect}</div>`
+      : "";
+    const linkHtml = uuid
+      ? `<div style="margin-top:8px;font-size:0.9em;opacity:0.9;">@UUID[${uuid}]{${safeName}}</div>`
+      : "";
+    await ChatMessage.create({
+      content: `<div style="border-left:4px solid #3498db;background:rgba(0,0,0,0.25);border-radius:6px;padding:10px;">
+        <div style="font-weight:bold;color:#3498db;text-transform:uppercase;font-size:0.8em;letter-spacing:0.5px;margin-bottom:6px;">${game.i18n.localize("STA_TC.Progression.ActivateTitle").replace("{name}", safeName)}</div>
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          ${imgHtml}
+          <div style="flex:1;"><div style="font-weight:bold;font-size:1.05em;">${safeName}</div>${effectHtml}${linkHtml}</div>
+        </div>
+      </div>`,
+      speaker: { alias: this.actor.name },
+      whisper: [game.user.id],
+    });
 
-    // ---- Import the power dialog lazily to avoid circular deps ----
-    const { ProgressionPowerDialog } =
-      await import("./progression-power-dialog.mjs");
-
-    switch (type) {
-      case "flexibleDeployments": {
-        if (!tracker.system.turnPhase) {
-          ui.notifications.warn(
-            game.i18n.localize("STA_TC.Wizard.StartTurnFirst"),
-          );
-          return;
-        }
-        await tracker.update({ "system.turnFlexibleDeployments": true });
-        ui.notifications.info(
-          game.i18n.localize("STA_TC.Progression.FlexibleDeploymentsActive"),
-        );
-        handled = true;
-        break;
-      }
-      case "damageControl": {
-        handled = await ProgressionPowerDialog.promptRemoveLoss(
-          tracker,
-          "ship",
-        );
-        break;
-      }
-      case "miraculousEscape": {
-        handled = await ProgressionPowerDialog.promptRemoveLoss(
-          tracker,
-          "character",
-        );
-        break;
-      }
-      default: {
-        // Chat reminder for manual awards (favourOwed, allyGained, etc.)
-        await ChatMessage.create({
-          content: `<div class="progression-result-card">
-            <h3><i class="fas fa-star"></i> ${game.i18n.localize("STA_TC.Progression.ChatResult")}: ${item.name}</h3>
-            <p>${game.i18n.localize(`STA_TC.Progression.Desc.${type}`)}</p>
-          </div>`,
-          speaker: { alias: this.actor.name },
-        });
-        handled = true;
-        break;
-      }
-    }
-
-    if (!handled) return;
-
-    // Mark as no-longer-saved so the activate button disappears, and prompt to delete
     await item.update({ "system.saved": false });
     const del = await foundry.applications.api.DialogV2.confirm({
-      window: {
-        title: game.i18n.localize(`STA_TC.Progression.Type.${type}`),
-      },
-      content: `<p>${game.i18n.localize("STA_TC.Progression.Delete")} — ${item.name}?</p>`,
+      window: { title: safeName },
+      content: `<p>${game.i18n.format("STA_TC.Progression.DeleteConfirm", { name: safeName })}</p>`,
       yes: { label: game.i18n.localize("STA_TC.Progression.Delete") },
       no: { label: game.i18n.localize("STA_TC.Cancel") },
       rejectClose: false,

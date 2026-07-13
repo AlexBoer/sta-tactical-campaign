@@ -1,0 +1,184 @@
+<div class="sta-tc-sheet roll-table-manager-sheet">
+  <header class="rtm-toolbar">
+    <div class="rtm-toolbar-row">
+      <label>{{localize "STA_TC.RollTableManager.Source"}}</label>
+      <select id="rtm-source" aria-label="{{localize 'STA_TC.RollTableManager.Source'}}">
+        {{#each sourceOptions}}
+        <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
+        {{/each}}
+      </select>
+
+      {{#if manualMode}}
+      <button type="button" class="btn" data-action="applyPending">{{localize "STA_TC.RollTableManager.ApplyChanges"}} ({{pendingCount}})</button>
+      {{/if}}
+    </div>
+
+    <div class="rtm-tabs">
+      {{#each tabs}}
+      <button type="button" class="btn rtm-tab {{#if this.active}}active{{/if}}" data-action="switchTab" data-tab="{{this.id}}">{{this.label}}</button>
+      {{/each}}
+    </div>
+
+    <div class="rtm-toolbar-row rtm-toolbar-actions">
+      <div class="rtm-create-new">
+        <label for="rtm-new-name">{{localize "STA_TC.RollTableManager.CreateNew"}}</label>
+        <input id="rtm-new-name" name="newName" type="text" placeholder="{{localize 'STA_TC.RollTableManager.NamePlaceholder'}}" />
+        <button type="button" class="btn" data-action="createNew">{{localize "STA_TC.RollTableManager.CreateAndAdd"}}</button>
+      </div>
+
+      <div class="rtm-search-group">
+        <label for="rtm-search">{{localize "STA_TC.RollTableManager.Search"}}</label>
+        <input id="rtm-search" type="text" value="{{search}}" placeholder="{{localize 'STA_TC.RollTableManager.SearchPlaceholder'}}" />
+      </div>
+    </div>
+  </header>
+
+  <section class="rtm-main">
+    <div class="rtm-panel">
+      <div class="rtm-panel-header">
+        <h3>{{localize "STA_TC.RollTableManager.ActiveResults"}}</h3>
+        {{#if tableUuid}}
+        <button type="button" class="btn rtm-icon" data-action="openTable" data-tooltip="{{localize 'STA_TC.RollTableManager.OpenTable'}}" aria-label="{{localize 'STA_TC.RollTableManager.OpenTable'}}"><i class="fa-solid fa-up-right-from-square"></i></button>
+        {{/if}}
+      </div>
+      {{#if hasMoreActiveResults}}
+      <p class="rtm-drop-hint">{{localize "STA_TC.RollTableManager.CappedActive" total=activeTotalCount limit=activeRenderLimit}}</p>
+      {{/if}}
+      <p class="rtm-drop-hint">{{localize "STA_TC.RollTableManager.DropHint"}}</p>
+      <div class="rtm-list rtm-list-active">
+        {{#if activeResults.length}}
+          {{#each activeResults}}
+          <div class="rtm-row {{#unless this.valid}}invalid{{/unless}}" data-rtm-filter-name="{{this.name}}">
+            <img src="{{this.img}}" alt="" />
+            <div class="rtm-row-main">
+              <div class="rtm-title">{{this.name}}</div>
+              {{#unless this.valid}}
+              <div class="rtm-meta">
+                <span class="rtm-warning">{{localize "STA_TC.RollTableManager.StaleReference"}}</span>
+              </div>
+              {{/unless}}
+            </div>
+            <div class="rtm-actions">
+              {{#if this.documentUuid}}
+              <button type="button" class="btn rtm-icon" data-action="openActor" data-uuid="{{this.documentUuid}}" data-tooltip="{{localize 'STA_TC.RollTableManager.Open'}}" aria-label="{{localize 'STA_TC.RollTableManager.Open'}}"><i class="fa-solid fa-up-right-from-square"></i></button>
+              {{/if}}
+              {{#unless this.pendingOnly}}
+              <button type="button" class="btn rtm-icon" data-action="removeResult" data-result-id="{{this.id}}" data-tooltip="{{localize 'STA_TC.RollTableManager.MoveToUsed'}}" aria-label="{{localize 'STA_TC.RollTableManager.MoveToUsed'}}"><i class="fa-solid fa-box-archive"></i></button>
+              {{/unless}}
+            </div>
+          </div>
+          {{/each}}
+        {{else}}
+          <p class="rtm-empty">{{localize "STA_TC.RollTableManager.NoResults"}}</p>
+        {{/if}}
+      </div>
+    </div>
+
+    {{#if hasLinkedCompendium}}
+    <div class="rtm-panel rtm-drop-target">
+      <div class="rtm-panel-header">
+        {{#if isItemBasedSource}}
+        <h3>{{localize "STA_TC.RollTableManager.CompendiumItems"}}</h3>
+        {{else}}
+        <h3>{{localize "STA_TC.RollTableManager.CompendiumActors"}}</h3>
+        {{/if}}
+        {{#if hasCompendium}}
+        <button type="button" class="btn rtm-icon" data-action="openCompendium" data-tooltip="{{localize 'STA_TC.RollTableManager.OpenCompendium'}}" aria-label="{{localize 'STA_TC.RollTableManager.OpenCompendium'}}"><i class="fa-solid fa-book-atlas"></i></button>
+        {{/if}}
+      </div>
+      {{#if hasMoreCompendiumActors}}
+      <p class="rtm-drop-hint">{{localize "STA_TC.RollTableManager.CappedCompendium" total=compendiumTotalCount limit=compendiumRenderLimit}}</p>
+      {{/if}}
+      {{#if showCompendiumFilters}}
+      <div class="rtm-comp-filters">
+        {{#if showPoiCompendiumFilters}}
+        <label for="rtm-filter-power">{{localize "STA_TC.Poi.Power"}}</label>
+        <select id="rtm-filter-power">
+          {{#each powerFilterOptions}}
+          <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
+          {{/each}}
+        </select>
+
+        <label for="rtm-filter-difficulty">{{localize "STA_TC.Poi.Difficulty"}}</label>
+        <select id="rtm-filter-difficulty">
+          {{#each difficultyFilterOptions}}
+          <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
+          {{/each}}
+        </select>
+
+        {{#if showUrgencyFilter}}
+        <label for="rtm-filter-urgency">{{localize "STA_TC.Poi.Urgency"}}</label>
+        <select id="rtm-filter-urgency">
+          {{#each urgencyFilterOptions}}
+          <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
+          {{/each}}
+        </select>
+        {{/if}}
+        {{/if}}
+
+        {{#if showAssetCompendiumFilters}}
+        <label for="rtm-filter-asset-power">{{localize "STA_TC.Powers.Primary"}}</label>
+        <select id="rtm-filter-asset-power">
+          {{#each assetPowerFilterOptions}}
+          <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
+          {{/each}}
+        </select>
+        {{/if}}
+      </div>
+      {{/if}}
+      <div class="rtm-list rtm-list-compendium">
+        {{#if compendiumActors.length}}
+          {{#each compendiumActors}}
+          <div class="rtm-row" data-rtm-filter-name="{{this.name}}" data-rtm-power="{{this.power}}" data-rtm-primary-power="{{this.primaryPower}}" data-rtm-power2="{{this.power2}}" data-rtm-difficulty="{{this.difficulty}}" data-rtm-urgency="{{this.urgency}}">
+            <img src="{{this.img}}" alt="" />
+            <div class="rtm-row-main">
+              <div class="rtm-title">{{this.name}}</div>
+            </div>
+            <div class="rtm-actions">
+              <button type="button" class="btn rtm-icon" data-action="openActor" data-uuid="{{this.uuid}}" data-tooltip="{{localize 'STA_TC.RollTableManager.Open'}}" aria-label="{{localize 'STA_TC.RollTableManager.Open'}}"><i class="fa-solid fa-up-right-from-square"></i></button>
+              <button type="button" class="btn rtm-icon" data-action="addExisting" data-uuid="{{this.uuid}}" data-tooltip="{{localize 'STA_TC.RollTableManager.Add'}}" aria-label="{{localize 'STA_TC.RollTableManager.Add'}}"><i class="fa-solid fa-plus"></i></button>
+            </div>
+          </div>
+          {{/each}}
+        {{else}}
+          <p class="rtm-empty">{{localize "STA_TC.RollTableManager.NoCompendiumActors"}}</p>
+        {{/if}}
+      </div>
+    </div>
+    {{/if}}
+  </section>
+
+  <section class="rtm-panel rtm-used">
+    <h3>{{localize "STA_TC.RollTableManager.UsedResults"}}</h3>
+    {{#if hasMoreUsedResults}}
+    <p class="rtm-drop-hint">{{localize "STA_TC.RollTableManager.CappedUsed" total=usedTotalCount limit=usedRenderLimit}}</p>
+    {{/if}}
+    <div class="rtm-list rtm-list-used">
+      {{#if usedResults.length}}
+        {{#each usedResults}}
+        <div class="rtm-row" data-rtm-filter-name="{{this.resultName}}">
+          <img src="{{this.resultImg}}" alt="" />
+          <div class="rtm-row-main">
+            <div class="rtm-title">{{this.resultName}}</div>
+            <div class="rtm-meta">
+              <span>{{this.subKey}}</span>
+              <span>{{localize "STA_TC.RollTableManager.Origin"}} {{this.origin}}</span>
+            </div>
+          </div>
+          <div class="rtm-actions">
+            <button type="button" class="btn rtm-icon" data-action="restoreUsed" data-index="{{this.index}}" data-tooltip="{{localize 'STA_TC.RollTableManager.Restore'}}" aria-label="{{localize 'STA_TC.RollTableManager.Restore'}}"><i class="fa-solid fa-rotate-left"></i></button>
+            <button type="button" class="btn rtm-icon" data-action="removeUsedRecord" data-index="{{this.index}}" data-tooltip="{{localize 'STA_TC.RollTableManager.RemoveUsed'}}" aria-label="{{localize 'STA_TC.RollTableManager.RemoveUsed'}}"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
+        {{/each}}
+      {{else}}
+        <p class="rtm-empty">{{localize "STA_TC.RollTableManager.NoUsed"}}</p>
+      {{/if}}
+    </div>
+  </section>
+
+  <footer class="rtm-footer">
+    <span class="rtm-status {{statusLevel}}">{{statusMessage}}</span>
+    <button type="button" class="btn" data-action="closeDialog">{{localize "STA_TC.Cancel"}}</button>
+  </footer>
+</div>

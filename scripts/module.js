@@ -21,8 +21,57 @@ import { AssetGenerator } from "./asset-generator.mjs";
 import { ActorConverter } from "./actor-converter.mjs";
 import { PoiImporter } from "./poi-importer.mjs";
 import { PoiExporter } from "./poi-exporter.mjs";
+import { RollTableManager } from "./apps/roll-table-manager.mjs";
+import { RollTableManagerService } from "./apps/roll-table-manager-service.mjs";
+import { DefaultFoldersForm } from "./apps/default-folders-form.mjs";
 
 const MODULE_ID = "sta-tactical-campaign";
+
+/** Default images for new POI actors, keyed by POI type. */
+const POI_DEFAULT_IMAGES = {
+  tacticalThreat: "icons/svg/combat.svg",
+  exploration: "icons/svg/daze.svg",
+  routine: "icons/svg/book.svg",
+  unknown: "icons/svg/portal.svg",
+};
+
+/** Default prototype token tint colors for POI types. */
+const POI_DEFAULT_TINTS = {
+  tacticalThreat: "#ff3333",
+  exploration: "#16eefe",
+  routine: "#33f07b",
+  unknown: "#9836e7",
+};
+
+const POI_TINT_SETTING_BY_TYPE = {
+  tacticalThreat: "poiTintTacticalThreat",
+  exploration: "poiTintExploration",
+  routine: "poiTintRoutine",
+  unknown: "poiTintUnknown",
+};
+
+function _normalizeHexColor(value, fallback) {
+  const raw = String(value || "").trim();
+  if (!raw) return fallback;
+  const withHash = raw.startsWith("#") ? raw : `#${raw}`;
+  return /^#[0-9a-fA-F]{6}$/.test(withHash) ? withHash.toLowerCase() : fallback;
+}
+
+function _getPoiTokenTint(poiType) {
+  const type = POI_DEFAULT_TINTS[poiType] ? poiType : "unknown";
+  const settingKey = POI_TINT_SETTING_BY_TYPE[type];
+  const fallback = POI_DEFAULT_TINTS[type];
+  const configured = settingKey ? game.settings.get(MODULE_ID, settingKey) : "";
+  return _normalizeHexColor(configured, fallback);
+}
+
+function _gpuDebugCount(metric, delta = 1) {
+  globalThis.__staGpuDebugCollector?.count?.(MODULE_ID, metric, delta);
+}
+
+function _gpuDebugTime(metric, ms) {
+  globalThis.__staGpuDebugCollector?.time?.(MODULE_ID, metric, ms);
+}
 
 /** Return all CampaignTracker actors in the world. */
 function _getTrackers() {
@@ -210,6 +259,81 @@ Hooks.once("ready", () => {
 
     /** Direct access to the PoiExporter class for advanced usage. */
     PoiExporter,
+
+    /** Open the unified roll-table manager dialog for a tracker (or world tracker). */
+    openRollTableManager: async (tracker) => {
+      const resolvedTracker = await RollTableManagerService.getTracker(tracker);
+      if (!resolvedTracker) {
+        ui.notifications.warn(
+          game.i18n.localize("STA_TC.RollTableManager.Errors.NoTracker"),
+        );
+        return null;
+      }
+      await RollTableManagerService.ensureTrackerQueues(resolvedTracker);
+      return RollTableManager.open(resolvedTracker);
+    },
+
+    /**
+     * One-time repair/migration for the roll tables used by the POI/Asset
+     * generators and the Roll Table Manager. Converts compendium-backed tables
+     * into de-duplicated, editable world tables, repoints the settings, and
+     * deletes obsolete temporary tables from the previous sync-based design.
+     *
+     * Run once from the console:
+     *   await game.modules.get("sta-tactical-campaign").api.migrateRollTablesToWorld()
+     *
+     * @returns {Promise<object[]>} Per-table migration report.
+     */
+    migrateRollTablesToWorld: (options) =>
+      RollTableManagerService.migrateRollTablesToWorld(options),
+
+    /**
+     * Publish the current editable tables into a compendium pack you control so
+     * multiple worlds can share them, and repoint the settings at the
+     * compendium tables. Because the mode is derived from where each setting
+     * points, repointing at the compendium table makes editing shared.
+     *
+     * Run from the console (use a pack you own, NOT a shared community pack):
+     *   await game.modules.get("sta-tactical-campaign").api
+     *     .publishTablesToCompendium("my-module.my-tables")
+     *
+     * @param {string} packId  Collection id of an unlocked RollTable compendium.
+     * @returns {Promise<object[]>} Per-table publish report.
+     */
+    publishTablesToCompendium: (packId) =>
+      RollTableManagerService.publishTablesToCompendium(packId),
+
+    /**
+     * Re-folder existing Tactical Campaign actors in Actor compendiums so they
+     * match the manager layout (Assets/* and Points of Interest/* groups).
+     *
+     * By default this uses the configured actor compendium settings. You can
+     * optionally target a specific pack or run a dry-run preview.
+     *
+     * Example:
+     *   await game.modules.get("sta-tactical-campaign").api
+     *     .migrateCompendiumActorsToFolders({ dryRun: true })
+     *
+     * @param {object} [options]
+     * @param {string} [options.packId]
+     * @param {string[]} [options.packIds]
+     * @param {boolean} [options.dryRun=false]
+     * @returns {Promise<object[]>} Per-pack migration report.
+     */
+    migrateCompendiumActorsToFolders: (options) =>
+      RollTableManagerService.migrateCompendiumActorsToFolders(options),
+
+    /** Direct access to RollTableManagerService for advanced automation. */
+    RollTableManagerService,
+
+    /**
+     * Open the Default Folders configuration form.
+     * Allows GMs to set where new actors/items are created in compendiums.
+     */
+    showDefaultFoldersForm: () => new DefaultFoldersForm().render(true),
+
+    /** Direct access to DefaultFoldersForm for advanced usage. */
+    DefaultFoldersForm,
   };
 
   moduleInstance.api = api;
@@ -221,6 +345,13 @@ Hooks.once("ready", () => {
   console.log(
     `${MODULE_ID} | Module ready – API available at game.modules.get("${MODULE_ID}").api`,
   );
+
+  // Ensure new used-result queue fields exist on existing campaign trackers.
+  Promise.resolve().then(async () => {
+    for (const tracker of _getTrackers()) {
+      await RollTableManagerService.ensureTrackerQueues(tracker);
+    }
+  });
 });
 
 /**
@@ -286,9 +417,60 @@ Hooks.on("deleteActor", async (deletedActor) => {
  * sheets that reference it so changes (power, difficulty, note, type, etc.)
  * are reflected immediately without requiring a manual refresh.
  */
-Hooks.on("updateActor", (updatedActor) => {
+Hooks.on("updateActor", (updatedActor, changed) => {
   const relevantTypes = [`${MODULE_ID}.asset`, `${MODULE_ID}.poi`];
   if (!relevantTypes.includes(updatedActor.type)) return;
+
+  // If the actor's sub-type changed (e.g. POI unknown → routine), move its
+  // result from the old type's roll table to the new type's roll table.
+  if (game.user?.isGM) {
+    const typeChanged =
+      updatedActor.type === `${MODULE_ID}.poi`
+        ? foundry.utils.hasProperty(changed, "system.poiType")
+        : foundry.utils.hasProperty(changed, "system.assetType");
+    if (typeChanged) {
+      RollTableManagerService.syncActorTableMembership(updatedActor);
+
+      // Keep POI portrait and prototype token art aligned to the selected POI type.
+      if (updatedActor.type === `${MODULE_ID}.poi`) {
+        const poiType = updatedActor.system?.poiType ?? "unknown";
+        const nextImg =
+          POI_DEFAULT_IMAGES[poiType] || POI_DEFAULT_IMAGES.unknown;
+        const nextTint = _getPoiTokenTint(poiType);
+        const actorImg = updatedActor.img;
+        const tokenImg = foundry.utils.getProperty(
+          updatedActor,
+          "prototypeToken.texture.src",
+        );
+        const tokenTint = foundry.utils.getProperty(
+          updatedActor,
+          "prototypeToken.texture.tint",
+        );
+
+        const updates = {};
+        if (actorImg !== nextImg) updates.img = nextImg;
+        if (tokenImg !== nextImg)
+          updates["prototypeToken.texture.src"] = nextImg;
+        if (_normalizeHexColor(tokenTint, "") !== nextTint) {
+          updates["prototypeToken.texture.tint"] = nextTint;
+        }
+        if (Object.keys(updates).length) {
+          updatedActor
+            .update(updates)
+            .catch((err) =>
+              console.error(
+                `${MODULE_ID} | Failed to synchronize POI image after type change`,
+                err,
+              ),
+            );
+        }
+      }
+    }
+  }
+
+  const t0 = performance.now();
+  let trackersScanned = 0;
+  let trackerRenders = 0;
 
   const uuid = updatedActor.uuid;
   const poiLists = [
@@ -299,6 +481,7 @@ Hooks.on("updateActor", (updatedActor) => {
   ];
 
   for (const tracker of _getTrackers()) {
+    trackersScanned += 1;
     const sys = tracker.system;
 
     // Check asset strip lists
@@ -322,8 +505,14 @@ Hooks.on("updateActor", (updatedActor) => {
 
     if (inAssets || inPois || inGenerated) {
       tracker.sheet?.render();
+      trackerRenders += 1;
     }
   }
+
+  _gpuDebugCount("hook.updateActor.relevantCalls", 1);
+  _gpuDebugCount("hook.updateActor.trackersScanned", trackersScanned);
+  _gpuDebugCount("hook.updateActor.trackerRenders", trackerRenders);
+  _gpuDebugTime("hook.updateActor.handlerMs", performance.now() - t0);
 });
 
 /**
@@ -417,8 +606,37 @@ Hooks.on("deleteItem", (item, _options, _userId) => {
  * Set Campaign Tracker prototype token defaults on creation.
  */
 Hooks.on("preCreateActor", (actor, data, _options, _userId) => {
-  if (actor.type !== `${MODULE_ID}.campaignTracker`) return;
-  actor.updateSource({ "prototypeToken.actorLink": true });
+  if (actor.type === `${MODULE_ID}.campaignTracker`) {
+    actor.updateSource({ "prototypeToken.actorLink": true });
+    return;
+  }
+
+  if (
+    actor.type === `${MODULE_ID}.poi` ||
+    actor.type === `${MODULE_ID}.asset`
+  ) {
+    actor.updateSource({ "prototypeToken.actorLink": true });
+  }
+
+  // Give new POIs a type-appropriate default image (unless a custom one was set).
+  if (actor.type === `${MODULE_ID}.poi`) {
+    const providedImg = data?.img ?? actor.img;
+    const hasCustomImg =
+      providedImg && providedImg !== "icons/svg/mystery-man.svg";
+    const poiType = data?.system?.poiType ?? actor.system?.poiType ?? "unknown";
+    const img = POI_DEFAULT_IMAGES[poiType] || POI_DEFAULT_IMAGES.unknown;
+    const tint = _getPoiTokenTint(poiType);
+    const sourceUpdates = {
+      "prototypeToken.texture.tint": tint,
+    };
+
+    if (!hasCustomImg) {
+      sourceUpdates.img = img;
+      sourceUpdates["prototypeToken.texture.src"] = img;
+    }
+
+    actor.updateSource(sourceUpdates);
+  }
 });
 
 // ─── Conflict Roll Reroll Handling ───────────────────────────────────────────

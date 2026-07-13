@@ -12,6 +12,7 @@
  */
 
 const { HandlebarsApplicationMixin, ApplicationV2 } = foundry.applications.api;
+import { aeMode } from "../utils.mjs";
 
 const MODULE_ID = "sta-tactical-campaign";
 const ALL_POWERS = ["medical", "military", "personal", "science", "social"];
@@ -174,7 +175,7 @@ export class AssetEffectEditor extends HandlebarsApplicationMixin(
     if (data.isLost) {
       changes.push({
         key: "system.lost",
-        mode: CONST.ACTIVE_EFFECT_MODES.UPGRADE,
+        mode: aeMode("UPGRADE"),
         value: "1",
         priority: 20,
       });
@@ -184,7 +185,7 @@ export class AssetEffectEditor extends HandlebarsApplicationMixin(
     if (data.isUnavailable) {
       changes.push({
         key: "system.unavailable",
-        mode: CONST.ACTIVE_EFFECT_MODES.UPGRADE,
+        mode: aeMode("UPGRADE"),
         value: "1",
         priority: 20,
       });
@@ -198,7 +199,7 @@ export class AssetEffectEditor extends HandlebarsApplicationMixin(
       if (pDelta !== 0) {
         changes.push({
           key: `system.powers.${power}.value`,
-          mode: CONST.ACTIVE_EFFECT_MODES.ADD,
+          mode: aeMode("ADD"),
           value: String(pDelta),
           priority: 20,
         });
@@ -206,7 +207,7 @@ export class AssetEffectEditor extends HandlebarsApplicationMixin(
       if (fDelta !== 0) {
         changes.push({
           key: `system.powers.${power}.focus`,
-          mode: CONST.ACTIVE_EFFECT_MODES.ADD,
+          mode: aeMode("ADD"),
           value: String(fDelta),
           priority: 20,
         });
@@ -217,7 +218,7 @@ export class AssetEffectEditor extends HandlebarsApplicationMixin(
     if (primaryPower) {
       changes.push({
         key: "system.primaryPower",
-        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        mode: aeMode("OVERRIDE"),
         value: primaryPower,
         priority: 20,
       });
@@ -227,7 +228,7 @@ export class AssetEffectEditor extends HandlebarsApplicationMixin(
     if (assetType) {
       changes.push({
         key: "system.assetType",
-        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        mode: aeMode("OVERRIDE"),
         value: assetType,
         priority: 20,
       });

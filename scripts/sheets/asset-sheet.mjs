@@ -4,6 +4,7 @@
  */
 
 import { AssetEffectEditor } from "../apps/asset-effect-editor.mjs";
+import { aeMode } from "../utils.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -216,7 +217,7 @@ export class AssetSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
           changes: [
             {
               key: "system.lost",
-              mode: CONST.ACTIVE_EFFECT_MODES.UPGRADE,
+              mode: aeMode("UPGRADE"),
               value: "1",
               priority: 20,
             },
@@ -244,7 +245,7 @@ export class AssetSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
           changes: [
             {
               key: "system.unavailable",
-              mode: CONST.ACTIVE_EFFECT_MODES.UPGRADE,
+              mode: aeMode("UPGRADE"),
               value: "1",
               priority: 20,
             },

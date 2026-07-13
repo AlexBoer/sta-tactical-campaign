@@ -16,6 +16,7 @@ import {
   ComplexEffectEditor,
   COMPLEX_EFFECT_TYPES,
 } from "../apps/complex-effect-editor.mjs";
+import { aeMode, aeModeToName } from "../utils.mjs";
 
 const MODULE_ID = "sta-tactical-campaign";
 
@@ -125,7 +126,7 @@ export class EventSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
         changes: [
           {
             key: fieldKey,
-            mode: CONST.ACTIVE_EFFECT_MODES[modeName],
+            mode: aeMode(modeName),
             value: String(value),
             priority: 20,
           },
@@ -154,10 +155,7 @@ export class EventSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     }
 
     // Look up mode name from CONST value
-    const modeName =
-      Object.entries(CONST.ACTIVE_EFFECT_MODES).find(
-        ([, v]) => v === change.mode,
-      )?.[0] ?? "ADD";
+    const modeName = aeModeToName(change.mode) ?? "ADD";
 
     const result = await PoiEffectEditor.show({
       fieldKey: change.key,
@@ -173,7 +171,7 @@ export class EventSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       changes: [
         {
           key: result.fieldKey,
-          mode: CONST.ACTIVE_EFFECT_MODES[result.modeName],
+          mode: aeMode(result.modeName),
           value: String(result.value),
           priority: 20,
         },

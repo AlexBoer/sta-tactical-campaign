@@ -1,23 +1,35 @@
 <div class="sta-tc-sheet progression-sheet">
-  {{!-- Header --}}
+  {{!-- Header: item name is the label --}}
   <header class="sheet-header progression-sheet-header">
     <div class="header-fields">
       <input name="name" type="text" value="{{item.name}}" placeholder="{{localize 'STA_TC.Progression.NamePlaceholder'}}" />
-      {{#if description}}<p class="progression-desc-preview">{{description}}</p>{{/if}}
     </div>
   </header>
 
-  {{!-- Saved toggle --}}
-  <section class="progression-saved-section">
+  {{!-- Category + Saved --}}
+  <section class="progression-meta-section">
+    <div class="progression-meta-field">
+      <label for="progression-category-select" class="progression-effect-label">{{localize "STA_TC.Progression.Category"}}</label>
+      <select id="progression-category-select" name="system.progressionCategory" class="progression-effect-select">
+        <option value="progression" {{#if (eq system.progressionCategory "progression")}}selected{{/if}}>{{localize "STA_TC.Progression.CategoryProgression"}}</option>
+        <option value="escalation" {{#if (eq system.progressionCategory "escalation")}}selected{{/if}}>{{localize "STA_TC.Progression.CategoryEscalation"}}</option>
+      </select>
+    </div>
     <label class="progression-saved-label">
       <input type="checkbox" name="system.saved" {{#if system.saved}}checked{{/if}} />
       {{localize "STA_TC.Progression.Saved"}}
     </label>
   </section>
 
-  {{!-- Notes --}}
-  <section class="progression-notes-section">
-    <div class="section-header">{{localize "STA_TC.Progression.Notes"}}</div>
-    <textarea name="system.notes" rows="6" class="progression-textarea" placeholder="{{localize 'STA_TC.Progression.NotesPlaceholder'}}">{{system.notes}}</textarea>
+  {{!-- Effect: text shown on the Campaign Tracker --}}
+  <section class="progression-text-section">
+    <div class="section-header">{{localize "STA_TC.Progression.Effect"}}</div>
+    <textarea name="system.effect" rows="4" class="progression-textarea" placeholder="{{localize 'STA_TC.Progression.EffectPlaceholder'}}">{{system.effect}}</textarea>
+  </section>
+
+  {{!-- Description: context only, no mechanical effect --}}
+  <section class="progression-text-section">
+    <div class="section-header">{{localize "STA_TC.Progression.Description"}}</div>
+    <textarea name="system.description" rows="4" class="progression-textarea" placeholder="{{localize 'STA_TC.Progression.DescriptionPlaceholder'}}">{{system.description}}</textarea>
   </section>
 </div>

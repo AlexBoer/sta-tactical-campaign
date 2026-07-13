@@ -35,9 +35,16 @@
         <input type="number" name="system.prioritySupply" value="{{system.prioritySupply}}" min="0" />
       </div>
     </div>
-    <button type="button" class="btn progression-log-btn" data-action="openProgressionLog" aria-label="{{localize 'STA_TC.CampaignTracker.OpenProgressionLog'}}" title="{{localize 'STA_TC.CampaignTracker.OpenProgressionLog'}}">
-      <i class="fas fa-list-check" aria-hidden="true"></i> {{localize "STA_TC.CampaignTracker.OpenProgressionLog"}}
-    </button>
+    <div class="tracker-stats-actions">
+      <button type="button" class="btn progression-log-btn" data-action="openProgressionLog" aria-label="{{localize 'STA_TC.CampaignTracker.OpenProgressionLog'}}" title="{{localize 'STA_TC.CampaignTracker.OpenProgressionLog'}}">
+        <i class="fas fa-list-check" aria-hidden="true"></i> {{localize "STA_TC.CampaignTracker.OpenProgressionLog"}}
+      </button>
+      {{#if isGM}}
+      <button type="button" class="btn progression-log-btn" data-action="openRollTableManager" aria-label="{{localize 'STA_TC.CampaignTracker.OpenRollTableManager'}}" title="{{localize 'STA_TC.CampaignTracker.OpenRollTableManager'}}">
+        <i class="fas fa-table" aria-hidden="true"></i> {{localize "STA_TC.CampaignTracker.OpenRollTableManager"}}
+      </button>
+      {{/if}}
+    </div>
   </div>
 
   {{!-- Progress Bar (shown when a turn is active) --}}

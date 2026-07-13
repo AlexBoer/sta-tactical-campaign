@@ -8,10 +8,37 @@ const MODULE_ID = "sta-tactical-campaign";
 /**
  * Register all module settings. Called during the "init" hook.
  */
-export function registerSettings() {
+export async function registerSettings() {
+  // Import the DefaultFoldersForm for the menu
+  const { DefaultFoldersForm } =
+    await import("./apps/default-folders-form.mjs");
+
+  // -------------------------------------------------------------------------
+  // Settings Menu
+  // -------------------------------------------------------------------------
+
+  game.settings.registerMenu(MODULE_ID, "defaultFoldersMenu", {
+    name: "STA_TC.Settings.DefaultFolders",
+    label: "STA_TC.Settings.DefaultFolders",
+    hint: "STA_TC.Settings.DefaultFoldersHint",
+    icon: "fas fa-folder",
+    type: DefaultFoldersForm,
+    restricted: true,
+  });
+
   // -------------------------------------------------------------------------
   // Rollable Table Settings
   // -------------------------------------------------------------------------
+
+  // Stores default compendium folder IDs per source:tab (e.g. "poi:tacticalThreat")
+  // so newly-created items/actors always land in the configured folder.
+  // Hidden from the config UI — managed via the Default Folders form.
+  game.settings.register(MODULE_ID, "folderDefaults", {
+    scope: "world",
+    config: false,
+    type: Object,
+    default: {},
+  });
 
   game.settings.register(MODULE_ID, "tablePoiType", {
     name: "STA_TC.Settings.TablePoiType",
@@ -102,9 +129,103 @@ export function registerSettings() {
     default: "",
   });
 
+  game.settings.register(MODULE_ID, "rollTableManagerMode", {
+    name: "STA_TC.Settings.RollTableManagerMode",
+    hint: "STA_TC.Settings.RollTableManagerModeHint",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "instant",
+    choices: {
+      instant: "STA_TC.Settings.RollTableManagerModes.Instant",
+      manual: "STA_TC.Settings.RollTableManagerModes.Manual",
+    },
+  });
+
+  game.settings.register(MODULE_ID, "progressionItemCompendium", {
+    name: "STA_TC.Settings.ProgressionItemCompendium",
+    hint: "STA_TC.Settings.ProgressionItemCompendiumHint",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "",
+  });
+
+  game.settings.register(MODULE_ID, "eventItemCompendium", {
+    name: "STA_TC.Settings.EventItemCompendium",
+    hint: "STA_TC.Settings.EventItemCompendiumHint",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "",
+  });
+
+  game.settings.register(MODULE_ID, "poiActorCompendium", {
+    name: "STA_TC.Settings.PoiActorCompendium",
+    hint: "STA_TC.Settings.PoiActorCompendiumHint",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "",
+  });
+
+  game.settings.register(MODULE_ID, "assetActorCompendium", {
+    name: "STA_TC.Settings.AssetActorCompendium",
+    hint: "STA_TC.Settings.AssetActorCompendiumHint",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "",
+  });
+
+  game.settings.register(MODULE_ID, "poiTintTacticalThreat", {
+    name: "STA_TC.Settings.PoiTintTacticalThreat",
+    hint: "STA_TC.Settings.PoiTintTacticalThreatHint",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "#ff3333",
+  });
+
+  game.settings.register(MODULE_ID, "poiTintExploration", {
+    name: "STA_TC.Settings.PoiTintExploration",
+    hint: "STA_TC.Settings.PoiTintExplorationHint",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "#16eefe",
+  });
+
+  game.settings.register(MODULE_ID, "poiTintRoutine", {
+    name: "STA_TC.Settings.PoiTintRoutine",
+    hint: "STA_TC.Settings.PoiTintRoutineHint",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "#33f07b",
+  });
+
+  game.settings.register(MODULE_ID, "poiTintUnknown", {
+    name: "STA_TC.Settings.PoiTintUnknown",
+    hint: "STA_TC.Settings.PoiTintUnknownHint",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "#9836e7",
+  });
+
   // -------------------------------------------------------------------------
   // Campaign Turn Wizard – Rollable Table Settings
   // -------------------------------------------------------------------------
+
+  game.settings.register(MODULE_ID, "tableProgression", {
+    name: "STA_TC.Settings.TableProgression",
+    hint: "STA_TC.Settings.TableProgressionHint",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "",
+  });
 
   game.settings.register(MODULE_ID, "tableEvents", {
     name: "STA_TC.Settings.TableEvents",

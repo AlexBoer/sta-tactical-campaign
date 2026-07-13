@@ -1,0 +1,45 @@
+<div class="default-folders-form-content">
+  <div class="form-group">
+    <label>{{localize "STA_TC.Settings.DefaultFolders"}}</label>
+    <p class="hint">{{localize "STA_TC.Settings.DefaultFoldersHint"}}</p>
+  </div>
+
+  <table class="default-folders-table">
+    <thead>
+      <tr>
+        <th>{{localize "STA_TC.Settings.Type"}}</th>
+        <th>{{localize "STA_TC.Settings.Category"}}</th>
+        <th>{{localize "STA_TC.Settings.DefaultFolder"}}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each rows}}
+      <tr>
+        <td>
+          {{#if sourceLabel}}
+          <strong>{{sourceLabel}}</strong>
+          {{/if}}
+        </td>
+        <td>{{tabLabel}}</td>
+        <td>
+          {{#if noFolders}}
+          <em>{{localize "STA_TC.Settings.NoFoldersConfigured"}}</em>
+          {{else}}
+          <select name="{{key}}" class="default-folder-select">
+            {{#each folders}}
+            <option value="{{this.id}}" {{#if (eq this.id ../currentDefault)}}selected{{/if}}>
+              {{this.label}}
+            </option>
+            {{/each}}
+          </select>
+          {{/if}}
+        </td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <div class="form-buttons">
+    <p class="hint">{{localize "STA_TC.Settings.DefaultFoldersAutoSaveHint"}}</p>
+  </div>
+</div>

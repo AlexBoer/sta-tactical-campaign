@@ -787,6 +787,24 @@
   border-radius: 4px;
 }
 
+.campaign-tracker-sheet .pace-split {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.campaign-tracker-sheet .pace-split-sep {
+  font-size: 0.75em;
+  opacity: 0.5;
+  user-select: none;
+  cursor: help;
+}
+
+.campaign-tracker-sheet .pace-temp-input {
+  width: 36px !important;
+  opacity: 0.75;
+}
+
 /* ===== Tracker Wizard Bar (progress bar area) ===== */
 .campaign-tracker-sheet .tracker-wizard-bar {
   background: rgba(0, 39, 63, 0.5);

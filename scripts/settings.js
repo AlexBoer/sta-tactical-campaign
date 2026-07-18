@@ -245,6 +245,21 @@ export async function registerSettings() {
     default: "",
   });
 
+  game.settings.register(MODULE_ID, "automationNotifications", {
+    name: "STA_TC.Settings.AutomationNotifications",
+    hint: "STA_TC.Settings.AutomationNotificationsHint",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "important",
+    choices: {
+      all: "STA_TC.Settings.AutomationNotificationModes.All",
+      important: "STA_TC.Settings.AutomationNotificationModes.Important",
+      chatOnly: "STA_TC.Settings.AutomationNotificationModes.ChatOnly",
+      off: "STA_TC.Settings.AutomationNotificationModes.Off",
+    },
+  });
+
   // -------------------------------------------------------------------------
   // Converter Settings
   // -------------------------------------------------------------------------

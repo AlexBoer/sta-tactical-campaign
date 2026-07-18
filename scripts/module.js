@@ -24,6 +24,7 @@ import { PoiExporter } from "./poi-exporter.mjs";
 import { RollTableManager } from "./apps/roll-table-manager.mjs";
 import { RollTableManagerService } from "./apps/roll-table-manager-service.mjs";
 import { DefaultFoldersForm } from "./apps/default-folders-form.mjs";
+import { TurnLog } from "./apps/turn-log.mjs";
 
 const MODULE_ID = "sta-tactical-campaign";
 
@@ -49,6 +50,27 @@ const POI_TINT_SETTING_BY_TYPE = {
   routine: "poiTintRoutine",
   unknown: "poiTintUnknown",
 };
+
+/** Default images for Tactical Campaign item types and subtypes. */
+const ITEM_DEFAULT_IMAGES = {
+  event: "icons/svg/hazard.svg",
+  progression: {
+    progression: "icons/svg/upgrade.svg",
+    escalation: "icons/svg/explosion.svg",
+  },
+};
+
+function _getDefaultItemImage(itemType, systemData = {}) {
+  if (itemType === `${MODULE_ID}.event`) return ITEM_DEFAULT_IMAGES.event;
+  if (itemType === `${MODULE_ID}.progression`) {
+    const category =
+      systemData?.progressionCategory === "escalation"
+        ? "escalation"
+        : "progression";
+    return ITEM_DEFAULT_IMAGES.progression[category];
+  }
+  return null;
+}
 
 function _normalizeHexColor(value, fallback) {
   const raw = String(value || "").trim();
@@ -587,6 +609,23 @@ Hooks.on("createItem", (item, _options, _userId) => {
  * re-render referencing campaign tracker sheets.
  */
 Hooks.on("updateItem", (item, _changes, _options, _userId) => {
+  if (item.type === `${MODULE_ID}.progression`) {
+    const categoryChanged = foundry.utils.hasProperty(
+      _changes,
+      "system.progressionCategory",
+    );
+    if (categoryChanged) {
+      const category = foundry.utils.getProperty(
+        _changes,
+        "system.progressionCategory",
+      );
+      const img = _getDefaultItemImage(item.type, {
+        progressionCategory: category,
+      });
+      if (img && item.img !== img) item.update({ img });
+    }
+  }
+
   const parent = item.parent;
   if (!parent || item.type !== `${MODULE_ID}.event`) return;
   _rerenderTrackersForPoi(parent);
@@ -639,6 +678,23 @@ Hooks.on("preCreateActor", (actor, data, _options, _userId) => {
   }
 });
 
+/**
+ * Set default images for new Event / Progression items unless a custom one was set.
+ */
+Hooks.on("preCreateItem", (item, data, _options, _userId) => {
+  const defaultImg = _getDefaultItemImage(item.type, data?.system);
+  if (!defaultImg) return;
+
+  const providedImg = data?.img ?? item.img;
+  const hasCustomImg =
+    providedImg &&
+    providedImg !== "icons/svg/item-bag.svg" &&
+    providedImg !== "icons/svg/mystery-man.svg";
+  if (hasCustomImg) return;
+
+  item.updateSource({ img: defaultImg });
+});
+
 // ─── Conflict Roll Reroll Handling ───────────────────────────────────────────
 // When an STA chat card was created by the conflict roll system we intercept
 // the ".reroll-button" click.  This lets us (a) show the same dice-picker
@@ -662,6 +718,19 @@ Hooks.on("renderChatMessageHTML", (message, html) => {
     e.preventDefault();
     await _handleConflictReroll(message, tcFlag, staFlag);
   });
+});
+
+/**
+ * When results are drawn from a managed roll table that has
+ * autoMoveOnDraw enabled, automatically move them to the Used section.
+ */
+Hooks.on("drawRollTable", async (table, results, _roll) => {
+  if (!RollTableManagerService.getAutoMoveOnDraw(table)) return;
+  try {
+    await RollTableManagerService.handleAutoMoveOnDraw(table, [...results]);
+  } catch (error) {
+    console.error(`${MODULE_ID} | autoMoveOnDraw error`, error);
+  }
 });
 
 async function _handleConflictReroll(message, tcFlag, staFlag) {

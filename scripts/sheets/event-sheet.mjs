@@ -38,7 +38,7 @@ export class EventSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       closeOnSubmit: false,
     },
     position: {
-      height: 420,
+      height: "auto",
       width: 480,
     },
     window: {

@@ -28,7 +28,11 @@
       </div>
       <div class="stat-group">
         <label>{{localize "STA_TC.CampaignTracker.Pace"}}</label>
-        <input type="number" name="system.pace" value="{{system.pace}}" min="0" />
+        <div class="pace-split">
+          <input type="number" name="system.pace" value="{{system.pace}}" min="0" title="{{localize 'STA_TC.CampaignTracker.Pace'}}" />
+          <span class="pace-split-sep" title="{{localize 'STA_TC.CampaignTracker.PaceTempBonus'}}">±</span>
+          <input type="number" name="system.paceTempBonus" value="{{system.paceTempBonus}}" title="{{localize 'STA_TC.CampaignTracker.PaceTempBonus'}}" class="pace-temp-input" />
+        </div>
       </div>
       <div class="stat-group">
         <label>{{localize "STA_TC.CampaignTracker.PrioritySupply"}}</label>
@@ -38,6 +42,9 @@
     <div class="tracker-stats-actions">
       <button type="button" class="btn progression-log-btn" data-action="openProgressionLog" aria-label="{{localize 'STA_TC.CampaignTracker.OpenProgressionLog'}}" title="{{localize 'STA_TC.CampaignTracker.OpenProgressionLog'}}">
         <i class="fas fa-list-check" aria-hidden="true"></i> {{localize "STA_TC.CampaignTracker.OpenProgressionLog"}}
+      </button>
+      <button type="button" class="btn progression-log-btn" data-action="openTurnLog" aria-label="{{localize 'STA_TC.CampaignTracker.OpenTurnLog'}}" title="{{localize 'STA_TC.CampaignTracker.OpenTurnLog'}}" style="display:none">
+        <i class="fas fa-bell" aria-hidden="true"></i> {{localize "STA_TC.CampaignTracker.OpenTurnLog"}}
       </button>
       {{#if isGM}}
       <button type="button" class="btn progression-log-btn" data-action="openRollTableManager" aria-label="{{localize 'STA_TC.CampaignTracker.OpenRollTableManager'}}" title="{{localize 'STA_TC.CampaignTracker.OpenRollTableManager'}}">
@@ -134,6 +141,7 @@
             {{else}}
             <img class="asset-thumb" src="{{this.img}}" draggable="false" data-action="openActor" data-uuid="{{this.uuid}}" alt="{{this.name}}" />
             {{/if}}
+            {{#if this.badges.hasBadge}}<span class="asset-notification-badge" title="{{this.badges.tooltip}}"><i class="fas fa-bell" aria-hidden="true"></i></span>{{/if}}
             {{#if this.isCommandeered}}<span class="commandeered-badge" title="{{localize 'STA_TC.Wizard.OutcomeAssetCommandeered'}}"><i class="fas fa-lock" aria-hidden="true"></i></span>{{/if}}
             {{#if this.isUnavailable}}<span class="unavail-badge" title="{{localize 'STA_TC.Wizard.UnavailableStatus'}}">{{#if (gt (strlen (localize 'STA_TC.Status.Unavailable')) 8)}}Unavail.{{else}}{{localize 'STA_TC.Status.Unavailable'}}{{/if}}</span>{{/if}}
             {{#if this.isLost}}<span class="lost-badge">{{localize 'STA_TC.Lost'}}</span>{{/if}}
@@ -163,6 +171,7 @@
             {{else}}
             <img class="asset-thumb" src="{{this.img}}" draggable="false" data-action="openActor" data-uuid="{{this.uuid}}" alt="{{this.name}}" />
             {{/if}}
+            {{#if this.badges.hasBadge}}<span class="asset-notification-badge" title="{{this.badges.tooltip}}"><i class="fas fa-bell" aria-hidden="true"></i></span>{{/if}}
             {{#if this.isCommandeered}}<span class="commandeered-badge" title="{{localize 'STA_TC.Wizard.OutcomeAssetCommandeered'}}"><i class="fas fa-lock" aria-hidden="true"></i></span>{{/if}}
             {{#if this.isUnavailable}}<span class="unavail-badge" title="{{localize 'STA_TC.Wizard.UnavailableStatus'}}">{{#if (gt (strlen (localize 'STA_TC.Status.Unavailable')) 8)}}Unavail.{{else}}{{localize 'STA_TC.Status.Unavailable'}}{{/if}}</span>{{/if}}
             {{#if this.isLost}}<span class="lost-badge">{{localize 'STA_TC.Lost'}}</span>{{/if}}
@@ -192,6 +201,7 @@
             {{else}}
             <img class="asset-thumb" src="{{this.img}}" draggable="false" data-action="openActor" data-uuid="{{this.uuid}}" alt="{{this.name}}" />
             {{/if}}
+            {{#if this.badges.hasBadge}}<span class="asset-notification-badge" title="{{this.badges.tooltip}}"><i class="fas fa-bell" aria-hidden="true"></i></span>{{/if}}
             {{#if this.isCommandeered}}<span class="commandeered-badge" title="{{localize 'STA_TC.Wizard.OutcomeAssetCommandeered'}}"><i class="fas fa-lock" aria-hidden="true"></i></span>{{/if}}
             {{#if this.isUnavailable}}<span class="unavail-badge" title="{{localize 'STA_TC.Wizard.UnavailableStatus'}}">{{#if (gt (strlen (localize 'STA_TC.Status.Unavailable')) 8)}}Unavail.{{else}}{{localize 'STA_TC.Status.Unavailable'}}{{/if}}</span>{{/if}}
             {{#if this.isLost}}<span class="lost-badge">{{localize 'STA_TC.Lost'}}</span>{{/if}}
@@ -488,6 +498,7 @@
                   <div class="poi-info">
                     <img class="poi-thumb" src="{{this.poi.img}}" data-action="openActor" data-uuid="{{this.poi.uuid}}" alt="{{this.poi.displayName}}" />
                     <span class="poi-name" data-action="openActor" data-uuid="{{this.poi.uuid}}">{{this.poi.displayName}}</span>
+                    {{#if this.poi.badges.hasBadge}}<span class="poi-notification-badge" title="{{this.poi.badges.tooltip}}"><i class="fas fa-bell" aria-hidden="true"></i></span>{{/if}}
                     {{#if this.canSelectScenario}}
                     <a class="btn-scenario {{#if this.isScenario}}active{{/if}}" role="button" tabindex="0" data-action="selectScenario" data-uuid="{{this.poi.uuid}}" aria-label="{{#if this.isScenario}}{{localize 'STA_TC.Wizard.ScenarioSelected'}}{{else}}{{localize 'STA_TC.Wizard.SelectScenario'}}{{/if}}" title="{{#if this.isScenario}}{{localize 'STA_TC.Wizard.ScenarioSelected'}}{{else}}{{localize 'STA_TC.Wizard.SelectScenario'}}{{/if}}">
                       <i class="{{#if this.isScenario}}fas{{else}}far{{/if}} fa-star" aria-hidden="true"></i>
@@ -737,7 +748,6 @@
                       {{/if}}
                     </span>
                     {{#if this.phase3outcome.showEscalationRoll}}
-                  {{#if (eq this.phase3Step 1)}}
                   <button type="button" class="btn btn-sm poi-escalation-btn" data-action="rollEscalation"
                     data-list-key="{{this.listKey}}" data-entry-index="{{this.index}}"
                     {{disabled this.phase3outcome.escalationRolled}}>
@@ -745,13 +755,7 @@
                     {{#if this.phase3outcome.escalationRolled}}{{localize "STA_TC.Wizard.EscalationRolled"}}
                     {{else}}{{localize "STA_TC.Wizard.RollEscalation"}}{{/if}}
                   </button>
-                  {{else if this.phase3outcome.escalationRolled}}
-                  <span class="outcome-rolled"><i class="fas fa-check"></i> {{localize "STA_TC.Wizard.EscalationRolled"}}</span>
-                  {{else}}
-                  <span class="outcome-pending"><i class="fas fa-clock"></i> {{localize "STA_TC.Wizard.RollEscalation"}}</span>
-                  {{/if}}
                     {{/if}}
-                  {{#if (eq this.phase3Step 1)}}
                     {{#if (eq this.phase3outcome.consequence "catastrophe")}}
                     <button type="button" class="btn btn-sm poi-outcome-btn outcome-btn-confirm" data-action="confirmOutcomeCatastrophe"
                       data-list-key="{{this.listKey}}" data-entry-index="{{this.index}}">
@@ -767,26 +771,21 @@
                       data-list-key="{{this.listKey}}" data-entry-index="{{this.index}}">
                       <i class="fas fa-eye-slash"></i> {{localize "STA_TC.Wizard.IgnoreOutcome"}}
                     </button>
-                  {{/if}}
                   </div>
                   {{else if (eq this.phase3outcome.type "unresolvedRoutine")}}
                   <div class="poi-phase3-outcome outcome-routine">
                     {{#if this.phase3outcome.commandeeredAssetName}}
                     <span class="outcome-label"><i class="fas fa-lock"></i> {{this.phase3outcome.commandeeredAssetName}}</span>
-                  {{else if (eq this.phase3Step 1)}}
+                  {{else}}
                     <button type="button" class="btn btn-sm poi-commandeer-btn" data-action="rollCommandeer"
                       data-list-key="{{this.listKey}}" data-entry-index="{{this.index}}">
                       <i class="fas fa-dice"></i> {{localize "STA_TC.Wizard.RollCommandeer"}}
                     </button>
-                  {{else}}
-                    <span class="outcome-pending"><i class="fas fa-clock"></i> {{localize "STA_TC.Wizard.RollCommandeer"}}</span>
                     {{/if}}
-                  {{#if (eq this.phase3Step 1)}}
                     <button type="button" class="btn btn-sm poi-outcome-btn outcome-btn-ignore" data-action="ignoreOutcome"
                       data-list-key="{{this.listKey}}" data-entry-index="{{this.index}}">
                       <i class="fas fa-eye-slash"></i> {{localize "STA_TC.Wizard.IgnoreOutcome"}}
                     </button>
-                  {{/if}}
                   </div>
                   {{else if (eq this.phase3outcome.type "unresolvedExploration")}}
                   <div class="poi-phase3-outcome outcome-exploration">
@@ -795,7 +794,6 @@
                     {{else}}
                     <span class="outcome-label"><i class="fas fa-exclamation-triangle"></i> {{localize "STA_TC.Wizard.OutcomeExplorationDiffShort"}}</span>
                     {{/if}}
-                  {{#if (eq this.phase3Step 1)}}
                     {{#if (eq this.phase3outcome.consequence "remove")}}
                     <button type="button" class="btn btn-sm poi-outcome-btn outcome-btn-confirm" data-action="confirmOutcomeExplorationRemove"
                       data-list-key="{{this.listKey}}" data-entry-index="{{this.index}}">
@@ -811,12 +809,10 @@
                       data-list-key="{{this.listKey}}" data-entry-index="{{this.index}}">
                       <i class="fas fa-eye-slash"></i> {{localize "STA_TC.Wizard.IgnoreOutcome"}}
                     </button>
-                  {{/if}}
                   </div>
                   {{else if (eq this.phase3outcome.type "unresolvedUnknown")}}
                   <div class="poi-phase3-outcome outcome-unknown">
                     <span class="outcome-label"><i class="fas fa-question-circle"></i> {{localize "STA_TC.Wizard.OutcomeUnknownShort"}}</span>
-                  {{#if (eq this.phase3Step 1)}}
                     <button type="button" class="btn btn-sm poi-outcome-btn outcome-btn-confirm" data-action="confirmOutcomeExtraPoi"
                       data-list-key="{{this.listKey}}" data-entry-index="{{this.index}}">
                       <i class="fas fa-check"></i> {{localize "STA_TC.Wizard.ConfirmOutcomeExtraPoi"}}
@@ -825,7 +821,6 @@
                       data-list-key="{{this.listKey}}" data-entry-index="{{this.index}}">
                       <i class="fas fa-eye-slash"></i> {{localize "STA_TC.Wizard.IgnoreOutcome"}}
                     </button>
-                  {{/if}}
                   </div>
                   {{/if}}
                   {{/if}}

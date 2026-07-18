@@ -140,7 +140,8 @@ export class PoiGenerator {
    *
    * @returns {Promise<{typeResult: object, subResult: object, subTableKey: string, actor: Actor|null}|null>}
    */
-  static async generate() {
+  static async generate(options = {}) {
+    const { postChat = true } = options;
     const tables = this.getTableSettings();
 
     // Step 1 – Roll on the main Point of Interest Type table
@@ -167,14 +168,22 @@ export class PoiGenerator {
         }),
       );
 
-      await ChatMessage.create({
-        content: this._buildFallbackHtml(typeResult),
-        speaker: {
-          alias: game.i18n.localize("STA_TC.Poi.Generator.SpeakerAlias"),
-        },
-        whisper: [game.user.id],
-      });
-      return null;
+      if (postChat) {
+        await ChatMessage.create({
+          content: this._buildFallbackHtml(typeResult),
+          speaker: {
+            alias: game.i18n.localize("STA_TC.Poi.Generator.SpeakerAlias"),
+          },
+          whisper: [game.user.id],
+        });
+      }
+      return {
+        typeResult,
+        subResult: null,
+        subTableKey: null,
+        actor: null,
+        status: "unknownType",
+      };
     }
 
     // Step 2 – Roll on the appropriate sub-table (returns a UUID in the text field)
@@ -183,14 +192,22 @@ export class PoiGenerator {
     const subResult = await this.rollOnTable(tables[subTableKey], configName);
 
     if (!subResult) {
-      await ChatMessage.create({
-        content: this._buildNoSubTableHtml(typeResult, configName, config),
-        speaker: {
-          alias: game.i18n.localize("STA_TC.Poi.Generator.SpeakerAlias"),
-        },
-        whisper: [game.user.id],
-      });
-      return { typeResult, subResult: null, subTableKey, actor: null };
+      if (postChat) {
+        await ChatMessage.create({
+          content: this._buildNoSubTableHtml(typeResult, configName, config),
+          speaker: {
+            alias: game.i18n.localize("STA_TC.Poi.Generator.SpeakerAlias"),
+          },
+          whisper: [game.user.id],
+        });
+      }
+      return {
+        typeResult,
+        subResult: null,
+        subTableKey,
+        actor: null,
+        status: "noSubResult",
+      };
     }
 
     // Step 3 – Resolve the actor UUID from the sub-table result
@@ -246,24 +263,89 @@ export class PoiGenerator {
       }
     }
 
-    // Step 4 – Build and send chat message
-    const html = this._buildChatHtml(
+    // Step 4 – Build and send chat message (skipped in batch mode)
+    if (postChat) {
+      const html = this._buildChatHtml(
+        typeResult,
+        subResult,
+        subTableKey,
+        config,
+        actor,
+      );
+
+      await ChatMessage.create({
+        content: html,
+        speaker: {
+          alias: game.i18n.localize("STA_TC.Poi.Generator.SpeakerAlias"),
+        },
+        whisper: [game.user.id],
+      });
+    }
+
+    return {
       typeResult,
       subResult,
       subTableKey,
-      config,
       actor,
-    );
+      status: actor ? "ok" : "actorNotFound",
+    };
+  }
 
-    await ChatMessage.create({
-      content: html,
-      speaker: {
-        alias: game.i18n.localize("STA_TC.Poi.Generator.SpeakerAlias"),
-      },
-      whisper: [game.user.id],
-    });
+  /**
+   * Build a consolidated chat card for a batch POI generation (Generate All).
+   * @param {Array<{actor: Actor|null, subTableKey: string|null, status: string}>} rows
+   * @returns {string} HTML
+   */
+  static buildBatchChatHtml(rows) {
+    const okRows = rows.filter((r) => r.actor);
+    const failCount = rows.length - okRows.length;
 
-    return { typeResult, subResult, subTableKey, actor };
+    let rowsHtml = "";
+    for (const row of okRows) {
+      const cfg = TYPE_CONFIG[row.subTableKey] ?? {
+        icon: "📍",
+        color: "#555",
+        nameKey: "STA_TC.Types.PointOfInterest",
+      };
+      const system = row.actor.system ?? {};
+      const powerKey = system.power ?? "military";
+      const powerLabel = game.i18n.localize(
+        `STA_TC.Powers.${powerKey.charAt(0).toUpperCase() + powerKey.slice(1)}`,
+      );
+      const difficulty = system.difficulty ?? 1;
+      const urgency = system.urgency ?? 1;
+      const typeName = game.i18n.localize(cfg.nameKey);
+      const statsStr =
+        row.subTableKey !== "unknown"
+          ? `${powerLabel} ${difficulty} · ${game.i18n.localize("STA_TC.Poi.Urgency")} ${urgency}`
+          : powerLabel;
+
+      rowsHtml += `
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+          <span style="font-size:15px;flex:0 0 auto;">${cfg.icon}</span>
+          <span style="flex:1;"><strong>${foundry.utils.escapeHTML(row.actor.name)}</strong>
+            <span style="font-size:0.82em;opacity:0.6;margin-left:4px;">(${typeName})</span></span>
+          <span style="font-size:0.82em;color:#ffd700;white-space:nowrap;">${statsStr}</span>
+        </div>`;
+    }
+
+    const failLine =
+      failCount > 0
+        ? `<p style="margin:6px 0 0;font-size:0.85em;color:#ff8866;">&#x26A0; ${failCount} ${game.i18n.localize("STA_TC.Poi.Generator.BatchFailed")}</p>`
+        : "";
+
+    const noneMsg =
+      !okRows.length && !failCount
+        ? `<p style="margin:0;opacity:0.5;">${game.i18n.localize("STA_TC.Poi.Generator.BatchNone")}</p>`
+        : "";
+
+    return `<div style="background:#222;border-radius:8px;overflow:hidden;">
+      <div style="background:#1a3a5c;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="color:white;font-weight:bold;">&#x1F4CD; ${game.i18n.localize("STA_TC.Poi.Generator.BatchTitle")}</span>
+        <span style="font-size:0.85em;color:rgba(255,255,255,0.7);">${okRows.length} / ${rows.length}</span>
+      </div>
+      <div style="padding:8px 12px;color:#eee;">${rowsHtml}${noneMsg}${failLine}</div>
+    </div>`;
   }
 
   // --------------------------------------------------------------------------

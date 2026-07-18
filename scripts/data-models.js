@@ -494,6 +494,14 @@ export class CampaignTrackerData extends foundry.abstract.TypeDataModel {
         initial: 0,
         min: 0,
       }),
+      // Temporary pace modifier that resets at the end of each campaign turn.
+      // Use positive values to add extra POI generation pressure for one turn,
+      // or negative values to reduce it. Does not affect the base Pace stat.
+      paceTempBonus: new NumberField({
+        required: false,
+        integer: true,
+        initial: 0,
+      }),
       // Whether progression gain for this turn has been confirmed (applied to system.progression)
       turnProgressionConfirmed: new BooleanField({
         required: false,
@@ -524,6 +532,41 @@ export class CampaignTrackerData extends foundry.abstract.TypeDataModel {
         required: false,
         initial: [],
       }),
+      // Persistent gameplay automation notification log (Turn Log)
+      notificationLog: new ArrayField(
+        new SchemaField({
+          turn: new NumberField({
+            required: false,
+            integer: true,
+            initial: 0,
+            min: 0,
+          }),
+          ts: new NumberField({
+            required: false,
+            integer: true,
+            initial: 0,
+            min: 0,
+          }),
+          group: new StringField({ required: false, blank: true, initial: "" }),
+          event: new StringField({ required: false, blank: true, initial: "" }),
+          severity: new StringField({
+            required: false,
+            blank: true,
+            initial: "info",
+          }),
+          message: new StringField({
+            required: false,
+            blank: true,
+            initial: "",
+          }),
+          entityUuid: new StringField({
+            required: false,
+            blank: true,
+            initial: "",
+          }),
+        }),
+        { required: false, initial: [] },
+      ),
     };
   }
 }

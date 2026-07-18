@@ -15,6 +15,8 @@ import { ProgressionLog } from "../apps/progression-log.mjs";
 import { RollTableManager } from "../apps/roll-table-manager.mjs";
 import { RollTableManagerService } from "../apps/roll-table-manager-service.mjs";
 import { aeMode } from "../utils.mjs";
+import { TrackerNotifier } from "../apps/tracker-notifier.mjs";
+import { TurnLog } from "../apps/turn-log.mjs";
 
 const MODULE_ID = "sta-tactical-campaign";
 
@@ -133,6 +135,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
 
       clearUnavailable: CampaignTrackerSheet._onClearUnavailable,
       openProgressionLog: CampaignTrackerSheet._onOpenProgressionLog,
+      openTurnLog: CampaignTrackerSheet._onOpenTurnLog,
       openRollTableManager: CampaignTrackerSheet._onOpenRollTableManager,
       openPoiTable: CampaignTrackerSheet._onOpenPoiTable,
       setPoiVisibility: CampaignTrackerSheet._onSetPoiVisibility,
@@ -278,6 +281,28 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       );
     }
 
+    // Build notification badge map for current-turn log entries
+    const currentTurn = system.campaignTurnNumber || 0;
+    const _badgeMap = {};
+    for (const logEntry of system.notificationLog || []) {
+      if (!logEntry.entityUuid || logEntry.turn !== currentTurn) continue;
+      if (!_badgeMap[logEntry.entityUuid]) _badgeMap[logEntry.entityUuid] = [];
+      _badgeMap[logEntry.entityUuid].push(logEntry);
+    }
+    const _badge = (uuid) => {
+      const entries = _badgeMap[uuid] ?? [];
+      return {
+        hasBadge: entries.length > 0,
+        count: entries.length,
+        tooltip: entries.map((e) => e.message).join(" | "),
+      };
+    };
+    for (const asset of allAssets) asset.badges = _badge(asset.uuid);
+    for (const col of poiColumns) {
+      for (const poiEntry of col.entries)
+        poiEntry.poi.badges = _badge(poiEntry.poi.uuid);
+    }
+
     return {
       actor,
       system,
@@ -304,6 +329,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       generateAllLabel: game.i18n.format("STA_TC.Wizard.GenerateAllPois", {
         pace:
           (system.pace || 0) +
+          (system.paceTempBonus || 0) +
           (system.turnExtraTacticalPoisNextTurn || 0) +
           (system.turnExtraUnknownPoisNextTurn || 0) +
           (system.turnExtraPoisNextTurn || 0),
@@ -312,6 +338,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
         current: generatedPois.length,
         pace:
           (system.pace || 0) +
+          (system.paceTempBonus || 0) +
           (system.turnExtraTacticalPoisNextTurn || 0) +
           (system.turnExtraUnknownPoisNextTurn || 0) +
           (system.turnExtraPoisNextTurn || 0),
@@ -1543,6 +1570,16 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       // Free any commandeered assets from the previous turn
       "system.commandeeredAssets": [],
     });
+    if (supplyBonus > 0) {
+      await TrackerNotifier.emit({
+        tracker: this.actor,
+        event: "supplyBonusApplied",
+        message: game.i18n.format("STA_TC.Notify.SupplyBonusApplied", {
+          amount: supplyBonus,
+          total: currentSupply + supplyBonus,
+        }),
+      });
+    }
   }
 
   static async _onCancelTurn(event, target) {
@@ -1594,6 +1631,19 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       const updates = { "system.turnStep": turnStep + 1 };
       // Consume carry-over extra POI counts when leaving the generation step
       if (turnPhase === "1" && turnStep === 1) {
+        const carryTotal =
+          (system.turnExtraTacticalPoisNextTurn || 0) +
+          (system.turnExtraUnknownPoisNextTurn || 0) +
+          (system.turnExtraPoisNextTurn || 0);
+        if (carryTotal > 0) {
+          await TrackerNotifier.emit({
+            tracker: this.actor,
+            event: "carryOverConsumed",
+            message: game.i18n.format("STA_TC.Notify.CarryOverConsumed", {
+              count: carryTotal,
+            }),
+          });
+        }
         updates["system.turnExtraTacticalPoisNextTurn"] = 0;
         updates["system.turnExtraUnknownPoisNextTurn"] = 0;
         updates["system.turnExtraPoisNextTurn"] = 0;
@@ -1637,6 +1687,8 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
   }
 
   static async _onEndTurn(event, target) {
+    // Begin batch notification window — all log writes are deferred until flushBatch()
+    TrackerNotifier.beginBatch(this.actor);
     // Original snapshot — used for momentum total, roleplay bonus, and
     // resolvedExploration count (before we remove them from the list).
     const system = this.actor.system;
@@ -1788,6 +1840,12 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       // Already handled by an outcome button — keep the entry as-is
       if (entry.outcomeConfirmed || entry.outcomeIgnored) {
         finalThreatEntries.push(entry);
+        if (entry.outcomeConfirmed) {
+          const confirmedPoi = await fromUuid(entry.actorUuid);
+          chatLines.push(
+            `<p>&#x1F53A; <strong>${confirmedPoi?.name || "?"}</strong>: ${game.i18n.localize("STA_TC.Wizard.OutcomeIntensify1Short")}</p>`,
+          );
+        }
         continue;
       }
       const poi = await fromUuid(entry.actorUuid);
@@ -1801,10 +1859,11 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
         );
       } else {
         // Intensify: urgency++ and difficulty++ on the POI actor.
+        const oldDiff = poi?.system?.difficulty || 1;
         if (poi) {
           const poiUpdates = {
             "system.urgency": Math.min(5, urgency + 1),
-            "system.difficulty": Math.min(5, (poi.system?.difficulty || 1) + 1),
+            "system.difficulty": Math.min(5, oldDiff + 1),
           };
           if (poi.system?.difficulty2 != null)
             poiUpdates["system.difficulty2"] = Math.min(
@@ -1814,11 +1873,18 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
           await poi.update(poiUpdates);
         }
         finalThreatEntries.push(entry);
+        const newUrgency = Math.min(5, urgency + 1);
+        const newDiff = Math.min(5, oldDiff + 1);
+        const intensifyDelta = ` <span style="opacity:0.75;font-size:0.9em;">(${game.i18n.localize("STA_TC.Poi.Urgency")} ${urgency}\u2192${newUrgency}, ${game.i18n.localize("STA_TC.Poi.Difficulty")} ${oldDiff}\u2192${newDiff})</span>`;
         chatLines.push(
-          urgency === 1
-            ? `<p>&#x1F53A; <strong>${poi?.name || "?"}</strong>: ${game.i18n.localize("STA_TC.Wizard.OutcomeIntensify1")}</p>`
-            : `<p>&#x1F53A; <strong>${poi?.name || "?"}</strong>: ${game.i18n.localize("STA_TC.Wizard.OutcomeIntensify2")}</p>`,
+          `<p>&#x1F53A; <strong>${poi?.name || "?"}</strong>: ${game.i18n.localize(urgency === 1 ? "STA_TC.Wizard.OutcomeIntensify1" : "STA_TC.Wizard.OutcomeIntensify2")}${intensifyDelta}</p>`,
         );
+        await TrackerNotifier.emit({
+          tracker: this.actor,
+          event: "turnEndThreatIntensify",
+          message: `${poi?.name || "?"}: ${game.i18n.localize(urgency === 1 ? "STA_TC.Wizard.OutcomeIntensify1" : "STA_TC.Wizard.OutcomeIntensify2")} (${game.i18n.localize("STA_TC.Poi.Urgency")} ${urgency}\u2192${newUrgency})`,
+          entityUuid: entry.actorUuid,
+        });
       }
     }
     const threatTrackerUpdates = { "system.poiListThreat": finalThreatEntries };
@@ -1874,6 +1940,12 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       // Already handled by an outcome button — keep the entry as-is
       if (entry.outcomeConfirmed || entry.outcomeIgnored) {
         finalExplorationEntries.push(entry);
+        if (entry.outcomeConfirmed) {
+          const confirmedPoi = await fromUuid(entry.actorUuid);
+          chatLines.push(
+            `<p>&#x1F4CD; <strong>${confirmedPoi?.name || "?"}</strong>: ${game.i18n.localize("STA_TC.Wizard.OutcomeExplorationDiffShort")}</p>`,
+          );
+        }
         continue;
       }
       const poi = await fromUuid(entry.actorUuid);
@@ -1885,10 +1957,11 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
         );
       } else {
         // First miss: difficulty++ and missedCount = 1 on the POI actor.
+        const explorationOldDiff = poi?.system?.difficulty || 1;
         if (poi) {
           const poiUpdates = {
             "system.missedCount": 1,
-            "system.difficulty": Math.min(5, (poi.system?.difficulty || 1) + 1),
+            "system.difficulty": Math.min(5, explorationOldDiff + 1),
           };
           if (poi.system?.difficulty2 != null)
             poiUpdates["system.difficulty2"] = Math.min(
@@ -1898,9 +1971,17 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
           await poi.update(poiUpdates);
         }
         finalExplorationEntries.push(entry);
+        const explorationNewDiff = Math.min(5, explorationOldDiff + 1);
+        const explorationDelta = ` <span style="opacity:0.75;font-size:0.9em;">(${game.i18n.localize("STA_TC.Poi.Difficulty")} ${explorationOldDiff}\u2192${explorationNewDiff})</span>`;
         chatLines.push(
-          `<p>&#x1F4CD; <strong>${poi?.name || "?"}</strong>: ${game.i18n.localize("STA_TC.Wizard.OutcomeExplorationDifficultyIncrease")}</p>`,
+          `<p>&#x1F4CD; <strong>${poi?.name || "?"}</strong>: ${game.i18n.localize("STA_TC.Wizard.OutcomeExplorationDifficultyIncrease")}${explorationDelta}</p>`,
         );
+        await TrackerNotifier.emit({
+          tracker: this.actor,
+          event: "turnEndExplorationDiff",
+          message: `${poi?.name || "?"}: ${game.i18n.localize("STA_TC.Wizard.OutcomeExplorationDifficultyIncrease")} (${game.i18n.localize("STA_TC.Poi.Difficulty")} ${explorationOldDiff}\u2192${explorationNewDiff})`,
+          entityUuid: entry.actorUuid,
+        });
       }
     }
     await this.actor.update({
@@ -1966,8 +2047,17 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
         if (!asset) continue;
         for (const effect of [...asset.effects]) {
           const expiry = effect.flags?.[MODULE_ID]?.expireAfterTurn;
-          if (expiry !== undefined && currentTurnForExpiry >= expiry)
+          if (expiry !== undefined && currentTurnForExpiry >= expiry) {
             await effect.delete();
+            await TrackerNotifier.emit({
+              tracker: this.actor,
+              event: "turnEndAeExpired",
+              message: game.i18n.format("STA_TC.Notify.AeExpired", {
+                name: asset.name,
+              }),
+              entityUuid: uuid,
+            });
+          }
         }
       }
     }
@@ -2007,6 +2097,8 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     };
     if (extraTacticalPois || extraUnknownPois || extraPoisFromConsequences)
       await this.actor.update(carryOver);
+    // Flush accumulated notification log entries in one batch write
+    await TrackerNotifier.flushBatch();
   }
 
   async _clearTurnState() {
@@ -2018,6 +2110,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       "system.turnGeneratedPois": [],
       "system.turnThreatIncrease": 0,
       "system.turnExtraPoisNextTurn": 0,
+      "system.paceTempBonus": 0,
       "system.turnMomentumGained": 0,
       "system.turnRoleplayBonus": 0,
       "system.turnMomentumSpent": 0,
@@ -2496,6 +2589,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     const system = this.actor.system;
     const pace =
       (system.pace || 0) +
+      (system.paceTempBonus || 0) +
       (system.turnExtraTacticalPoisNextTurn || 0) +
       (system.turnExtraUnknownPoisNextTurn || 0) +
       (system.turnExtraPoisNextTurn || 0);
@@ -2503,11 +2597,26 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       ui.notifications.warn(game.i18n.localize("STA_TC.Wizard.PaceIsZero"));
       return;
     }
+    const batchRows = [];
     for (let i = 0; i < pace; i++) {
-      const result = await PoiGenerator.generate();
-      if (!result?.actor) continue;
+      const result = await PoiGenerator.generate({ postChat: false });
+      if (!result?.actor) {
+        batchRows.push({
+          actor: null,
+          subTableKey: result?.subTableKey ?? null,
+          status: result?.status ?? "failed",
+        });
+        continue;
+      }
       const actor = await this._importActorIfNeeded(result.actor);
-      if (!actor) continue;
+      if (!actor) {
+        batchRows.push({
+          actor: null,
+          subTableKey: result.subTableKey,
+          status: "importFailed",
+        });
+        continue;
+      }
       const poiFolder = await this._getOrCreatePoiFolder(
         actor.system?.poiType || "unknown",
       );
@@ -2516,6 +2625,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
         folder: poiFolder?.id ?? null,
         "system.hiddenByGM": true,
       });
+      batchRows.push({ actor, subTableKey: result.subTableKey, status: "ok" });
       const uuid = actor.uuid;
       const listKey = CampaignTrackerSheet._poiTypeToListKey(
         actor,
@@ -2546,6 +2656,16 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
           );
         }
       }
+    }
+    // Post one consolidated chat card for all generated POIs
+    if (batchRows.length) {
+      await ChatMessage.create({
+        content: PoiGenerator.buildBatchChatHtml(batchRows),
+        speaker: {
+          alias: game.i18n.localize("STA_TC.Poi.Generator.SpeakerAlias"),
+        },
+        whisper: [game.user.id],
+      });
     }
   }
 
@@ -3042,6 +3162,24 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
         entries[idx].conflictResult = finalResult;
         entries[idx].conflictMomentum = finalMomentum;
         await this.actor.update({ [`system.${listKey}`]: entries });
+        // Notify conflict resolution
+        const _conflictResultLabels = {
+          success: "STA_TC.Wizard.ResultSuccess",
+          flawedSuccess: "STA_TC.Wizard.ResultFlawedSuccess",
+          failure: "STA_TC.Wizard.ResultFailure",
+          seriousSetback: "STA_TC.Wizard.ResultSeriousSetback",
+        };
+        const _momentumStr =
+          finalMomentum > 0
+            ? ` (+${finalMomentum} ${game.i18n.localize("STA_TC.Wizard.MomentumGained")})`
+            : "";
+        await TrackerNotifier.emit({
+          tracker: this.actor,
+          event: "conflictFinalized",
+          message: `${poi?.name || "?"}: ${game.i18n.localize(_conflictResultLabels[finalResult] || finalResult)}${_momentumStr}`,
+          entityUuid: poiUuid,
+          data: { result: finalResult, momentum: finalMomentum },
+        });
         break;
       }
     }
@@ -3216,12 +3354,19 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     // Don't overwrite a previously commandeered asset
     if (entries[entryIndex].commandeeredAssetUuid) return;
     const system = this.actor.system;
-    const alreadyCommandeered = system.commandeeredAssets || [];
+    // Exclude assets commandeered in prior turns AND assets already picked by
+    // other routine POI rolls earlier this same turn.
+    const excludedUuids = new Set([
+      ...(system.commandeeredAssets || []),
+      ...(system.poiListRoutine || [])
+        .map((e) => e.commandeeredAssetUuid)
+        .filter(Boolean),
+    ]);
     const pool = [
       ...(system.characterAssets || []),
       ...(system.shipAssets || []),
       ...(system.resourceAssets || []),
-    ].filter((uuid) => !alreadyCommandeered.includes(uuid));
+    ].filter((uuid) => !excludedUuids.has(uuid));
     if (!pool.length) {
       ui.notifications.warn(
         game.i18n.localize("STA_TC.Wizard.NoAssetsToCommandeer"),
@@ -3233,11 +3378,15 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     entries[entryIndex].commandeeredAssetUuid = chosenUuid;
     entries[entryIndex].outcomeConfirmed = true;
     await this.actor.update({ [`system.${listKey}`]: entries });
-    ui.notifications.info(
-      game.i18n.format("STA_TC.Wizard.AssetCommandeered", {
-        name: asset?.name || chosenUuid,
-      }),
-    );
+    const commandeerMsg = game.i18n.format("STA_TC.Wizard.AssetCommandeered", {
+      name: asset?.name || chosenUuid,
+    });
+    await TrackerNotifier.emit({
+      tracker: this.actor,
+      event: "phase3Commandeer",
+      message: commandeerMsg,
+      entityUuid: chosenUuid,
+    });
   }
 
   // ==========================================================================
@@ -3278,12 +3427,15 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     if (!listKey || isNaN(entryIndex)) return;
     const entries = foundry.utils.deepClone(this.actor.system[listKey] || []);
     if (!entries[entryIndex]) return;
-    const poi = await fromUuid(entries[entryIndex].actorUuid);
+    const poiActorUuid = entries[entryIndex].actorUuid;
+    const poi = await fromUuid(poiActorUuid);
+    let notifyMsg = game.i18n.localize("STA_TC.Wizard.OutcomeIntensify1Short");
     if (poi) {
       const urgency = poi.system?.urgency || 1;
+      const oldDiff = poi.system?.difficulty || 1;
       const poiUpdates = {
         "system.urgency": Math.min(5, urgency + 1),
-        "system.difficulty": Math.min(5, (poi.system?.difficulty || 1) + 1),
+        "system.difficulty": Math.min(5, oldDiff + 1),
       };
       if (poi.system?.difficulty2 != null)
         poiUpdates["system.difficulty2"] = Math.min(
@@ -3291,12 +3443,22 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
           poi.system.difficulty2 + 1,
         );
       await poi.update(poiUpdates);
+      notifyMsg = game.i18n.format("STA_TC.Notify.Phase3Intensify", {
+        name: poi.name,
+        oldUrgency: urgency,
+        newUrgency: Math.min(5, urgency + 1),
+        oldDiff,
+        newDiff: Math.min(5, oldDiff + 1),
+      });
     }
     entries[entryIndex].outcomeConfirmed = true;
     await this.actor.update({ [`system.${listKey}`]: entries });
-    ui.notifications.info(
-      game.i18n.localize("STA_TC.Wizard.OutcomeIntensify1Short"),
-    );
+    await TrackerNotifier.emit({
+      tracker: this.actor,
+      event: "phase3Intensify",
+      message: notifyMsg,
+      entityUuid: poiActorUuid,
+    });
   }
 
   static async _onConfirmOutcomeCatastrophe(event, target) {
@@ -3306,14 +3468,17 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     const system = this.actor.system;
     const entries = foundry.utils.deepClone(system[listKey] || []);
     if (!entries[entryIndex]) return;
+    const catastrophePoi = await fromUuid(entries[entryIndex].actorUuid);
     entries.splice(entryIndex, 1);
     await this.actor.update({
       [`system.${listKey}`]: entries,
       "system.pace": (system.pace || 0) + 1,
     });
-    ui.notifications.info(
-      game.i18n.localize("STA_TC.Wizard.OutcomeCatastropheShort"),
-    );
+    await TrackerNotifier.emit({
+      tracker: this.actor,
+      event: "phase3Catastrophe",
+      message: `${catastrophePoi?.name || "?"}: ${game.i18n.localize("STA_TC.Wizard.OutcomeCatastropheShort")} (${game.i18n.localize("STA_TC.CampaignTracker.Pace")} ${system.pace || 0}\u2192${(system.pace || 0) + 1})`,
+    });
   }
 
   static async _onConfirmOutcomeDiffIncrease(event, target) {
@@ -3322,11 +3487,16 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     if (!listKey || isNaN(entryIndex)) return;
     const entries = foundry.utils.deepClone(this.actor.system[listKey] || []);
     if (!entries[entryIndex]) return;
-    const poi = await fromUuid(entries[entryIndex].actorUuid);
+    const diffPoiUuid = entries[entryIndex].actorUuid;
+    const poi = await fromUuid(diffPoiUuid);
+    let diffNotifyMsg = game.i18n.localize(
+      "STA_TC.Wizard.OutcomeExplorationDiffShort",
+    );
     if (poi) {
+      const oldDiff = poi.system?.difficulty || 1;
       const poiUpdates = {
         "system.missedCount": 1,
-        "system.difficulty": Math.min(5, (poi.system?.difficulty || 1) + 1),
+        "system.difficulty": Math.min(5, oldDiff + 1),
       };
       if (poi.system?.difficulty2 != null)
         poiUpdates["system.difficulty2"] = Math.min(
@@ -3334,12 +3504,20 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
           poi.system.difficulty2 + 1,
         );
       await poi.update(poiUpdates);
+      diffNotifyMsg = game.i18n.format("STA_TC.Notify.Phase3DiffIncrease", {
+        name: poi.name,
+        oldDiff,
+        newDiff: Math.min(5, oldDiff + 1),
+      });
     }
     entries[entryIndex].outcomeConfirmed = true;
     await this.actor.update({ [`system.${listKey}`]: entries });
-    ui.notifications.info(
-      game.i18n.localize("STA_TC.Wizard.OutcomeExplorationDiffShort"),
-    );
+    await TrackerNotifier.emit({
+      tracker: this.actor,
+      event: "phase3DiffIncrease",
+      message: diffNotifyMsg,
+      entityUuid: diffPoiUuid,
+    });
   }
 
   static async _onConfirmOutcomeExplorationRemove(event, target) {
@@ -3348,11 +3526,15 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     if (!listKey || isNaN(entryIndex)) return;
     const entries = foundry.utils.deepClone(this.actor.system[listKey] || []);
     if (!entries[entryIndex]) return;
+    const removePoiUuid = entries[entryIndex].actorUuid;
+    const removePoi = await fromUuid(removePoiUuid);
     entries.splice(entryIndex, 1);
     await this.actor.update({ [`system.${listKey}`]: entries });
-    ui.notifications.info(
-      game.i18n.localize("STA_TC.Wizard.OutcomeExplorationRemovedShort"),
-    );
+    await TrackerNotifier.emit({
+      tracker: this.actor,
+      event: "phase3ExplorationRemove",
+      message: `${removePoi?.name || "?"}: ${game.i18n.localize("STA_TC.Wizard.OutcomeExplorationRemovedShort")}`,
+    });
   }
 
   static async _onConfirmOutcomeExtraPoi(event, target) {
@@ -3373,9 +3555,12 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       [`system.${listKey}`]: entries,
       "system.turnExtraPoisNextTurn": (system.turnExtraPoisNextTurn || 0) + 1,
     });
-    ui.notifications.info(
-      game.i18n.localize("STA_TC.Wizard.OutcomeUnknownShort"),
-    );
+    await TrackerNotifier.emit({
+      tracker: this.actor,
+      event: "phase3ExtraPoi",
+      message: `${poi?.name || "?"}: ${game.i18n.localize("STA_TC.Wizard.OutcomeUnknownShort")}`,
+      entityUuid: entries[entryIndex]?.actorUuid ?? "",
+    });
   }
 
   static async _onIgnoreOutcome(event, target) {
@@ -3385,6 +3570,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     const entries = foundry.utils.deepClone(this.actor.system[listKey] || []);
     if (!entries[entryIndex]) return;
     const entry = entries[entryIndex];
+    const ignoredPoiUuid = entry.actorUuid;
     entry.conflictResult = "";
     entry.conflictSuccesses = 0;
     entry.conflictMomentum = 0;
@@ -3397,7 +3583,12 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     entry.outcomeConfirmed = false;
     entry.outcomeIgnored = true;
     await this.actor.update({ [`system.${listKey}`]: entries });
-    ui.notifications.info(game.i18n.localize("STA_TC.Wizard.OutcomeIgnored"));
+    await TrackerNotifier.emit({
+      tracker: this.actor,
+      event: "phase3Ignore",
+      message: game.i18n.localize("STA_TC.Wizard.OutcomeIgnored"),
+      entityUuid: ignoredPoiUuid,
+    });
   }
 
   static async _onConfirmProgression(event, target) {
@@ -3425,12 +3616,14 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       );
     }
     await this.actor.update(updates);
-    ui.notifications.info(
-      game.i18n.format("STA_TC.Wizard.ProgressionConfirmed", {
+    await TrackerNotifier.emit({
+      tracker: this.actor,
+      event: "progressionConfirmed",
+      message: game.i18n.format("STA_TC.Wizard.ProgressionConfirmed", {
         gain: progressionGain,
         total: newTotal,
       }),
-    );
+    });
   }
 
   static async _onRollProgression(event, target) {
@@ -3882,6 +4075,13 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
    */
   static _onOpenProgressionLog(event, target) {
     ProgressionLog.open(this.actor);
+  }
+
+  /**
+   * Open the Turn Log popup for this campaign tracker.
+   */
+  static _onOpenTurnLog(event, target) {
+    TurnLog.open(this.actor);
   }
 
   /**

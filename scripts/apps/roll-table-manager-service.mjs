@@ -687,6 +687,87 @@ export class RollTableManagerService {
     await tracker.update({ [`system.${usedKey}`]: list });
   }
 
+  /**
+   * Return whether the table has auto-move-to-used-on-draw enabled.
+   * @param {RollTable} table
+   * @returns {boolean}
+   */
+  static getAutoMoveOnDraw(table) {
+    return !!table?.getFlag?.(MODULE_ID, "autoMoveOnDraw");
+  }
+
+  /**
+   * Set the auto-move-to-used-on-draw flag on a table.
+   * @param {RollTable} table
+   * @param {boolean} value
+   */
+  static async setAutoMoveOnDraw(table, value) {
+    await table.setFlag(MODULE_ID, "autoMoveOnDraw", !!value);
+  }
+
+  /**
+   * Find which source and subKey the given table UUID is configured for.
+   * Returns null if the table is not managed by the RTM.
+   * @param {string} tableUuid
+   * @returns {{source: string, subKey: string}|null}
+   */
+  static findSourceForTable(tableUuid) {
+    if (!tableUuid) return null;
+    for (const [source, config] of Object.entries(SOURCE_CONFIG)) {
+      for (const [subKey, settingKey] of Object.entries(
+        config.settingBySubKey,
+      )) {
+        try {
+          if (game.settings.get(MODULE_ID, settingKey) === tableUuid)
+            return { source, subKey };
+        } catch {
+          // Setting may not exist yet during early init.
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Auto-move drawn results to the Used section.
+   * Called from the drawRollTable hook when autoMoveOnDraw is enabled.
+   * @param {RollTable} table
+   * @param {TableResult[]} drawnResults
+   */
+  static async handleAutoMoveOnDraw(table, drawnResults) {
+    if (!game.user?.isGM) return;
+    if (!Array.isArray(drawnResults) || drawnResults.length === 0) return;
+
+    const entry = this.findSourceForTable(table.uuid);
+    if (!entry) return;
+    const { source, subKey } = entry;
+
+    const tracker = await this.getTracker(null);
+    if (!tracker) return;
+
+    const resultIds = [];
+    const usedRecords = [];
+    for (const result of drawnResults) {
+      if (!table.results.has(result.id)) continue;
+      usedRecords.push(
+        this.buildUsedRecord({ result, table, source, subKey, origin: "draw" }),
+      );
+      resultIds.push(result.id);
+    }
+
+    if (!resultIds.length) return;
+
+    await table.deleteEmbeddedDocuments("TableResult", resultIds);
+    await table.normalize();
+
+    const usedKey = this.getUsedKey(source);
+    const list = foundry.utils.deepClone(tracker.system[usedKey] || []);
+    for (const record of usedRecords) {
+      list.unshift(record);
+    }
+    await tracker.update({ [`system.${usedKey}`]: list });
+  }
+
   static async getTracker(preferredTracker) {
     if (preferredTracker) return preferredTracker;
 

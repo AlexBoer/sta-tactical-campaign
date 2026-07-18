@@ -18,7 +18,7 @@ export class ProgressionSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       closeOnSubmit: false,
     },
     position: {
-      height: 350,
+      height: "auto",
       width: 380,
     },
     window: {

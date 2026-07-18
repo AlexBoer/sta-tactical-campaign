@@ -433,6 +433,9 @@ export class RollTableManager extends HandlebarsApplicationMixin(
       statusLevel: this.rtmState.statusLevel,
       search: this.rtmState.search,
       tableUuid: table?.uuid || "",
+      autoMoveOnDraw: table
+        ? RollTableManagerService.getAutoMoveOnDraw(table)
+        : false,
       activeResults: activeResultsCapped,
       activeTotalCount: activeTotal,
       hasMoreActiveResults: activeTotal > activeResultsCapped.length,
@@ -1450,6 +1453,18 @@ export class RollTableManager extends HandlebarsApplicationMixin(
     sourceSelect?.addEventListener("change", (event) => {
       this.#switchSource(event.currentTarget?.value);
     });
+
+    const autoMoveCheckbox = root.querySelector("#rtm-auto-move-on-draw");
+    if (autoMoveCheckbox) {
+      autoMoveCheckbox.addEventListener("change", async (event) => {
+        const table = this.rtmState.cachedTable;
+        if (!table) return;
+        await RollTableManagerService.setAutoMoveOnDraw(
+          table,
+          event.currentTarget.checked,
+        );
+      });
+    }
 
     applyFilters();
   }

@@ -212,6 +212,10 @@
         "ActorNotResolved": "Actor UUID could not be resolved. Verify the sub-table results contain valid actor UUIDs.",
         "TokenPlaced": "Placed {name} token on canvas.",
         "TokenFailed": "Failed to create token: {error}",
+        "BatchTitle": "Generated Points of Interest",
+        "BatchGenerated": "generated",
+        "BatchFailed": "POI(s) could not be resolved.",
+        "BatchNone": "No POIs were generated.",
         "Types": {
           "TacticalThreat": "Tactical Threat",
           "Exploration": "Exploration",
@@ -327,6 +331,8 @@
       "AllFolders": "All Folders",
       "UsedResults": "Used Results",
       "MoveToUsed": "Move to Used",
+      "AutoMoveOnDraw": "Auto-move to Used on Draw",
+      "AutoMoveOnDrawHint": "Automatically move drawn results to the Used section.",
       "Restore": "Restore",
       "RemoveUsed": "Remove",
       "Open": "Open",
@@ -353,6 +359,7 @@
       "Status": {
         "Added": "Result added and normalized.",
         "RemovedToUsed": "Result moved to Used.",
+        "AutoMovedOnDraw": "Result auto-moved to Used after draw.",
         "Restored": "Result restored to active pool.",
         "UsedRemoved": "Used entry removed.",
         "Created": "Actor created and added to table.",
@@ -424,6 +431,14 @@
       "PoiTintRoutineHint": "Default prototype token tint color for Routine points of interest.",
       "PoiTintUnknown": "POI Tint: Unknown",
       "PoiTintUnknownHint": "Default prototype token tint color for Unknown points of interest.",
+      "AutomationNotifications": "Automation Notifications",
+      "AutomationNotificationsHint": "Controls which gameplay automation events show toast notifications.",
+      "AutomationNotificationModes": {
+        "All": "All (info, warnings, and critical)",
+        "Important": "Important only (warnings and critical)",
+        "ChatOnly": "Chat only (no toasts)",
+        "Off": "Off (no notifications)"
+      },
       "PrimaryPowerMode": "Primary Power Selection Mode",
       "PrimaryPowerModeHint": "How the primary power is chosen when converting actors to assets.",
       "PrimaryPowerModes": {
@@ -470,6 +485,23 @@
     "RollDice": "Roll Dice",
     "RollForLoss": "Roll for Loss",
     "Cancel": "Cancel",
+    "TurnLog": {
+      "Title": "Turn Log",
+      "ClearLog": "Clear Log",
+      "ClearConfirm": "Clear all notification log entries? This cannot be undone.",
+      "Turn": "Turn",
+      "Current": "Current",
+      "Entries": "entries",
+      "Empty": "No log entries yet."
+    },
+    "Notify": {
+      "SupplyBonusApplied": "Turn start: Priority Supply +{amount} (now {total})",
+      "CarryOverConsumed": "{count} carry-over extra POI(s) applied to this generation step",
+      "AeExpired": "{name} is now available again (status expired)",
+      "Phase3Intensify": "{name}: urgency {oldUrgency}\u2192{newUrgency}, difficulty {oldDiff}\u2192{newDiff}",
+      "Phase3DiffIncrease": "{name}: difficulty {oldDiff}\u2192{newDiff} (first miss)",
+      "Phase3Commandeer": "{assetName} commandeered by {poiName}"
+    },
     "Event": {
       "NamePlaceholder": "Event name…",
       "DescriptionPlaceholder": "Describe the event and its conditions…",
@@ -534,6 +566,7 @@
       "Momentum": "Campaign Momentum",
       "Progression": "Progression",
       "Pace": "Pace",
+      "PaceTempBonus": "Temp. Pace ±",
       "PrioritySupply": "Priority Supply",
       "Assets": "Assets",
       "PointsOfInterest": "Points of Interest",
@@ -567,6 +600,7 @@
       "RandomAsset": "Random",
       "CustomAsset": "Custom",
       "OpenProgressionLog": "Progression Log",
+      "OpenTurnLog": "Turn Log",
       "NoPoiTableConfigured": "No roll table configured for this PoI type.",
       "PoiTableNotFound": "Could not find the configured roll table."
     },

@@ -1,0 +1,34 @@
+<div class="turn-log-app">
+  <div class="turn-log-toolbar">
+    <span class="log-count">{{totalEntries}} {{localize "STA_TC.TurnLog.Entries"}}</span>
+    {{#if isGM}}
+    <button type="button" class="btn btn-sm" data-action="clearLog">
+      <i class="fas fa-trash"></i> {{localize "STA_TC.TurnLog.ClearLog"}}
+    </button>
+    {{/if}}
+  </div>
+  <div class="turn-log-body">
+    {{#if turns.length}}
+      {{#each turns}}
+      <details class="turn-log-group" {{#if this.isCurrent}}open{{/if}}>
+        <summary class="turn-log-group-header">
+          {{localize "STA_TC.TurnLog.Turn"}} {{this.turn}}
+          {{#if this.isCurrent}}<span class="current-badge">{{localize "STA_TC.TurnLog.Current"}}</span>{{/if}}
+          <span class="entry-count">({{this.entries.length}})</span>
+        </summary>
+        <ul class="turn-log-entries">
+          {{#each this.entries}}
+          <li class="turn-log-entry {{this.severityClass}}">
+            <i class="{{this.severityIcon}}"></i>
+            <span class="log-message">{{this.message}}</span>
+            <span class="log-time">{{this.timeStr}}</span>
+          </li>
+          {{/each}}
+        </ul>
+      </details>
+      {{/each}}
+    {{else}}
+      <p class="log-empty">{{localize "STA_TC.TurnLog.Empty"}}</p>
+    {{/if}}
+  </div>
+</div>

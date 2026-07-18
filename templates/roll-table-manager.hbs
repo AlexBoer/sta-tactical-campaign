@@ -37,6 +37,10 @@
     <div class="rtm-panel">
       <div class="rtm-panel-header">
         <h3>{{localize "STA_TC.RollTableManager.ActiveResults"}}</h3>
+        <label class="rtm-auto-move-label" data-tooltip="{{localize 'STA_TC.RollTableManager.AutoMoveOnDrawHint'}}">
+          <input id="rtm-auto-move-on-draw" type="checkbox" {{#if autoMoveOnDraw}}checked{{/if}} {{#unless tableUuid}}disabled{{/unless}} />
+          {{localize "STA_TC.RollTableManager.AutoMoveOnDraw"}}
+        </label>
         {{#if tableUuid}}
         <button type="button" class="btn rtm-icon" data-action="openTable" data-tooltip="{{localize 'STA_TC.RollTableManager.OpenTable'}}" aria-label="{{localize 'STA_TC.RollTableManager.OpenTable'}}"><i class="fa-solid fa-up-right-from-square"></i></button>
         {{/if}}

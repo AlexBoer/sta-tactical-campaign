@@ -52,7 +52,7 @@
       <div class="rtm-list rtm-list-active">
         {{#if activeResults.length}}
           {{#each activeResults}}
-          <div class="rtm-row {{#unless this.valid}}invalid{{/unless}}" data-rtm-filter-name="{{this.name}}">
+          <div class="rtm-row {{#unless this.valid}}invalid{{/unless}}" data-rtm-row-kind="active" data-rtm-filter-name="{{this.name}}">
             <img src="{{this.img}}" alt="" />
             <div class="rtm-row-main">
               <div class="rtm-title">{{this.name}}</div>
@@ -66,9 +66,8 @@
               {{#if this.documentUuid}}
               <button type="button" class="btn rtm-icon" data-action="openActor" data-uuid="{{this.documentUuid}}" data-tooltip="{{localize 'STA_TC.RollTableManager.Open'}}" aria-label="{{localize 'STA_TC.RollTableManager.Open'}}"><i class="fa-solid fa-up-right-from-square"></i></button>
               {{/if}}
-              {{#unless this.pendingOnly}}
-              <button type="button" class="btn rtm-icon" data-action="removeResult" data-result-id="{{this.id}}" data-tooltip="{{localize 'STA_TC.RollTableManager.MoveToUsed'}}" aria-label="{{localize 'STA_TC.RollTableManager.MoveToUsed'}}"><i class="fa-solid fa-box-archive"></i></button>
-              {{/unless}}
+              <button type="button" class="btn rtm-icon" data-action="rowMenu" data-tooltip="{{localize 'STA_TC.RollTableManager.MoreActions'}}" aria-label="{{localize 'STA_TC.RollTableManager.MoreActions'}}"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+              {{#unless this.pendingOnly}}<button type="button" hidden data-action="removeResult" data-result-id="{{this.id}}"></button>{{/unless}}
             </div>
           </div>
           {{/each}}
@@ -133,14 +132,15 @@
       <div class="rtm-list rtm-list-compendium">
         {{#if compendiumActors.length}}
           {{#each compendiumActors}}
-          <div class="rtm-row" data-rtm-filter-name="{{this.name}}" data-rtm-power="{{this.power}}" data-rtm-primary-power="{{this.primaryPower}}" data-rtm-power2="{{this.power2}}" data-rtm-difficulty="{{this.difficulty}}" data-rtm-urgency="{{this.urgency}}">
+          <div class="rtm-row" data-rtm-row-kind="compendium" data-rtm-filter-name="{{this.name}}" data-rtm-power="{{this.power}}" data-rtm-primary-power="{{this.primaryPower}}" data-rtm-power2="{{this.power2}}" data-rtm-difficulty="{{this.difficulty}}" data-rtm-urgency="{{this.urgency}}">
             <img src="{{this.img}}" alt="" />
             <div class="rtm-row-main">
               <div class="rtm-title">{{this.name}}</div>
             </div>
             <div class="rtm-actions">
-              <button type="button" class="btn rtm-icon" data-action="openActor" data-uuid="{{this.uuid}}" data-tooltip="{{localize 'STA_TC.RollTableManager.Open'}}" aria-label="{{localize 'STA_TC.RollTableManager.Open'}}"><i class="fa-solid fa-up-right-from-square"></i></button>
               <button type="button" class="btn rtm-icon" data-action="addExisting" data-uuid="{{this.uuid}}" data-tooltip="{{localize 'STA_TC.RollTableManager.Add'}}" aria-label="{{localize 'STA_TC.RollTableManager.Add'}}"><i class="fa-solid fa-plus"></i></button>
+              <button type="button" class="btn rtm-icon" data-action="rowMenu" data-tooltip="{{localize 'STA_TC.RollTableManager.MoreActions'}}" aria-label="{{localize 'STA_TC.RollTableManager.MoreActions'}}"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+              <button type="button" hidden data-action="openActor" data-uuid="{{this.uuid}}"></button>
             </div>
           </div>
           {{/each}}
@@ -160,7 +160,7 @@
     <div class="rtm-list rtm-list-used">
       {{#if usedResults.length}}
         {{#each usedResults}}
-        <div class="rtm-row" data-rtm-filter-name="{{this.resultName}}">
+        <div class="rtm-row" data-rtm-row-kind="used" data-rtm-filter-name="{{this.resultName}}">
           <img src="{{this.resultImg}}" alt="" />
           <div class="rtm-row-main">
             <div class="rtm-title">{{this.resultName}}</div>
@@ -171,7 +171,8 @@
           </div>
           <div class="rtm-actions">
             <button type="button" class="btn rtm-icon" data-action="restoreUsed" data-index="{{this.index}}" data-tooltip="{{localize 'STA_TC.RollTableManager.Restore'}}" aria-label="{{localize 'STA_TC.RollTableManager.Restore'}}"><i class="fa-solid fa-rotate-left"></i></button>
-            <button type="button" class="btn rtm-icon" data-action="removeUsedRecord" data-index="{{this.index}}" data-tooltip="{{localize 'STA_TC.RollTableManager.RemoveUsed'}}" aria-label="{{localize 'STA_TC.RollTableManager.RemoveUsed'}}"><i class="fa-solid fa-trash"></i></button>
+            <button type="button" class="btn rtm-icon" data-action="rowMenu" data-tooltip="{{localize 'STA_TC.RollTableManager.MoreActions'}}" aria-label="{{localize 'STA_TC.RollTableManager.MoreActions'}}"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+            <button type="button" hidden data-action="removeUsedRecord" data-index="{{this.index}}"></button>
           </div>
         </div>
         {{/each}}

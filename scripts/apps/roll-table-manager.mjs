@@ -164,7 +164,93 @@ export class RollTableManager extends HandlebarsApplicationMixin(
   async _onRender(context, options) {
     await super._onRender(context, options);
     this._dragDrop.bind(this.element);
+    this.#installRowContextMenu();
     this.#ensureExternalHooks();
+  }
+
+  #installRowContextMenu() {
+    const root = this.element;
+    if (!(root instanceof HTMLElement)) return;
+
+    const isV14 = game.release.generation >= 14;
+    const entry = (label, icon, action, kinds) => {
+      // Hidden per-row action buttons drive the real handlers; an entry is only
+      // shown when its backing button exists for that row (e.g. no "Move to
+      // Used" for pending-only rows, no "Open" without a linked document).
+      const visible = (target) =>
+        kinds.includes(target?.dataset?.rtmRowKind) &&
+        !!target?.querySelector?.(`[data-action="${action}"]`);
+      const run = (target) =>
+        target?.querySelector?.(`[data-action="${action}"]`)?.click();
+      return isV14
+        ? {
+            label: game.i18n.localize(label),
+            icon: `<i class="fa-solid ${icon}"></i>`,
+            visible,
+            onClick: (_event, target) => run(target),
+          }
+        : {
+            name: game.i18n.localize(label),
+            icon: `<i class="fa-solid ${icon}"></i>`,
+            condition: visible,
+            callback: (target) => run(target),
+          };
+    };
+    const menuItems = [
+      entry(
+        "STA_TC.RollTableManager.Open",
+        "fa-up-right-from-square",
+        "openActor",
+        ["active", "compendium"],
+      ),
+      entry(
+        "STA_TC.RollTableManager.MoveToUsed",
+        "fa-box-archive",
+        "removeResult",
+        ["active"],
+      ),
+      entry("STA_TC.RollTableManager.Add", "fa-plus", "addExisting", [
+        "compendium",
+      ]),
+      entry(
+        "STA_TC.RollTableManager.Restore",
+        "fa-rotate-left",
+        "restoreUsed",
+        ["used"],
+      ),
+      entry(
+        "STA_TC.RollTableManager.RemoveUsed",
+        "fa-trash",
+        "removeUsedRecord",
+        ["used"],
+      ),
+    ];
+
+    // The root frame persists across re-renders, so bind the delegated menu
+    // only once per element to avoid stacking duplicate contextmenu listeners.
+    if (this._rowContextMenuElement !== root) {
+      this._rowContextMenuElement = root;
+      new foundry.applications.ux.ContextMenu(
+        root,
+        ".rtm-row[data-rtm-row-kind]",
+        menuItems,
+        { fixed: true, jQuery: false },
+      );
+    }
+
+    root.querySelectorAll("[data-action='rowMenu']").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        button.closest("[data-rtm-row-kind]")?.dispatchEvent(
+          new MouseEvent("contextmenu", {
+            bubbles: true,
+            clientX: event.clientX,
+            clientY: event.clientY,
+          }),
+        );
+      });
+    });
   }
 
   async _onClose(options) {

@@ -40,6 +40,13 @@ export async function registerSettings() {
     default: {},
   });
 
+  game.settings.register(MODULE_ID, "activeEffectMigrationVersion", {
+    scope: "world",
+    config: false,
+    type: Number,
+    default: 0,
+  });
+
   game.settings.register(MODULE_ID, "tablePoiType", {
     name: "STA_TC.Settings.TablePoiType",
     hint: "STA_TC.Settings.TablePoiTypeHint",

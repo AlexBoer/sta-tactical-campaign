@@ -14,7 +14,10 @@ import { EventEffectResolver } from "../apps/event-effect-resolver.mjs";
 import { ProgressionLog } from "../apps/progression-log.mjs";
 import { RollTableManager } from "../apps/roll-table-manager.mjs";
 import { RollTableManagerService } from "../apps/roll-table-manager-service.mjs";
-import { aeMode } from "../utils.mjs";
+import {
+  expireCampaignTurnEffects,
+  replaceAssetStatusEffect,
+} from "../active-effect-service.mjs";
 import { TrackerNotifier } from "../apps/tracker-notifier.mjs";
 import { TurnLog } from "../apps/turn-log.mjs";
 
@@ -274,10 +277,10 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       asset.isCommandeered = commandeeredSet.has(asset.uuid);
       // Read status directly from AE flags — more reliable than derived system fields
       asset.isUnavailable = !!doc?.effects?.some(
-        (e) => !e.disabled && e.flags?.[MODULE_ID]?.unavailable,
+        (effect) => effect.active && effect.flags?.[MODULE_ID]?.unavailable,
       );
       asset.isLost = !!doc?.effects?.some(
-        (e) => !e.disabled && e.flags?.[MODULE_ID]?.lost,
+        (effect) => effect.active && effect.flags?.[MODULE_ID]?.lost,
       );
     }
 
@@ -840,7 +843,7 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
                   .filter((i) => i.type === `${MODULE_ID}.event`)
                   .some((item) =>
                     item.effects.some(
-                      (e) => !e.disabled && e.changes.length > 0,
+                      (e) => e.active && e.system.changes.length > 0,
                     ),
                   ),
               eventEffectTooltip:
@@ -1448,7 +1451,11 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
         return;
       }
     }
-    if (actor.effects?.some((e) => e.flags?.[MODULE_ID]?.unavailable)) {
+    if (
+      actor.effects?.some(
+        (effect) => effect.active && effect.flags?.[MODULE_ID]?.unavailable,
+      )
+    ) {
       ui.notifications.warn(
         game.i18n.format("STA_TC.CampaignTracker.AssetUnavailableAssign", {
           name: actor.name,
@@ -1456,7 +1463,11 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
       );
       return;
     }
-    if (actor.effects?.some((e) => e.flags?.[MODULE_ID]?.lost)) {
+    if (
+      actor.effects?.some(
+        (effect) => effect.active && effect.flags?.[MODULE_ID]?.lost,
+      )
+    ) {
       ui.notifications.warn(
         game.i18n.format("STA_TC.CampaignTracker.AssetLostAssign", {
           name: actor.name,
@@ -2040,26 +2051,16 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     // Expire unavailability Active Effects whose expireAfterTurn has been reached.
     // Run BEFORE incrementing the turn counter so effects set to expire at turn N
     // are removed at the end of turn N (i.e. they lasted the full turn).
-    const currentTurnForExpiry = sys6.campaignTurnNumber || 0;
-    for (const listKey of ["characterAssets", "shipAssets", "resourceAssets"]) {
-      for (const uuid of this.actor.system[listKey] || []) {
-        const asset = await fromUuid(uuid);
-        if (!asset) continue;
-        for (const effect of [...asset.effects]) {
-          const expiry = effect.flags?.[MODULE_ID]?.expireAfterTurn;
-          if (expiry !== undefined && currentTurnForExpiry >= expiry) {
-            await effect.delete();
-            await TrackerNotifier.emit({
-              tracker: this.actor,
-              event: "turnEndAeExpired",
-              message: game.i18n.format("STA_TC.Notify.AeExpired", {
-                name: asset.name,
-              }),
-              entityUuid: uuid,
-            });
-          }
-        }
-      }
+    const expiredEffects = await expireCampaignTurnEffects(this.actor);
+    for (const { actor } of expiredEffects) {
+      await TrackerNotifier.emit({
+        tracker: this.actor,
+        event: "turnEndAeExpired",
+        message: game.i18n.format("STA_TC.Notify.AeExpired", {
+          name: actor.name,
+        }),
+        entityUuid: actor.uuid,
+      });
     }
 
     // Increment the campaign turn counter (used for AE expiry checks)
@@ -2422,8 +2423,12 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
         const actor = await fromUuid(uuid);
         if (
           actor &&
-          !actor.effects?.some((e) => e.flags?.[MODULE_ID]?.unavailable) &&
-          !actor.effects?.some((e) => e.flags?.[MODULE_ID]?.lost) &&
+          !actor.effects?.some(
+            (effect) => effect.active && effect.flags?.[MODULE_ID]?.unavailable,
+          ) &&
+          !actor.effects?.some(
+            (effect) => effect.active && effect.flags?.[MODULE_ID]?.lost,
+          ) &&
           !(slot === 0 && actor.system?.assetType === "resource")
         ) {
           const powers = actor.system?.powers;
@@ -2448,8 +2453,12 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
           actor &&
           actor.system?.assetType === "resource" &&
           slot !== 0 &&
-          !actor.effects?.some((e) => e.flags?.[MODULE_ID]?.unavailable) &&
-          !actor.effects?.some((e) => e.flags?.[MODULE_ID]?.lost)
+          !actor.effects?.some(
+            (effect) => effect.active && effect.flags?.[MODULE_ID]?.unavailable,
+          ) &&
+          !actor.effects?.some(
+            (effect) => effect.active && effect.flags?.[MODULE_ID]?.lost,
+          )
         ) {
           const limit = this.actor.system.turnFlexibleDeployments ? 2 : 1;
           if (this._countResourceAssignments(uuid) < limit) {
@@ -4028,28 +4037,10 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
   async _applyUnavailableEffect(actorUuid, label, expireAfterTurn) {
     const actor = await fromUuid(actorUuid);
     if (!actor) return;
-    // Remove any existing unavailability AE first to avoid duplicates
-    const existing = actor.effects.find(
-      (e) => e.flags?.[MODULE_ID]?.unavailable,
-    );
-    if (existing) await existing.delete();
-    await actor.createEmbeddedDocuments("ActiveEffect", [
-      {
-        name: label || game.i18n.localize("STA_TC.Wizard.UnavailableStatus"),
-        img: "icons/svg/sleep.svg",
-        disabled: false,
-        statuses: ["sta-tc.unavailable"],
-        changes: [
-          {
-            key: "system.unavailable",
-            mode: aeMode("UPGRADE"),
-            value: "1",
-            priority: 20,
-          },
-        ],
-        flags: { [MODULE_ID]: { unavailable: true, expireAfterTurn } },
-      },
-    ]);
+    await replaceAssetStatusEffect(actor, "unavailable", {
+      name: label || game.i18n.localize("STA_TC.Wizard.UnavailableStatus"),
+      expireAfterTurn,
+    });
   }
 
   /**
@@ -4225,28 +4216,9 @@ export class CampaignTrackerSheet extends HandlebarsApplicationMixin(
     }
 
     if (markLost && primaryActor) {
-      // Create a permanent Lost AE (deleting it "rescues" the asset)
-      const existingLost = primaryActor.effects.find(
-        (e) => e.flags?.[MODULE_ID]?.lost,
-      );
-      if (existingLost) await existingLost.delete();
-      await primaryActor.createEmbeddedDocuments("ActiveEffect", [
-        {
-          name: resultTitle,
-          img: "icons/svg/skull.svg",
-          disabled: false,
-          statuses: ["sta-tc.lost"],
-          changes: [
-            {
-              key: "system.lost",
-              mode: aeMode("UPGRADE"),
-              value: "1",
-              priority: 20,
-            },
-          ],
-          flags: { [MODULE_ID]: { lost: true } },
-        },
-      ]);
+      await replaceAssetStatusEffect(primaryActor, "lost", {
+        name: resultTitle,
+      });
     }
 
     const resultText = resultTitle;

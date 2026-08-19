@@ -9,8 +9,8 @@
   "bugs": "https://github.com/AlexBoer/sta-tactical-campaign/issues",
   "changelog": "https://github.com/AlexBoer/sta-tactical-campaign/releases",
   "compatibility": {
-    "minimum": "13",
-    "verified": "13"
+    "minimum": "14",
+    "verified": "14"
   },
   "authors": [
     {
@@ -41,7 +41,7 @@
         "type": "system",
         "compatibility": {
           "minimum": "2.5.0",
-          "verified": "2.5.0"
+          "verified": "2.6.0"
         }
       }
     ]

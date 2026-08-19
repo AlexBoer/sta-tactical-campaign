@@ -29,7 +29,7 @@
     {{#if hasAnyEffects}}
       <ul class="event-effects-list">
         {{#each effects as |effect|}}
-          <li class="event-effect-row {{#unless effect.transfer}}no-transfer{{/unless}}" data-effect-id="{{effect.id}}">
+          <li class="event-effect-row {{#unless effect.transfer}}no-transfer{{/unless}}" data-effect-id="{{effect.id}}" draggable="true">
             <img class="effect-icon" src="{{effect.img}}" alt="{{effect.name}}" title="{{effect.name}}" />
             <span class="effect-name">{{effect.name}}</span>
             <div class="effect-controls">

@@ -12,7 +12,11 @@
  */
 
 const { HandlebarsApplicationMixin, ApplicationV2 } = foundry.applications.api;
-import { aeMode } from "../utils.mjs";
+import { buildAeChange } from "../utils.mjs";
+import {
+  getCampaignExpiry,
+  getCurrentCampaignTurn,
+} from "../active-effect-service.mjs";
 
 const MODULE_ID = "sta-tactical-campaign";
 const ALL_POWERS = ["medical", "military", "personal", "science", "social"];
@@ -76,7 +80,7 @@ export class AssetEffectEditor extends HandlebarsApplicationMixin(
   /** @override */
   async _prepareContext(options) {
     const e = this._effect;
-    const changes = e?.changes ?? [];
+    const changes = e?.system.changes ?? [];
 
     // --- Decode existing changes back into form-friendly values ---------------
 
@@ -107,10 +111,8 @@ export class AssetEffectEditor extends HandlebarsApplicationMixin(
     const selectedAssetType = assetTypeChange?.value ?? "";
 
     // Duration from flag
-    const expireAfterTurn = e?.flags?.[MODULE_ID]?.expireAfterTurn ?? null;
-    const currentTurn =
-      game.actors.find((a) => a.type === `${MODULE_ID}.campaignTracker`)?.system
-        ?.campaignTurnNumber ?? 0;
+    const expireAfterTurn = e ? getCampaignExpiry(e) : null;
+    const currentTurn = await getCurrentCampaignTurn();
     const duration =
       expireAfterTurn != null
         ? Math.max(1, expireAfterTurn - currentTurn)
@@ -167,28 +169,18 @@ export class AssetEffectEditor extends HandlebarsApplicationMixin(
    * @param {FormDataExtended} formData
    * @returns {{ changes: object[], flags: object, statuses: string[] }}
    */
-  _buildEffectData(formData) {
+  async _buildEffectData(formData) {
     const data = formData.object;
     const changes = [];
     const statuses = [];
 
     if (data.isLost) {
-      changes.push({
-        key: "system.lost",
-        mode: aeMode("UPGRADE"),
-        value: "1",
-        priority: 20,
-      });
+      changes.push(buildAeChange("system.lost", "upgrade", true));
       statuses.push("sta-tc.lost");
     }
 
     if (data.isUnavailable) {
-      changes.push({
-        key: "system.unavailable",
-        mode: aeMode("UPGRADE"),
-        value: "1",
-        priority: 20,
-      });
+      changes.push(buildAeChange("system.unavailable", "upgrade", true));
       statuses.push("sta-tc.unavailable");
     }
 
@@ -197,41 +189,27 @@ export class AssetEffectEditor extends HandlebarsApplicationMixin(
       const fDelta = Number(data[`focusDelta_${power}`] ?? 0);
 
       if (pDelta !== 0) {
-        changes.push({
-          key: `system.powers.${power}.value`,
-          mode: aeMode("ADD"),
-          value: String(pDelta),
-          priority: 20,
-        });
+        changes.push(
+          buildAeChange(`system.powers.${power}.value`, "add", pDelta),
+        );
       }
       if (fDelta !== 0) {
-        changes.push({
-          key: `system.powers.${power}.focus`,
-          mode: aeMode("ADD"),
-          value: String(fDelta),
-          priority: 20,
-        });
+        changes.push(
+          buildAeChange(`system.powers.${power}.focus`, "add", fDelta),
+        );
       }
     }
 
     const primaryPower = data.primaryPower ?? "";
     if (primaryPower) {
-      changes.push({
-        key: "system.primaryPower",
-        mode: aeMode("OVERRIDE"),
-        value: primaryPower,
-        priority: 20,
-      });
+      changes.push(
+        buildAeChange("system.primaryPower", "override", primaryPower),
+      );
     }
 
     const assetType = data.assetType ?? "";
     if (assetType) {
-      changes.push({
-        key: "system.assetType",
-        mode: aeMode("OVERRIDE"),
-        value: assetType,
-        priority: 20,
-      });
+      changes.push(buildAeChange("system.assetType", "override", assetType));
     }
 
     // Build flags — preserve existing MODULE_ID flags if editing
@@ -241,9 +219,7 @@ export class AssetEffectEditor extends HandlebarsApplicationMixin(
     // Update expiry from duration input
     const durationRaw = data.duration;
     if (durationRaw != null && durationRaw !== "" && Number(durationRaw) > 0) {
-      const currentTurn =
-        game.actors.find((a) => a.type === `${MODULE_ID}.campaignTracker`)
-          ?.system?.campaignTurnNumber ?? 0;
+      const currentTurn = await getCurrentCampaignTurn();
       newModuleFlags.expireAfterTurn = currentTurn + Number(durationRaw);
     } else if (
       durationRaw === "" ||
@@ -270,7 +246,10 @@ export class AssetEffectEditor extends HandlebarsApplicationMixin(
       name: data.name || game.i18n.localize("STA_TC.EffectEditor.DefaultName"),
       img: data.img || "icons/svg/aura.svg",
       disabled: false,
-      changes,
+      showIcon: statuses.length
+        ? CONST.ACTIVE_EFFECT_SHOW_ICON.ALWAYS
+        : CONST.ACTIVE_EFFECT_SHOW_ICON.CONDITIONAL,
+      system: { changes },
       statuses,
       flags: { [MODULE_ID]: newModuleFlags },
     };
@@ -279,8 +258,8 @@ export class AssetEffectEditor extends HandlebarsApplicationMixin(
   /** Submit action — create or update the AE. */
   static async _onSubmit(event, target) {
     const form = this.element.querySelector("form") ?? this.element;
-    const formData = new FormDataExtended(form);
-    const effectData = this._buildEffectData(formData);
+    const formData = new foundry.applications.ux.FormDataExtended(form);
+    const effectData = await this._buildEffectData(formData);
 
     if (this._effect) {
       await this._effect.update(effectData);
@@ -292,8 +271,8 @@ export class AssetEffectEditor extends HandlebarsApplicationMixin(
   /** @override — wire our submit action to the native form submit too */
   async _onSubmitForm(formConfig, event) {
     event.preventDefault();
-    const formData = new FormDataExtended(this.element);
-    const effectData = this._buildEffectData(formData);
+    const formData = new foundry.applications.ux.FormDataExtended(this.element);
+    const effectData = await this._buildEffectData(formData);
 
     if (this._effect) {
       await this._effect.update(effectData);

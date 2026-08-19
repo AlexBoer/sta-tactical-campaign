@@ -25,6 +25,7 @@ import { RollTableManager } from "./apps/roll-table-manager.mjs";
 import { RollTableManagerService } from "./apps/roll-table-manager-service.mjs";
 import { DefaultFoldersForm } from "./apps/default-folders-form.mjs";
 import { TurnLog } from "./apps/turn-log.mjs";
+import { ActiveEffectMigration } from "./active-effect-migration.mjs";
 
 const MODULE_ID = "sta-tactical-campaign";
 
@@ -356,6 +357,9 @@ Hooks.once("ready", () => {
 
     /** Direct access to DefaultFoldersForm for advanced usage. */
     DefaultFoldersForm,
+
+    /** Audit or repair module-owned Active Effects for Foundry V14. */
+    auditActiveEffects: (options) => ActiveEffectMigration.run(options),
   };
 
   moduleInstance.api = api;
@@ -370,6 +374,14 @@ Hooks.once("ready", () => {
 
   // Ensure new used-result queue fields exist on existing campaign trackers.
   Promise.resolve().then(async () => {
+    try {
+      await ActiveEffectMigration.migrateIfNeeded();
+    } catch (error) {
+      console.error(
+        `${MODULE_ID} | Active Effects 2.0 migration failed`,
+        error,
+      );
+    }
     for (const tracker of _getTrackers()) {
       await RollTableManagerService.ensureTrackerQueues(tracker);
     }
@@ -575,23 +587,21 @@ function _rerenderTrackersForPoi(actor) {
   }
 }
 
-/**
- * When an Active Effect is created on an asset actor, re-render referencing
- * campaign trackers so the unavailable badge updates immediately.
- */
-Hooks.on("createActiveEffect", (_effect, _options, _userId) => {
-  const parent = _effect.parent;
-  if (parent) _rerenderTrackersForAsset(parent);
-});
+function _rerenderTrackersForActiveEffect(effect) {
+  const target =
+    effect.target?.documentName === "Actor" ? effect.target : effect.actor;
+  if (!target) return;
+  _rerenderTrackersForAsset(target);
+  _rerenderTrackersForPoi(target);
+}
 
-/**
- * When an Active Effect is deleted from an asset actor, re-render referencing
- * campaign trackers so the unavailable badge clears immediately.
- */
-Hooks.on("deleteActiveEffect", (_effect, _options, _userId) => {
-  const parent = _effect.parent;
-  if (parent) _rerenderTrackersForAsset(parent);
-});
+for (const hook of [
+  "createActiveEffect",
+  "updateActiveEffect",
+  "deleteActiveEffect",
+]) {
+  Hooks.on(hook, (effect) => _rerenderTrackersForActiveEffect(effect));
+}
 
 /**
  * When an Event item is created on a POI actor (e.g. dragged onto the POI

@@ -49,7 +49,12 @@ export class ProgressionPowerDialog {
       if (!actor) continue;
       if (!assetTypes.includes(actor.system?.assetType)) continue;
       // Skip lost assets — they can't benefit from improvements
-      if (actor.effects?.some((e) => e.flags?.[MODULE_ID]?.lost)) continue;
+      if (
+        actor.effects?.some(
+          (effect) => effect.active && effect.flags?.[MODULE_ID]?.lost,
+        )
+      )
+        continue;
       eligible.push({ uuid, name: actor.name, img: actor.img });
     }
 
@@ -130,7 +135,16 @@ export class ProgressionPowerDialog {
     await asset.createEmbeddedDocuments("ActiveEffect", [
       {
         name: effectName,
-        changes: [{ key: statKey, mode: 2 /* ADD */, value: String(delta) }],
+        system: {
+          changes: [
+            {
+              key: statKey,
+              type: "add",
+              value: delta,
+              phase: "initial",
+            },
+          ],
+        },
         disabled: false,
         flags: { [MODULE_ID]: { progressionEffect: true } },
       },
@@ -172,11 +186,15 @@ export class ProgressionPowerDialog {
       const actor = await fromUuid(uuid);
       if (!actor) continue;
       if (assetType && actor.system?.assetType !== assetType) continue;
-      const hasLost = actor.effects?.some((e) => e.flags?.[MODULE_ID]?.lost);
+      const hasLost = actor.effects?.some(
+        (effect) => effect.active && effect.flags?.[MODULE_ID]?.lost,
+      );
       // For ships, also include assets with an unavailability AE (heavily damaged)
       const hasUnavailable =
         assetType === "ship" &&
-        actor.effects?.some((e) => e.flags?.[MODULE_ID]?.unavailable);
+        actor.effects?.some(
+          (effect) => effect.active && effect.flags?.[MODULE_ID]?.unavailable,
+        );
       if (hasLost || hasUnavailable) {
         affectedAssets.push({ uuid, name: actor.name });
       }

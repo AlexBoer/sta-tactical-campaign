@@ -16,7 +16,7 @@ import {
   ComplexEffectEditor,
   COMPLEX_EFFECT_TYPES,
 } from "../apps/complex-effect-editor.mjs";
-import { aeMode, aeModeToName } from "../utils.mjs";
+import { aeTypeToName, buildAeChange } from "../utils.mjs";
 
 const MODULE_ID = "sta-tactical-campaign";
 
@@ -69,7 +69,7 @@ export class EventSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       img: effect.img,
       disabled: effect.disabled,
       transfer: effect.transfer,
-      changes: effect.changes,
+      changes: effect.system.changes,
     }));
 
     const typeLabels = Object.fromEntries(
@@ -91,6 +91,25 @@ export class EventSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       complexEffects,
       hasAnyEffects: effects.length > 0 || complexEffects.length > 0,
     };
+  }
+
+  /** @override */
+  _onRender(context, options) {
+    super._onRender(context, options);
+    // Make Active Effect rows draggable so they can be copied onto other
+    // actors/items (including compendium entries) via native drop handling.
+    for (const row of this.element.querySelectorAll(
+      ".event-effect-row[data-effect-id]",
+    )) {
+      row.addEventListener("dragstart", (dragEvent) => {
+        const effect = this.item.effects.get(row.dataset.effectId);
+        if (!effect) return;
+        dragEvent.dataTransfer.setData(
+          "text/plain",
+          JSON.stringify(effect.toDragData()),
+        );
+      });
+    }
   }
 
   /**
@@ -123,14 +142,9 @@ export class EventSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
         img: "icons/svg/aura.svg",
         transfer: true,
         disabled: false,
-        changes: [
-          {
-            key: fieldKey,
-            mode: aeMode(modeName),
-            value: String(value),
-            priority: 20,
-          },
-        ],
+        system: {
+          changes: [buildAeChange(fieldKey, modeName, value)],
+        },
       },
       { parent: this.item },
     );
@@ -145,7 +159,7 @@ export class EventSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     const effect = this.item.effects.get(effectId);
     if (!effect) return;
 
-    const change = effect.changes?.[0];
+    const change = effect.system.changes?.[0];
     const isKnownField =
       change && POI_EFFECT_FIELDS.some((f) => f.key === change.key);
 
@@ -154,8 +168,7 @@ export class EventSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       return effect.sheet.render(true);
     }
 
-    // Look up mode name from CONST value
-    const modeName = aeModeToName(change.mode) ?? "ADD";
+    const modeName = aeTypeToName(change.type);
 
     const result = await PoiEffectEditor.show({
       fieldKey: change.key,
@@ -168,13 +181,8 @@ export class EventSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
 
     await effect.update({
       name: result.effectName,
-      changes: [
-        {
-          key: result.fieldKey,
-          mode: aeMode(result.modeName),
-          value: String(result.value),
-          priority: 20,
-        },
+      "system.changes": [
+        buildAeChange(result.fieldKey, result.modeName, result.value),
       ],
     });
   }

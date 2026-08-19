@@ -4,7 +4,11 @@
  */
 
 import { AssetEffectEditor } from "../apps/asset-effect-editor.mjs";
-import { aeMode } from "../utils.mjs";
+import {
+  getCampaignExpiry,
+  getCurrentCampaignTurn,
+  replaceAssetStatusEffect,
+} from "../active-effect-service.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -88,12 +92,9 @@ export class AssetSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     );
 
     // Build active effects list (all AEs, including unavailable)
-    const tracker = game.actors.find(
-      (a) => a.type === `${MODULE_ID}.campaignTracker`,
-    );
-    const currentTurn = tracker?.system?.campaignTurnNumber ?? 0;
+    const currentTurn = await getCurrentCampaignTurn();
     const effects = actor.effects.map((e) => {
-      const expiryTurn = e.flags?.[MODULE_ID]?.expireAfterTurn ?? null;
+      const expiryTurn = getCampaignExpiry(e);
       return {
         id: e.id,
         name: e.name,
@@ -102,8 +103,8 @@ export class AssetSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         turnsLeft:
           expiryTurn != null ? Math.max(0, expiryTurn - currentTurn) : null,
         isPermanent: expiryTurn == null,
-        isUnavailable: !!e.flags?.[MODULE_ID]?.unavailable, // flag still marks the campaign-turn expiry AE specifically
-        changesSummary: AssetSheet._buildChangesSummary(e.changes ?? []),
+        isUnavailable: e.active && !!e.flags?.[MODULE_ID]?.unavailable,
+        changesSummary: AssetSheet._buildChangesSummary(e.system.changes ?? []),
       };
     });
 
@@ -115,7 +116,9 @@ export class AssetSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       powersCol2,
       hasPrimaryPower,
       effects,
-      hasLossEffect: actor.effects.some((e) => e.flags?.[MODULE_ID]?.lost),
+      hasLossEffect: actor.effects.some(
+        (effect) => effect.active && effect.flags?.[MODULE_ID]?.lost,
+      ),
       enrichedDescription: await foundry.applications.ux.TextEditor.enrichHTML(
         system.description,
         {
@@ -203,56 +206,15 @@ export class AssetSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 
     // Apply outcomes
     if (markLost) {
-      // Create a permanent Lost AE (deleting it "rescues" the asset)
-      const existingLost = actor.effects.find(
-        (e) => e.flags?.[MODULE_ID]?.lost,
-      );
-      if (existingLost) await existingLost.delete();
-      await actor.createEmbeddedDocuments("ActiveEffect", [
-        {
-          name: resultTitle,
-          img: "icons/svg/skull.svg",
-          disabled: false,
-          statuses: ["sta-tc.lost"],
-          changes: [
-            {
-              key: "system.lost",
-              mode: aeMode("UPGRADE"),
-              value: "1",
-              priority: 20,
-            },
-          ],
-          flags: { [MODULE_ID]: { lost: true } },
-        },
-      ]);
+      await replaceAssetStatusEffect(actor, "lost", { name: resultTitle });
     }
     if (markUnavailable) {
-      const tracker = game.actors.find(
-        (a) => a.type === `${MODULE_ID}.campaignTracker`,
-      );
-      const currentTurn = tracker?.system?.campaignTurnNumber ?? 0;
+      const currentTurn = await getCurrentCampaignTurn();
       const expireAfterTurn = currentTurn + 1;
-      const existing = actor.effects.find(
-        (e) => e.flags?.[MODULE_ID]?.unavailable,
-      );
-      if (existing) await existing.delete();
-      await actor.createEmbeddedDocuments("ActiveEffect", [
-        {
-          name: resultTitle,
-          img: "icons/svg/sleep.svg",
-          disabled: false,
-          statuses: ["sta-tc.unavailable"],
-          changes: [
-            {
-              key: "system.unavailable",
-              mode: aeMode("UPGRADE"),
-              value: "1",
-              priority: 20,
-            },
-          ],
-          flags: { [MODULE_ID]: { unavailable: true, expireAfterTurn } },
-        },
-      ]);
+      await replaceAssetStatusEffect(actor, "unavailable", {
+        name: resultTitle,
+        expireAfterTurn,
+      });
     }
 
     // For "lost with all hands" ship result, remind the GM about assigned characters
@@ -387,6 +349,25 @@ export class AssetSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     // Create a new STARoll instance and perform the roll
     const roller = new STARoll();
     await roller.rollTask(taskData);
+  }
+
+  /** @override */
+  _onRender(context, options) {
+    super._onRender(context, options);
+    // Make Active Effect rows draggable so they can be copied onto other
+    // actors/items (including compendium entries) via native drop handling.
+    for (const row of this.element.querySelectorAll(
+      ".asset-effect-row[data-effect-id]",
+    )) {
+      row.addEventListener("dragstart", (dragEvent) => {
+        const effect = this.actor.effects.get(row.dataset.effectId);
+        if (!effect) return;
+        dragEvent.dataTransfer.setData(
+          "text/plain",
+          JSON.stringify(effect.toDragData()),
+        );
+      });
+    }
   }
 
   static async _onAddTimedEffect(event, target) {

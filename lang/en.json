@@ -40,6 +40,9 @@
       "Lost": "Lost",
       "Unavailable": "Unavailable"
     },
+    "ActiveEffectMigration": {
+      "ReviewNeeded": "Active Effects 2.0 migration completed with {ambiguous} ambiguous effect(s) and {skipped} skipped compendium(s). Run auditActiveEffects({apply:false}) from the module API for details."
+    },
     "Folders": {
       "Assets": "Assets",
       "Characters": "Characters",
